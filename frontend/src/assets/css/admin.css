@@ -1518,12 +1518,73 @@ html.dark {
   text-align: center;
 }
 
+/* 复选框：自绘圆角样式，两套主题跟随 --adm 变量（原生 accent-color 在暗色下是突兀的白方块） */
 .admin-check {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--adm-accent);
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--adm-input-border);
+  border-radius: 6px;
+  background: var(--adm-input-bg);
   cursor: pointer;
   vertical-align: middle;
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.admin-check:hover {
+  border-color: var(--adm-accent);
+}
+
+.admin-check:active {
+  transform: scale(0.9);
+}
+
+.admin-check:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--adm-accent-soft);
+}
+
+/* 选中：主题色底 + 白勾（border 画 L 形旋转 45°） */
+.admin-check:checked {
+  border-color: var(--adm-accent);
+  background: linear-gradient(135deg, var(--adm-accent), var(--adm-accent-strong));
+  box-shadow: 0 3px 10px var(--adm-accent-soft);
+}
+
+.admin-check:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  border-radius: 1px;
+  /* 勾的视觉重心偏下，垂直上移多一点才是视觉居中 */
+  transform: translate(-50%, -58%) rotate(45deg);
+}
+
+/* 半选（表头跨页部分选中）：主题色底 + 白色短横 */
+.admin-check:indeterminate {
+  border-color: var(--adm-accent);
+  background: linear-gradient(135deg, var(--adm-accent), var(--adm-accent-strong));
+}
+
+.admin-check:indeterminate::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translate(-50%, -50%);
 }
 
 .admin-table tbody tr.is-checked {
