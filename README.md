@@ -76,3 +76,17 @@
 因此**实体字段一旦变更（新增/删除/改名/改类型），上线前必须人工出具对应 DDL，先在线上库执行完毕，再启动新版本服务**，顺序不可颠倒。评审涉及 `backend/src/main/java/com/chuxi/entity/` 改动的提交时，须确认对应 DDL 已随变更给出。
 
 > 后续项（未实施）：评估以线上既有 `flyway_schema_history` 表为基线重新启用 Flyway 纳管后续变更；涉及线上执行，需单独授权后再做。
+
+## 线上部署
+
+生产环境部署在阿里云（`106.14.202.90`），由 nginx 反向代理到本机 Spring Boot：
+
+- **域名**：`https://www.chuxi.online`（主）；`https://chuxi.online` 同步可用
+- **静态资源**：`/opt/chuxi/dist`（vite 构建产物），由 nginx 直接服务
+- **后端**：`127.0.0.1:8080`，systemd unit `chuxi.service`，环境变量在 unit 内声明（DB/CORS/JWT/OSS/上传目录等）
+- **数据库**：MySQL 8，库名 `chuxi`（`chuxi` / `chuxi123`）
+- **对象存储**：阿里云 OSS 桶 `chuxisleep`（`oss-cn-beijing`），`/api/admin/media/fetch` 提供白名单 SSRF 安全代理供外链图传回站内
+- **架构**：`nginx(:80/:443) → /api/* → 127.0.0.1:8080`
+- **部署脚本**：`D:/workspace/Claw/2026-07-19-17-59-15/deploy/website/deploy_upload.py`（全量 jar+dist，重启服务）、`deploy_frontend_only.py`（仅前端，跳过重启）
+- **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，新表必须在重启前先在库内执行（参 `scripts/ddl-friend-link.sql` 风格），顺序不可颠倒
+- **构建路径坑**：Maven 必须在**纯英文路径**（`D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；前端 `vite build --outDir` 绝对路径会被拼成 `/d/d/tmp/...`，构建后用 `find` 定位真实目录再 `tar`
