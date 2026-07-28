@@ -11,7 +11,6 @@ import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,14 +56,35 @@ public class OssStorageService {
 
     /** 对象名 -> 公网访问 URL（优先自定义域名，否则 bucket.endpoint 三级域名） */
     public String publicUrl(String objectKey) {
+        String host = computeHost();
+        if (host == null) return null;
+        return host + "/" + objectKey;
+    }
+
+    /**
+     * 当前生效的公网域名（不含尾斜杠）。供管理接口校验外链是否属于本站资产。
+     * 配置缺失或 bucket/endpoint 为空时返回 null。
+     */
+    public String publicHost() {
+        return computeHost();
+    }
+
+    /** 共享的 host 计算逻辑：先 publicHost，再回退到 bucket.endpoint 三级域名 */
+    private String computeHost() {
         String host = props.getPublicHost() == null ? "" : props.getPublicHost().trim();
         if (!host.isEmpty()) {
             if (host.endsWith("/")) host = host.substring(0, host.length() - 1);
             if (!host.startsWith("http")) host = "https://" + host;
-            return host + "/" + objectKey;
+            return host;
         }
-        String endpointHost = URI.create(props.getEndpoint()).getHost();
-        return "https://" + props.getBucket() + "." + endpointHost + "/" + objectKey;
+        String ep = props.getEndpoint() == null ? "" : props.getEndpoint();
+        int idx = ep.indexOf("://");
+        if (idx >= 0) ep = ep.substring(idx + 3);
+        while (ep.endsWith("/")) ep = ep.substring(0, ep.length() - 1);
+        if (ep.isEmpty() || props.getBucket() == null || props.getBucket().isEmpty()) return null;
+        // 回退：bucket.<endpoint> 三级域名。endpoint 可能带或不带 scheme，
+        // 之前用 URI.create(ep).getHost() 在无 scheme 时返回 null，会拼出 https://bucket.null/key 这种坏地址。
+        return "https://" + props.getBucket() + "." + ep;
     }
 
     /** 上传：返回 { name(对象名去前缀), url, size } */

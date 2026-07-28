@@ -83,6 +83,51 @@ public class MediaController {
         return R.ok(data);
     }
 
+    /**
+     * 取回外链图：仅接受本站 OSS 公网域（白名单防 SSRF），下载后重传到 OSS。
+     * 用途：管理端「裁切」按钮对 OSS 图（canvas CORS 污染无法导出）时，先走这里转一份站内副本再裁。
+     */
+    @PostMapping("/api/admin/media/fetch")
+    public R<Map<String, Object>> fetch(@RequestBody Map<String, String> body) throws IOException {
+        if (!oss.available()) return R.fail("OSS 未配置，暂不支持取回外链");
+        String url = body == null ? null : body.get("url");
+        if (url == null || url.isBlank()) return R.fail("url 必填");
+
+        String host = oss.publicHost();
+        if (host == null || !url.startsWith(host + "/")) return R.fail("仅支持本站 OSS 公网地址");
+
+        String originName;
+        try {
+            String path = java.net.URI.create(url).getPath();
+            originName = path == null ? "" : path.substring(path.lastIndexOf('/') + 1);
+        } catch (Exception e) {
+            return R.fail("非法 url");
+        }
+        if (originName.isBlank()) return R.fail("无法从 url 推断文件名");
+        // 清洗 + 加前缀，避免重名覆盖
+        String cleaned = originName.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (cleaned.isBlank() || cleaned.chars().allMatch(c -> c == '.')) cleaned = "image";
+        String name = UUID.randomUUID().toString().substring(0, 8) + "-fetch-" + cleaned;
+
+        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) java.net.URI.create(url).toURL().openConnection();
+        conn.setConnectTimeout(8000);
+        conn.setReadTimeout(15000);
+        conn.setRequestMethod("GET");
+        conn.setInstanceFollowRedirects(false); // 重定向前一律拒绝，避免被引导到内网
+        int code = conn.getResponseCode();
+        if (code / 100 != 2) {
+            conn.disconnect();
+            return R.fail("下载失败，HTTP " + code);
+        }
+        long size = conn.getContentLengthLong();
+        String contentType = conn.getContentType();
+        try (java.io.InputStream in = conn.getInputStream()) {
+            return R.ok(oss.upload(name, in, size, contentType));
+        } finally {
+            conn.disconnect();
+        }
+    }
+
     /** 公开读取（不在 /api/admin 下）：字节直出 + 7 天缓存 */
     @GetMapping("/api/uploads/{name}")
     public ResponseEntity<byte[]> serve(@PathVariable String name) throws IOException {

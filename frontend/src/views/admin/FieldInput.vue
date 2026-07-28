@@ -78,7 +78,9 @@
             {{ uploading ? '上传中…' : '上传图片' }}
           </button>
           <button type="button" class="admin-btn admin-btn-ghost" @click="pickerOpen = true">从图库选择</button>
-          <button v-if="canCrop" type="button" class="admin-btn admin-btn-ghost" @click="openCrop">裁切</button>
+          <button v-if="canCrop" type="button" class="admin-btn admin-btn-ghost" :disabled="fetching" @click="openCrop">
+            {{ fetching ? '取回中…' : '裁切' }}
+          </button>
         </div>
         <input ref="fileRef" type="file" accept="image/*" hidden @change="onUpload" />
       </div>
@@ -127,16 +129,37 @@ const uploading = ref(false)
 const uploadPercent = ref(0)
 const thumbBroken = ref(false)
 const cropTarget = ref(null)
+// 取回外链中的 loading：拉远端图转副本期间防止重复点「裁切」
+const fetching = ref(false)
 const toast = inject('adminToast', () => {})
 
-// 仅站内图库图片可裁切：外链图画布会被 CORS 污染，无法导出
+// 任何 HTTP 图都可裁：站内 /api/uploads/ 直接打开；外链（如 OSS）先让后端取回转本地副本再裁
 const canCrop = computed(
-  () => typeof props.modelValue === 'string' && props.modelValue.startsWith('/api/uploads/')
+  () => typeof props.modelValue === 'string' && /^https?:\/\//.test(props.modelValue)
 )
 
-function openCrop() {
-  const name = decodeURIComponent(props.modelValue.split('/').pop() || '')
-  if (name) cropTarget.value = { name, url: props.modelValue }
+async function openCrop() {
+  const raw = props.modelValue
+  const name = decodeURIComponent((raw.split('?')[0].split('/').pop() || ''))
+  if (!name) return
+  if (raw.startsWith('/api/uploads/')) {
+    cropTarget.value = { name, url: raw }
+    return
+  }
+  // 外链：先让后端下载到站内，再打开裁切（canvas 跨域会被污染，无法直接 toBlob）
+  fetching.value = true
+  try {
+    const data = await mediaApi.fetch(raw)
+    if (data && data.url) {
+      emit('update:modelValue', data.url)
+      thumbBroken.value = false
+      cropTarget.value = { name: data.name || name, url: data.url }
+    }
+  } catch (err) {
+    toast((err && err.message) || '取回失败，请稍后重试', 'error')
+  } finally {
+    fetching.value = false
+  }
 }
 
 // 裁切保存为新图后直接回填字段

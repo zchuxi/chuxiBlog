@@ -82,7 +82,9 @@ export const mediaApi = {
       }
     })
   },
-  remove: name => http.delete(`/admin/media/${encodeURIComponent(name)}`)
+  remove: name => http.delete(`/admin/media/${encodeURIComponent(name)}`),
+  // 取回外链图：仅支持本站 OSS 公网域；返回 { name, url, size }，url 是新的站内副本
+  fetch: url => http.post('/admin/media/fetch', { url })
 }
 
 const crud = res => ({
