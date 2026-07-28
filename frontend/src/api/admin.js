@@ -93,5 +93,7 @@ const crud = res => ({
 })
 
 export const adminApi = Object.fromEntries(RESOURCE_KEYS.map(key => [key, crud(key)]))
+// 日历页通过 adminApi.me() 探活，单独挂上避免 tree-shake 把它干掉（被删后调用会 undefined → 抛错 → catch 清 token）
+adminApi.me = () => http.get('/auth/me')
 
 export default http

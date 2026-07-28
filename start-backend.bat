@@ -4,11 +4,11 @@ cd /d "%~dp0backend"
 set DB_PASSWORD=1234
 set SERVER_PORT=8081
 rem ===== 阿里云 OSS（媒体存储）=====
-rem 密钥放在仓库根目录 oss-keys.bat（已被 .gitignore 排除），存在则自动加载
-if exist "%~dp0oss-keys.bat" call "%~dp0oss-keys.bat"
+rem AK/SK 存于 Windows 用户级环境变量 APP_OSS_ACCESS_KEY_ID / APP_OSS_ACCESS_KEY_SECRET，
+rem 进程启动时自动继承，不再从工作区明文脚本加载；未配置则上传回退本地 uploads/ 目录
 rem 默认 bucket=chuxisleep，北京地域；如有变动可覆盖：
-rem set OSS_BUCKET=chuxisleep
-rem set OSS_ENDPOINT=https://oss-cn-beijing.aliyuncs.com
+rem set APP_OSS_BUCKET=chuxisleep
+rem set APP_OSS_ENDPOINT=https://oss-cn-beijing.aliyuncs.com
 if not exist target\blog-backend.jar (
   echo [build] target\blog-backend.jar not found, packaging...
   call mvn -DskipTests package

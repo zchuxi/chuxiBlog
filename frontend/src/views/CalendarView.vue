@@ -26,32 +26,49 @@
       <div v-if="loading" class="calendar-state">正在向 Bangumi 打听这周播什么…</div>
       <div v-else-if="!days.length" class="calendar-state">放送表暂时拿不到，可能是网络原因，稍后再来看看吧。</div>
 
-      <!-- 当日放送网格 -->
+      <!-- 管理员提示条：仅当已确认管理员身份时短暂提示可追番 -->
+      <p v-if="notice" class="calendar-notice">{{ notice }}</p>
+
+      <!-- 当日放送网格：key 含星期，切页签时卡片重新挂载触发错峰入场动效 -->
       <div v-else class="calendar-grid">
-        <a
-          v-for="item in activeItems"
-          :key="item.id"
+        <div
+          v-for="(item, i) in activeItems"
+          :key="activeDay + '-' + item.id"
           class="calendar-card"
-          :href="item.localId ? undefined : `https://bgm.tv/subject/${item.id}`"
-          :target="item.localId ? undefined : '_blank'"
-          rel="noopener"
-          @click="item.localId && router.push('/bangumi/' + item.localId)"
+          :style="{ animationDelay: Math.min(i, 18) * 0.045 + 's' }"
         >
-          <div class="calendar-cover">
-            <img
-              v-if="item.cover && !broken.has(item.id)"
-              :src="item.cover"
-              :alt="item.nameCn || item.name"
-              referrerpolicy="no-referrer"
-              loading="lazy"
-              @error="broken = new Set(broken).add(item.id)"
-            />
-            <div v-else class="calendar-cover-fallback"><span>{{ (item.nameCn || item.name || '?').charAt(0) }}</span></div>
-            <span v-if="item.localId" class="calendar-mine-badge">已收录</span>
-            <span v-if="item.score" class="calendar-score-badge">{{ item.score.toFixed(1) }}</span>
-          </div>
-          <p class="calendar-card-name">{{ item.nameCn || item.name }}</p>
-        </a>
+          <a
+            class="calendar-card-inner"
+            :href="item.localId ? undefined : `https://bgm.tv/subject/${item.id}`"
+            :target="item.localId ? undefined : '_blank'"
+            rel="noopener"
+            @click="item.localId && router.push('/bangumi/' + item.localId)"
+          >
+            <div class="calendar-cover">
+              <img
+                v-if="item.cover && !broken.has(item.id)"
+                :src="item.cover"
+                :alt="item.nameCn || item.name"
+                referrerpolicy="no-referrer"
+                loading="lazy"
+                @error="broken = new Set(broken).add(item.id)"
+              />
+              <div v-else class="calendar-cover-fallback"><span>{{ (item.nameCn || item.name || '?').charAt(0) }}</span></div>
+              <span v-if="item.localId" class="calendar-mine-badge">已收录</span>
+              <span v-if="item.score" class="calendar-score-badge">{{ item.score.toFixed(1) }}</span>
+            </div>
+            <p class="calendar-card-name" :title="item.nameCn || item.name">{{ item.nameCn || item.name }}</p>
+          </a>
+          <button
+            v-if="isAdmin && !item.localId"
+            type="button"
+            class="calendar-import-btn"
+            :disabled="importingId === item.id"
+            @click.stop="importSubject(item)"
+          >
+            {{ importingId === item.id ? '追番中…' : '＋ 追番' }}
+          </button>
+        </div>
       </div>
     </div>
   </main>
@@ -61,6 +78,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
+import { adminApi, getToken, clearToken } from '../api/admin'
 
 const router = useRouter()
 
@@ -70,6 +88,16 @@ const loading = ref(true)
 const broken = ref(new Set())
 // 本站 subjectId -> 本地记录 id，用于「已收录」标记与跳转本站详情
 const mine = ref(new Map())
+// 已确认管理员（本地有 token 且后端 /api/auth/me 校验通过）才显示追番按钮
+const isAdmin = ref(false)
+const importingId = ref(null)
+const notice = ref('')
+let noticeTimer = null
+function flashNotice(msg) {
+  notice.value = msg
+  if (noticeTimer) clearTimeout(noticeTimer)
+  noticeTimer = setTimeout(() => (notice.value = ''), 4000)
+}
 
 // bgm 的 weekday.id：1=周一 … 7=周日；JS getDay()：0=周日
 const todayId = (() => {
@@ -79,8 +107,15 @@ const todayId = (() => {
 
 const activeItems = computed(() => {
   const day = days.value.find(d => d.weekdayId === activeDay.value)
-  return day ? day.items : []
+  if (!day) return []
+  // localId 从 mine 响应式注入，导入后「已收录」徽标即时更新
+  return day.items.map(it => ({ ...it, localId: mine.value.get(Number(it.id)) || null }))
 })
+
+// Bangumi 图片地址常为 http://lain.bgm.tv/...，在 HTTPS 页面会触发 Mixed Content 警告，统一升级为 https
+function toHttps(url) {
+  return typeof url === 'string' ? url.replace(/^http:\/\//i, 'https://') : ''
+}
 
 function normalizeDay(raw) {
   return {
@@ -90,14 +125,77 @@ function normalizeDay(raw) {
       id: it.id,
       name: it.name || '',
       nameCn: it.name_cn || '',
-      cover: (it.images && (it.images.common || it.images.large || it.images.grid)) || '',
-      score: it.rating && it.rating.score ? Number(it.rating.score) : null,
-      localId: mine.value.get(Number(it.id)) || null
+      cover: toHttps((it.images && (it.images.common || it.images.large || it.images.grid)) || ''),
+      score: it.rating && it.rating.score ? Number(it.rating.score) : null
     }))
   }
 }
 
+// 确认管理员身份：本地有 token 且后端 /api/auth/me 校验通过才视为已确认。
+// 失败（无 token / 过期）则隐藏追番按钮，避免越权入口暴露。
+async function confirmAdmin() {
+  if (!getToken()) {
+    isAdmin.value = false
+    return
+  }
+  try {
+    await adminApi.me()
+    isAdmin.value = true
+  } catch {
+    clearToken()
+    isAdmin.value = false
+  }
+}
+
+// 追番：把日历上的 Bangumi 条目写入本站「番剧记录」（状态默认「想看」）。
+// 复用后台已有权限的 adminApi，后端 AdminAuthInterceptor 会再次校验管理员身份。
+async function importSubject(item) {
+  if (importingId.value === item.id || item.localId) return
+  importingId.value = item.id
+  try {
+    const res = await fetch(`https://api.bgm.tv/v0/subjects/${item.id}`)
+    if (!res.ok) throw new Error(`详情获取失败: ${res.status}`)
+    const s = await res.json()
+    const images = s.images || {}
+    const rating = s.rating || {}
+    const record = {
+      subjectId: s.id || item.id,
+      name: s.name || item.name || item.nameCn,
+      nameCn: s.name_cn || item.nameCn || s.name || '',
+      coverUrl: toHttps(images.common || images.large || images.medium || item.cover || ''),
+      totalEps: Number(s.eps) || Number(s.total_episodes) || 0,
+      watchedEps: 0,
+      status: '想看',
+      rating: null,
+      score: rating.score == null ? null : Number(rating.score),
+      airDate: s.date || '',
+      platform: s.platform || '',
+      rank: rating.rank ? Number(rating.rank) : null,
+      ratingTotal: rating.total ? Number(rating.total) : null,
+      summary: s.summary || '',
+      tags: Array.isArray(s.tags) ? s.tags.map(t => t && t.name).filter(Boolean).slice(0, 4) : [],
+      visible: true
+    }
+    const created = await adminApi['bangumi-records'].create(record)
+    const newId = created && created.id
+    mine.value = new Map(mine.value).set(Number(item.id), newId || true)
+    flashNotice(`已追番「${record.nameCn || record.name}」，可到「番剧记录」查看`)
+  } catch (err) {
+    if (err && err.unauthorized) {
+      clearToken()
+      isAdmin.value = false
+      flashNotice('登录已过期，请到后台重新登录')
+      return
+    }
+    flashNotice((err && err.message) || '追番失败，请稍后再试')
+  } finally {
+    importingId.value = null
+  }
+}
+
 onMounted(async () => {
+  // 先确认管理员身份（决定追番按钮是否可见），失败不阻塞放送表
+  confirmAdmin()
   // 先拉本站记录做「已收录」映射，失败不阻塞放送表
   try {
     const list = (await api.bangumiRecords()) || []
@@ -249,6 +347,23 @@ onMounted(async () => {
   cursor: pointer;
   text-decoration: none;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  /* 切换星期时的错峰入场：淡入 + 上浮 + 微缩放回正；delay 由行内样式按序号递增 */
+  animation: calendar-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes calendar-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-card {
+    animation: none;
+  }
 }
 .calendar-card:hover {
   transform: translateY(-5px);
@@ -297,7 +412,9 @@ onMounted(async () => {
   font-weight: 700;
 }
 .calendar-card-name {
-  padding: 10px 12px 12px;
+  /* line-clamp 元素自身带 padding 时，被裁行会透进底部 padding 区域露出半行，
+     改用 margin 留白避开这个坑 */
+  margin: 10px 12px 8px;
   font-size: 14px;
   line-height: 1.45;
   color: var(--text-color);
@@ -305,6 +422,53 @@ onMounted(async () => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* 固定两行高，长短标题卡片底部对齐 */
+  min-height: calc(14px * 1.45 * 2);
+}
+
+/* 追番按钮 + 提示条（确认管理员后可见） */
+.calendar-card { position: relative; }
+.calendar-card-inner {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+/* 按钮作为卡片底部独立一行（不在文本区同行挤占空间） */
+.calendar-import-btn {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+  padding: 7px 13px;
+  border: 1px solid var(--accent-solid, #7cd6c0);
+  border-radius: 999px;
+  background: var(--accent-solid, #7cd6c0);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 4px 12px var(--accent-glow, rgba(124, 214, 192, 0.4));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.calendar-import-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px var(--accent-glow, rgba(124, 214, 192, 0.5));
+}
+.calendar-import-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.calendar-notice {
+  align-self: flex-start;
+  margin: -4px 0 0;
+  padding: 6px 16px;
+  border: 1px solid var(--accent-border, rgba(124, 214, 192, 0.5));
+  border-radius: 999px;
+  background: var(--nested-middle-card-bg);
+  font-size: 13.5px;
+  color: var(--text-color);
+  opacity: 0.85;
 }
 
 /* 移动端 */

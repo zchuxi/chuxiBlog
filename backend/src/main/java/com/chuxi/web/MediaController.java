@@ -1,6 +1,8 @@
 package com.chuxi.web;
 
 import com.chuxi.common.R;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ import java.util.stream.Stream;
  */
 @RestController
 public class MediaController {
+
+    private static final Logger log = LoggerFactory.getLogger(MediaController.class);
 
     private static final Path ROOT = Paths.get("uploads");
 
@@ -62,6 +66,7 @@ public class MediaController {
             try {
                 return R.ok(oss.upload(name, file.getInputStream(), file.getSize(), file.getContentType()));
             } catch (Exception e) {
+                log.error("OSS 上传失败：name={}, size={}, contentType={}", name, file.getSize(), file.getContentType(), e);
                 return R.fail("OSS 上传失败：" + e.getMessage());
             }
         }
@@ -104,6 +109,7 @@ public class MediaController {
             try {
                 items.addAll(oss.list());
             } catch (Exception e) {
+                log.error("OSS 列表获取失败", e);
                 return R.fail("OSS 列表获取失败：" + e.getMessage());
             }
         }
@@ -120,6 +126,7 @@ public class MediaController {
                                 m.put("lastModified", Files.getLastModifiedTime(p).toMillis());
                                 return m;
                             } catch (IOException e) {
+                                log.warn("读取本地媒体文件信息失败，已跳过：path={}, err={}", p, e.getMessage());
                                 return null;
                             }
                         })
@@ -142,6 +149,7 @@ public class MediaController {
                     return R.ok(true);
                 }
             } catch (Exception e) {
+                log.error("OSS 删除失败：name={}", name, e);
                 return R.fail("OSS 删除失败：" + e.getMessage());
             }
         }

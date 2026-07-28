@@ -44,7 +44,7 @@
       </div>
       <div v-else class="bangumi-grid">
         <article
-          v-for="(r, i) in filtered"
+          v-for="(r, i) in pagedList"
           :key="r.id"
           v-reveal="(i % 6) * 60"
           class="bangumi-card"
@@ -82,12 +82,35 @@
           </div>
         </article>
       </div>
+
+      <!-- 分页：岛屿胶囊风，与筛选条同语言；仅多于一页时展示 -->
+      <nav v-if="totalPages > 1" class="bangumi-pager">
+        <button type="button" class="bangumi-chip" :disabled="pageNo === 1" @click="gotoPage(pageNo - 1)">
+          ← 上一页
+        </button>
+        <template v-for="(item, i) in pageItems" :key="i">
+          <span v-if="item === '…'" class="bangumi-pager-ellipsis">…</span>
+          <button
+            v-else
+            type="button"
+            class="bangumi-chip bangumi-pager-num"
+            :class="{ active: item === pageNo }"
+            @click="gotoPage(item)"
+          >
+            {{ item }}
+          </button>
+        </template>
+        <button type="button" class="bangumi-chip" :disabled="pageNo === totalPages" @click="gotoPage(pageNo + 1)">
+          下一页 →
+        </button>
+        <span class="bangumi-pager-info">共 {{ filtered.length }} 部 · {{ pageNo }}/{{ totalPages }} 页</span>
+      </nav>
     </div>
   </main>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { api } from '../api'
 
@@ -120,6 +143,38 @@ const hiddenCount = computed(() => records.value.length - deduped.value.length)
 const filtered = computed(() =>
   activeFilter.value === '全部' ? deduped.value : deduped.value.filter(r => normStatus(r.status) === activeFilter.value)
 )
+
+// 前端分页：每页 10 部（两排）；切筛选回第一页，数据变少时钉回合法页
+const PAGE_SIZE = 10
+const pageNo = ref(1)
+const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / PAGE_SIZE)))
+const pagedList = computed(() => filtered.value.slice((pageNo.value - 1) * PAGE_SIZE, pageNo.value * PAGE_SIZE))
+const pageItems = computed(() => {
+  const total = totalPages.value
+  const cur = pageNo.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const items = [1]
+  if (cur > 3) items.push('…')
+  for (let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) items.push(p)
+  if (cur < total - 2) items.push('…')
+  items.push(total)
+  return items
+})
+
+function gotoPage(p) {
+  const next = Math.min(Math.max(1, p), totalPages.value)
+  if (next === pageNo.value) return
+  pageNo.value = next
+  // 翻页后滚回筛选条（scroll-margin 已给悬浮顶栏留位）
+  document.querySelector('.bangumi-filter')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+watch(activeFilter, () => {
+  pageNo.value = 1
+})
+watch(totalPages, () => {
+  if (pageNo.value > totalPages.value) pageNo.value = totalPages.value
+})
 
 const watchedTotal = computed(() => deduped.value.reduce((s, r) => s + (r.watchedEps || 0), 0))
 const epsTotal = computed(() => deduped.value.reduce((s, r) => s + (r.totalEps || 0), 0))
@@ -273,6 +328,8 @@ html.dark .bangumi-bar {
   box-shadow: var(--nested-outer-card-shadow);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  /* 翻页回滚时给悬浮顶栏留位 */
+  scroll-margin-top: 86px;
 }
 .bangumi-chip {
   padding: 7px 18px;
@@ -299,6 +356,46 @@ html.dark .bangumi-bar {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+}
+
+/* 分页条：与筛选条同款岛屿胶囊 */
+.bangumi-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  align-self: center;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--nested-outer-card-bg);
+  box-shadow: var(--nested-outer-card-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.bangumi-pager .bangumi-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.bangumi-pager-num {
+  min-width: 40px;
+  padding: 7px 0;
+  text-align: center;
+}
+.bangumi-pager-ellipsis {
+  color: var(--text-color);
+  opacity: 0.5;
+  padding: 0 2px;
+}
+.bangumi-pager-info {
+  margin-left: 6px;
+  font-size: 13.5px;
+  color: var(--text-color);
+  opacity: 0.65;
+  white-space: nowrap;
 }
 
 /* 去重提示（与参考站一致的半透明胶囊注释行） */

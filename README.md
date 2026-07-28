@@ -65,3 +65,14 @@
 - `GET /api/front/parallax/stories` · `GET /api/front/tools/landing` · `GET /api/music`
 
 种子数据在 `backend/src/main/resources/seed/*.json`（取自原站接口样例），表空时自动导入，可随意清库重建。
+
+## 线上 schema 变更流程（审阅点）
+
+`spring.jpa.hibernate.ddl-auto` 已改为环境变量注入（`${JPA_DDL_AUTO:update}`）：
+
+- **本地**：缺省 `update`，实体改动自动同步到本地 `blog_db`，无需额外操作
+- **线上**：由服务器 systemd unit 注入 `JPA_DDL_AUTO=validate`，启动时只校验实体与库结构是否一致，**绝不自动改表**；不一致时启动直接失败（SchemaManagementException），以此兜底拦截未经审阅的结构变更
+
+因此**实体字段一旦变更（新增/删除/改名/改类型），上线前必须人工出具对应 DDL，先在线上库执行完毕，再启动新版本服务**，顺序不可颠倒。评审涉及 `backend/src/main/java/com/chuxi/entity/` 改动的提交时，须确认对应 DDL 已随变更给出。
+
+> 后续项（未实施）：评估以线上既有 `flyway_schema_history` 表为基线重新启用 Flyway 纳管后续变更；涉及线上执行，需单独授权后再做。

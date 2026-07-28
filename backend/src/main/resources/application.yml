@@ -14,7 +14,9 @@ spring:
     password: ${DB_PASSWORD:1234}
   jpa:
     hibernate:
-      ddl-auto: update
+      # 本地缺省 update；线上由 systemd unit 注入 JPA_DDL_AUTO=validate，
+      # 实体与库结构不一致时启动直接报校验失败，禁止静默改线上库结构
+      ddl-auto: ${JPA_DDL_AUTO:update}
     open-in-view: false
     properties:
       hibernate:
@@ -23,8 +25,8 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
-  # 网站2 无 Flyway 迁移脚本，交由 Hibernate ddl-auto:update 管理线上库结构；
-  # 显式关闭 Flyway 避免与既有 flyway_schema_history 表冲突。
+  # 网站2 暂无 Flyway 迁移脚本：线上 schema 变更由人工出具 DDL 执行（见 README「线上 schema 变更流程」），
+  # 本地开发库仍由 ddl-auto:update 管理；显式关闭 Flyway 避免与既有 flyway_schema_history 表冲突。
   flyway:
     enabled: false
 

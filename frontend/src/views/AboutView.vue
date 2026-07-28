@@ -10,11 +10,14 @@
               <img class="about-avatar" src="/favicon.png" alt="站点头像" />
             </div>
             <h2 class="about-site-name">初曦的窝</h2>
+            <i class="about-profile-divider"></i>
             <p class="about-site-tagline">收集工具、追番与灵感碎片的小小基地。</p>
+            <div class="about-profile-tags">
+              <span>前端</span><span>AI</span><span>追番</span><span>碎碎念</span>
+            </div>
           </aside>
           <div class="about-body">
             <template v-if="hasContent">
-              <h3 v-if="content.title" class="about-body-title">{{ content.title }}</h3>
               <div class="md-editor-preview default-theme about-markdown" v-html="renderedHtml"></div>
             </template>
             <div v-else class="about-placeholder">
@@ -80,30 +83,31 @@ onMounted(async () => {
 .about-page .about-shell {
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 22px;
 }
 
-/* ========== 主卡：玻璃拟态岛屿 ========== */
+/* ========== 主卡：外层岛屿 + 内部左右两张中层卡，对齐站内嵌套卡片语言 ========== */
 .about-page .about-card {
   position: relative;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 34px;
-  padding: 38px 40px;
-  border-radius: 26px;
+  grid-template-columns: 272px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px;
+  border-radius: 28px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(18px) saturate(1.35);
-  -webkit-backdrop-filter: blur(18px) saturate(1.35);
-  box-shadow: 0 18px 44px rgba(88, 111, 214, 0.16), 0 4px 12px rgba(88, 111, 214, 0.08);
+  /* 亮色轻透：低白色浆 + 极轻模糊，与设置弹窗同语言，背景图案可透出 */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(8px) saturate(1.15);
+  -webkit-backdrop-filter: blur(8px) saturate(1.15);
+  box-shadow: var(--nested-outer-card-shadow);
 }
 
 .about-page .about-card__orb {
   position: absolute;
   border-radius: 999px;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(109, 155, 214, 0.22), transparent 68%);
+  background: radial-gradient(circle, rgba(109, 155, 214, 0.2), transparent 68%);
 }
 
 .about-page .about-card__orb--1 {
@@ -118,10 +122,10 @@ onMounted(async () => {
   height: 220px;
   bottom: -100px;
   left: 16%;
-  background: radial-gradient(circle, rgba(103, 183, 207, 0.2), transparent 68%);
+  background: radial-gradient(circle, rgba(103, 183, 207, 0.18), transparent 68%);
 }
 
-/* ----- 左侧：头像与站点信息 ----- */
+/* ----- 左侧：头像与站点信息（中层卡） ----- */
 .about-page .about-profile {
   position: relative;
   z-index: 1;
@@ -129,18 +133,23 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   text-align: center;
-  padding: 12px 8px;
+  padding: 30px 22px;
+  border-radius: 22px;
+  /* 轻透中层卡：叠在外层上有效底约六成白，可读性与透感兼顾 */
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow: 0 8px 22px rgba(88, 111, 214, 0.08);
 }
 
 .about-page .about-avatar-ring {
-  width: 132px;
-  height: 132px;
-  padding: 6px;
+  width: 124px;
+  height: 124px;
+  padding: 5px;
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(109, 155, 214, 0.65), rgba(103, 183, 207, 0.65));
-  box-shadow: 0 14px 30px rgba(63, 119, 181, 0.28);
+  box-shadow: 0 14px 30px rgba(63, 119, 181, 0.26);
 }
 
 .about-page .about-avatar {
@@ -154,10 +163,19 @@ onMounted(async () => {
 }
 
 .about-page .about-site-name {
-  margin: 4px 0 0;
-  font-size: 29px;
+  margin: 6px 0 0;
+  font-size: 27px;
   letter-spacing: 2px;
   color: var(--text-color);
+}
+
+.about-page .about-profile-divider {
+  display: block;
+  width: 54px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-solid), transparent);
+  opacity: 0.65;
 }
 
 .about-page .about-site-tagline {
@@ -167,22 +185,57 @@ onMounted(async () => {
   color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
 
-/* ----- 右侧：正文 ----- */
+/* 兴趣小标签：内层胶囊 */
+.about-page .about-profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.about-page .about-profile-tags span {
+  padding: 4px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--nested-inner-card-border);
+  background: var(--nested-inner-card-bg);
+  box-shadow: var(--nested-inner-card-shadow);
+  font-size: 12.5px;
+  color: var(--accent-text);
+}
+
+/* ----- 右侧：正文（中层卡） ----- */
 .about-page .about-body {
   position: relative;
   z-index: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  justify-content: center;
+  gap: 10px;
+  padding: 28px 32px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow: 0 8px 22px rgba(88, 111, 214, 0.08);
 }
 
-.about-page .about-body-title {
-  margin: 0;
-  font-size: 23px;
-  letter-spacing: 1px;
-  color: var(--text-color);
+/* 正文顶部主题色飾条，强化分区识别度 */
+.about-page .about-body::before {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-solid), rgba(103, 183, 207, 0.6));
+  margin-bottom: 4px;
+}
+
+/* Markdown 首尾去多余留白，首标题紧贴飾条 */
+.about-page .about-markdown > *:first-child {
+  margin-top: 0;
+}
+.about-page .about-markdown > *:last-child {
+  margin-bottom: 0;
 }
 
 .about-page .about-markdown {
@@ -197,7 +250,7 @@ onMounted(async () => {
   border-radius: 18px;
   text-align: center;
   border: 1.5px dashed rgba(126, 160, 198, 0.45);
-  background: color-mix(in srgb, rgba(255, 255, 255, 0.5) 80%, transparent);
+  background: var(--nested-inner-card-bg);
 }
 
 .about-page .about-placeholder-title {
@@ -213,11 +266,13 @@ onMounted(async () => {
   color: color-mix(in srgb, var(--text-color) 58%, transparent);
 }
 
-/* ========== 底部快捷入口 ========== */
+/* ========== 底部快捷入口：与主卡同语言的独立岛屿 ========== */
 .about-page .about-quick-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
+  /* 与主卡拉开呼吸距，避免两层岛屿粘连 */
+  margin-top: 26px;
 }
 
 .about-page .about-quick-card {
@@ -225,12 +280,12 @@ onMounted(async () => {
   align-items: center;
   gap: 14px;
   padding: 18px 20px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(14px) saturate(1.3);
-  -webkit-backdrop-filter: blur(14px) saturate(1.3);
-  box-shadow: 0 10px 26px rgba(88, 111, 214, 0.12);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(8px) saturate(1.15);
+  -webkit-backdrop-filter: blur(8px) saturate(1.15);
+  box-shadow: var(--nested-outer-card-shadow);
   color: var(--text-color);
   font: inherit;
   text-align: left;
@@ -240,8 +295,8 @@ onMounted(async () => {
 
 .about-page .about-quick-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(109, 155, 214, 0.55);
-  box-shadow: 0 16px 34px rgba(63, 119, 181, 0.22);
+  border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
+  box-shadow: 0 16px 34px var(--accent-glow);
 }
 
 .about-page .about-quick-card:hover .about-quick-arrow {
@@ -257,9 +312,10 @@ onMounted(async () => {
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  color: #3f77b5;
-  background: rgba(109, 155, 214, 0.16);
-  border: 1px solid rgba(109, 155, 214, 0.3);
+  color: var(--accent-text);
+  border: 1px solid var(--nested-inner-card-border);
+  background: var(--nested-inner-card-bg);
+  box-shadow: var(--nested-inner-card-shadow);
 }
 
 .about-page .about-quick-copy {
@@ -282,16 +338,27 @@ onMounted(async () => {
 .about-page .about-quick-arrow {
   margin-left: auto;
   display: inline-flex;
-  color: #3f77b5;
+  color: var(--accent-text);
   opacity: 0.55;
   transition: transform 0.24s ease, opacity 0.24s ease;
 }
 
-/* ========== 暗色模式 ========== */
+/* ========== 暗色模式：低色浆半透 + 细白描边，与设置弹窗等组件的透明语言对齐 ========== */
 html.dark .about-page .about-card {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(24, 30, 52, 0.66);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), 0 4px 12px rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(18, 21, 30, 0.42);
+}
+
+html.dark .about-page .about-profile,
+html.dark .about-page .about-body {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(26, 29, 37, 0.38);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .about-page .about-quick-card {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(26, 29, 37, 0.38);
 }
 
 html.dark .about-page .about-avatar {
@@ -299,38 +366,16 @@ html.dark .about-page .about-avatar {
   background: rgba(24, 30, 52, 0.85);
 }
 
-html.dark .about-page .about-placeholder {
-  border-color: rgba(127, 176, 221, 0.32);
-  background: rgba(18, 22, 40, 0.4);
-}
-
-html.dark .about-page .about-quick-card {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(24, 30, 52, 0.62);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.36);
-}
-
-html.dark .about-page .about-quick-card:hover {
-  border-color: rgba(127, 176, 221, 0.5);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.46);
-}
-
-html.dark .about-page .about-quick-icon,
-html.dark .about-page .about-quick-arrow {
-  color: #a8cdf0;
-}
-
-html.dark .about-page .about-quick-icon {
-  background: rgba(127, 176, 221, 0.14);
-  border-color: rgba(127, 176, 221, 0.3);
-}
-
 /* ========== 小屏适配 ========== */
 @media (max-width: 860px) {
   .about-page .about-card {
     grid-template-columns: 1fr;
-    gap: 22px;
-    padding: 28px 22px;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .about-page .about-profile {
+    padding: 24px 18px;
   }
 
   .about-page .about-quick-row {
@@ -340,9 +385,8 @@ html.dark .about-page .about-quick-icon {
 
 /* ========== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ========== */
 @media (max-width: 768px) {
-  .about-page .about-card {
-    gap: 20px;
-    padding: 26px 20px;
+  .about-page .about-body {
+    padding: 20px 18px;
   }
 
   .about-page .about-quick-row {
@@ -350,19 +394,19 @@ html.dark .about-page .about-quick-icon {
   }
 
   .about-page .about-avatar-ring {
-    width: 112px;
-    height: 112px;
+    width: 108px;
+    height: 108px;
   }
 
   .about-page .about-site-name {
-    font-size: 25px;
+    font-size: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .about-page .about-card {
-    gap: 16px;
-    padding: 22px 16px;
+    gap: 12px;
+    padding: 12px;
   }
 
   .about-page .about-avatar-ring {
@@ -371,11 +415,7 @@ html.dark .about-page .about-quick-icon {
   }
 
   .about-page .about-site-name {
-    font-size: 23px;
-  }
-
-  .about-page .about-body-title {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .about-page .about-placeholder {

@@ -296,6 +296,17 @@ html.dark {
   color: var(--adm-danger);
 }
 
+.admin-login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 14px;
+  font-size: 14px;
+  color: var(--adm-text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+
 /* ---------- 工作台外壳：侧栏 + 主区 ---------- */
 
 .admin-shell {

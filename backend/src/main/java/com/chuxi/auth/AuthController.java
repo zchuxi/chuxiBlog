@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.chuxi.common.R;
 import com.chuxi.entity.SiteContent;
 import com.chuxi.repo.SiteContentRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +21,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     static final String ADMIN_USERNAME = "admin";
     static final String DEFAULT_PASSWORD = "123456";
@@ -40,12 +44,15 @@ public class AuthController {
                                         jakarta.servlet.http.HttpServletRequest request) {
         String ip = clientIp(request);
         if (isLocked(ip)) {
+            log.warn("登录请求被限流拒绝：ip={}, uri={}", ip, request.getRequestURI());
             return R.fail("失败次数过多，请 " + LOCK_MINUTES + " 分钟后再试");
         }
         String username = body.getOrDefault("username", "");
         String password = body.getOrDefault("password", "");
         if (!ADMIN_USERNAME.equals(username) || !PasswordHasher.matches(password, storedPassword())) {
             recordFailure(ip);
+            // 只记用户名与来源 IP，不落口令
+            log.warn("登录鉴权失败：ip={}, username={}, uri={}", ip, username, request.getRequestURI());
             return R.fail("账号或密码错误");
         }
         FAILURES.remove(ip);
@@ -89,6 +96,7 @@ public class AuthController {
             // 只存哈希，绝不落明文
             sc.setContentJson(mapper.writeValueAsString(Map.of("password", PasswordHasher.hash(newPassword))));
         } catch (Exception e) {
+            log.error("修改密码时序列化失败：key={}", PASSWORD_KEY, e);
             return ResponseEntity.ok(R.fail("密码保存失败"));
         }
         sc.setUpdatedAt(LocalDateTime.now());
@@ -104,6 +112,7 @@ public class AuthController {
                         String pwd = mapper.readTree(sc.getContentJson()).path("password").asText("");
                         return pwd.isEmpty() ? DEFAULT_PASSWORD : pwd;
                     } catch (Exception e) {
+                        log.warn("解析存储密码 JSON 失败，回退默认口令：key={}, err={}", PASSWORD_KEY, e.getMessage());
                         return DEFAULT_PASSWORD;
                     }
                 })
@@ -123,8 +132,9 @@ public class AuthController {
             sc.setContentJson(mapper.writeValueAsString(Map.of("password", PasswordHasher.hash(rawPassword))));
             sc.setUpdatedAt(LocalDateTime.now());
             siteContentRepo.save(sc);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             // 升级失败不影响本次登录
+            log.warn("明文密码升级为哈希失败（不影响本次登录）：key={}", PASSWORD_KEY, e);
         }
     }
 

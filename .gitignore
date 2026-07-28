@@ -1,6 +1,7 @@
 # 构建产物
 backend/target/
 frontend/dist/
+frontend/dist_fresh*/
 frontend/node_modules/
 
 # 运行时数据
