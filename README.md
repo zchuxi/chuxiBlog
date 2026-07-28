@@ -21,6 +21,12 @@
 - **功能特性按边界拆分提交**：一个提交只做一件事，互不相关的特性/修复各自成提交，使 `git log --oneline` 可按特性归因、可选择性回退
 - 本约定仅对**后续提交**生效，不要求重写既有历史
 
+## 改动后验证（约定）
+
+- **后端改动后必须在 `backend/` 目录运行 `mvn test`**：冒烟测试 `BlogApplicationTests` 会完整加载 Spring 上下文（H2 内存库替代 MySQL，测试配置见 `src/test/resources/application.yml`，无需本地 MySQL/OSS），Bean 装配、实体映射、种子数据导入出错都会直接失败
+- **前端改动后在 `frontend/` 目录运行 `npm run build`**，以构建通过作为机械检查（暂未引入 lint/type 检查，按需另行评估）
+- `start-backend.bat` 打包时保留 `-DskipTests`（启动提速），因此**跳过测试仅限启动脚本，提交前仍须手动跑 `mvn test`**
+
 ## 页面清单
 
 | 路由 | 内容 |
