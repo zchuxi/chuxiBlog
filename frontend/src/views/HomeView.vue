@@ -532,8 +532,8 @@ onMounted(async () => {
 }
 .home-page .home-landing__actions {
   display: flex;
-  gap: 14px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 16px;
   flex-wrap: wrap;
 }
 .home-page .home-landing__btn {
@@ -542,95 +542,97 @@ onMounted(async () => {
   overflow: hidden;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: 6px;
+  padding: 10px 22px;
   border-radius: 999px;
-  border: 1px solid var(--accent-border);
-  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
-  color: var(--accent-text);
+  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  background: rgba(255, 255, 255, 0.18);
+  color: color-mix(in srgb, var(--text-color) 92%, transparent);
   font: inherit;
-  font-size: 16.5px;
+  font-size: 15.5px;
   font-weight: 600;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 8px 20px rgba(63, 119, 181, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  transition: transform 0.24s ease, box-shadow 0.28s ease, background 0.24s ease, border-color 0.24s ease, color 0.24s ease;
-}
-/* 扫光层：悬停时掠过一道高光 */
-.home-page .home-landing__btn::before {
-  content: "";
-  position: absolute;
-  top: -120%;
-  left: -40%;
-  z-index: -1;
-  width: 42%;
-  height: 340%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-  opacity: 0;
-  transform: rotate(18deg) translate(-180%);
-  pointer-events: none;
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
+  box-shadow:
+    0 4px 14px color-mix(in srgb, var(--text-color) 6%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.26s ease,
+    background-color 0.24s ease,
+    border-color 0.24s ease,
+    color 0.24s ease;
 }
 .home-page .home-landing__btn .svg-icon {
-  transition: transform 0.24s ease;
+  opacity: 0.9;
+  transition: transform 0.24s ease, opacity 0.24s ease;
 }
 .home-page .home-landing__btn:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
-  box-shadow: 0 12px 28px rgba(63, 119, 181, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.32);
+  border-color: color-mix(in srgb, var(--text-color) 22%, transparent);
+  box-shadow:
+    0 8px 22px color-mix(in srgb, var(--text-color) 10%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-.home-page .home-landing__btn:hover::before {
-  opacity: 0.6;
-  animation: home-landing-btn-sheen 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+.home-page .home-landing__btn:hover .svg-icon {
+  opacity: 1;
 }
 .home-page .home-landing__btn:active {
   transform: translateY(0) scale(0.98);
 }
 .home-page .home-landing__btn--primary {
-  border-color: color-mix(in srgb, var(--accent-strong) 58%, rgba(255, 255, 255, 0.4));
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-solid) 88%, #ffffff) 0%, var(--accent-strong) 100%);
-  color: #f7fbff;
-  text-shadow: 0 1px 3px rgba(31, 68, 110, 0.35);
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent-strong) 38%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -8px 16px color-mix(in srgb, var(--accent-strong) 40%, transparent);
+  /* 玻璃浅底主按钮：主色用 accent 但走"边框+字+内发光"高亮，不铺实色填充 */
+  color: var(--accent-strong);
+  border-color: color-mix(in srgb, var(--accent-solid) 42%, transparent);
+  background: color-mix(in srgb, var(--accent-solid) 14%, rgba(255, 255, 255, 0.18));
+  box-shadow:
+    0 6px 18px color-mix(in srgb, var(--accent-solid) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -10px 18px color-mix(in srgb, var(--accent-solid) 8%, transparent);
 }
 .home-page .home-landing__btn--primary:hover {
-  border-color: color-mix(in srgb, var(--accent-strong) 66%, rgba(255, 255, 255, 0.5));
-  box-shadow: 0 14px 32px color-mix(in srgb, var(--accent-strong) 46%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -8px 16px color-mix(in srgb, var(--accent-strong) 38%, transparent);
+  color: color-mix(in srgb, var(--accent-strong) 90%, #ffffff);
+  border-color: color-mix(in srgb, var(--accent-solid) 60%, transparent);
+  background-color: color-mix(in srgb, var(--accent-solid) 22%, rgba(255, 255, 255, 0.24));
+  box-shadow:
+    0 10px 26px color-mix(in srgb, var(--accent-solid) 32%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .home-page .home-landing__btn--primary:hover .svg-icon {
-  transform: translateY(2px);
-}
-@keyframes home-landing-btn-sheen {
-  0% { transform: rotate(18deg) translate(-220%); }
-  100% { transform: rotate(18deg) translate(300%); }
+  transform: translateX(2px);
+  opacity: 1;
 }
 html.dark .home-page .home-landing__btn {
-  border-color: var(--accent-border);
-  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
-  color: var(--accent-text);
-  box-shadow: 0 8px 20px rgba(3, 8, 17, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: color-mix(in srgb, var(--text-color) 96%, transparent);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 html.dark .home-page .home-landing__btn:hover {
-  border-color: color-mix(in srgb, var(--accent-solid) 48%, transparent);
-  box-shadow: 0 12px 28px rgba(3, 8, 17, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 html.dark .home-page .home-landing__btn--primary {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-solid) 88%, #ffffff 8%) 0%, var(--accent-strong) 100%);
-  color: #f5f9ff;
-  text-shadow: 0 1px 3px rgba(3, 8, 17, 0.4);
-  box-shadow: 0 10px 26px rgba(3, 8, 17, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.22);
+  color: color-mix(in srgb, var(--accent-solid) 88%, #ffffff);
+  background: color-mix(in srgb, var(--accent-solid) 18%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--accent-solid) 48%, transparent);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -10px 18px color-mix(in srgb, var(--accent-solid) 14%, transparent);
 }
 html.dark .home-page .home-landing__btn--primary:hover {
-  box-shadow: 0 14px 32px rgba(3, 8, 17, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  background-color: color-mix(in srgb, var(--accent-solid) 28%, rgba(255, 255, 255, 0.1));
+  border-color: color-mix(in srgb, var(--accent-solid) 70%, transparent);
 }
 .home-page .home-landing__aside {
   display: flex;
