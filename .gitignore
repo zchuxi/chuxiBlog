@@ -20,3 +20,8 @@ avatar.png
 
 # Claude 会话内部文件
 .claude/
+.qoder/
+
+# AI 助手临时截图/裁图产物
+.qoder-*.png
+.tmp-crop-*.png

@@ -1,27 +1,4 @@
 <template>
-  <transition name="entry-loader">
-    <div v-if="loading" class="entry-loader">
-      <span class="entry-loader__orb entry-loader__orb--blue"></span>
-      <span class="entry-loader__orb entry-loader__orb--mint"></span>
-      <span class="entry-loader__orb entry-loader__orb--peach"></span>
-      <div class="entry-loader__card">
-        <div class="entry-loader__pet">
-          <span class="entry-loader__pet-ear entry-loader__pet-ear--left"></span>
-          <span class="entry-loader__pet-ear entry-loader__pet-ear--right"></span>
-          <span class="entry-loader__pet-eye entry-loader__pet-eye--left"></span>
-          <span class="entry-loader__pet-eye entry-loader__pet-eye--right"></span>
-          <span class="entry-loader__pet-blush entry-loader__pet-blush--left"></span>
-          <span class="entry-loader__pet-blush entry-loader__pet-blush--right"></span>
-          <span class="entry-loader__pet-mouth"></span>
-        </div>
-        <p class="entry-loader__tag">Now Loading</p>
-        <h2 class="entry-loader__title">正在整理今天的小灵感</h2>
-        <p class="entry-loader__desc">把云朵、卡片和一点点好心情都摆放整齐。</p>
-        <div class="entry-loader__dots"><span></span><span></span><span></span></div>
-      </div>
-    </div>
-  </transition>
-
   <div class="app-shell">
     <!-- 主题切换日月过渡 -->
     <div
@@ -626,9 +603,6 @@ const settings = useSettingsStore()
 const route = useRoute()
 const router = useRouter()
 
-/* ---------- 入场加载 ---------- */
-const loading = ref(true)
-
 /* ---------- 主题 ---------- */
 const themeAnimating = ref(false)
 let themeTimer = null
@@ -965,11 +939,20 @@ watch(() => settings.sakuraEnabled, val => {
   else stopSakura()
 })
 
-// 猫爪吊绳：返回顶部
+// 猫爪吊绳：返回顶部（收起交给滚动监听，回到顶部后自动消失）
 function scrollMainToTop() {
   const main = document.querySelector('.app-shell-main')
   if (main) main.scrollTo({ top: 0, behavior: 'smooth' })
-  pawOpen.value = false
+}
+
+// 向下滚动自动展开吊绳，回到顶部自动收起
+let pawScrollEl = null
+function onMainScroll() {
+  pawOpen.value = pawScrollEl && pawScrollEl.scrollTop > 120
+}
+function bindPawScroll() {
+  pawScrollEl = document.querySelector('.app-shell-main')
+  if (pawScrollEl) pawScrollEl.addEventListener('scroll', onMainScroll, { passive: true })
 }
 
 /* ---------- 搜索 ---------- */
@@ -1044,8 +1027,8 @@ function onResize() {
 onMounted(() => {
   document.documentElement.classList.toggle('dark', settings.isDark)
   api.bumpViews().catch(() => {})
-  setTimeout(() => { loading.value = false }, 900)
   nextTick(updateIndicator)
+  nextTick(bindPawScroll)
   window.addEventListener('resize', onResize)
   window.addEventListener('keydown', onAuthKeydown)
   startBgCarousel()
@@ -1056,6 +1039,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
   window.removeEventListener('keydown', onAuthKeydown)
+  if (pawScrollEl) pawScrollEl.removeEventListener('scroll', onMainScroll)
   stopBgCarousel()
   stopSakura()
   clearTimeout(themeTimer)
