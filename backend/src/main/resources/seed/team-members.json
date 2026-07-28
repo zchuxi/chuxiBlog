@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "displayName": "初曦",
+    "email": "yonah@example.com",
+    "avatarUrl": "https://ai.lin-xin.top/public/blog/dev/user/1/bdf52d2ce0e34d919239c527312569cb.webp",
+    "roleCode": "SUPER_ADMIN",
+    "roleLabel": "博主",
+    "position": "站点主理人",
+    "description": "一个小透明，记录和分享一些东西",
+    "createdAt": "2026-02-28T19:23:43",
+    "updatedAt": "2026-03-05T10:28:13"
+  },
+  {
+    "id": 3,
+    "displayName": "mashiro",
+    "email": "mashiro@example.com",
+    "avatarUrl": "https://ai.lin-xin.top/public/blog/dev/user/1/bdf52d2ce0e34d919239c527312569cb.webp",
+    "roleCode": "ASSISTANT",
+    "roleLabel": "后台助手",
+    "position": "内容与运维助手",
+    "description": "负责后台巡检、资料整理与日常协作支持，保障内容流转稳定。",
+    "createdAt": "2026-02-28T19:23:43",
+    "updatedAt": "2026-03-04T19:09:01"
+  }
+]

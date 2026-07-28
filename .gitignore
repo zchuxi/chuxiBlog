@@ -1,0 +1,22 @@
+# 构建产物
+backend/target/
+frontend/dist/
+frontend/node_modules/
+
+# 运行时数据
+backend/uploads/
+*.log
+nohup.out
+
+# IDE / 系统
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# 本地素材（网站图标已在 frontend/public 内，源图不入库）
+avatar.png
+
+# Claude 会话内部文件
+.claude/

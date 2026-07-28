@@ -1,0 +1,92 @@
+[
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "hello",
+    "createdAt": "2026-03-15T13:33:46",
+    "updatedAt": "2026-03-15T13:33:46"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "你好呀",
+    "createdAt": "2026-03-15T11:10:41",
+    "updatedAt": "2026-03-15T16:51:55"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "哈哈哈",
+    "createdAt": "2026-04-17T09:40:59",
+    "updatedAt": "2026-04-17T09:40:59"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "1",
+    "createdAt": "2026-04-17T14:34:51",
+    "updatedAt": "2026-04-17T14:34:51"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "1",
+    "createdAt": "2026-04-17T14:34:51",
+    "updatedAt": "2026-04-17T14:34:51"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "你好呀",
+    "createdAt": "2026-04-17T14:38:42",
+    "updatedAt": "2026-04-17T14:38:42"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "你好呀",
+    "createdAt": "2026-04-17T14:53:56",
+    "updatedAt": "2026-04-17T14:53:56"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "你好",
+    "createdAt": "2026-04-17T15:20:47",
+    "updatedAt": "2026-04-17T15:20:47"
+  },
+  {
+    "userId": 1,
+    "nickname": "树友-0001",
+    "mood": "轻声",
+    "likeCount": 0,
+    "liked": false,
+    "content": "你是谁",
+    "createdAt": "2026-04-17T15:27:03",
+    "updatedAt": "2026-04-17T15:27:03"
+  }
+]

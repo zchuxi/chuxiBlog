@@ -1,0 +1,72 @@
+[
+  {
+    "id": 7,
+    "title": "记录前端开发中的真实实践",
+    "description": "这部分聚焦 Vue、工程化、页面实现与问题排查，记录开发过程中真正有参考价值的经验。",
+    "content": "我会把前端开发里的组件封装、交互实现、接口联调、性能优化和踩坑过程认真整理出来，让内容不仅能看，也能在实际项目里复用和参考。",
+    "imageUrl": "https://ai.lin-xin.top/public/blog/prod/front/home/9fe0eae37fb34418b2670061faf68fe2.webp",
+    "sortIndex": 55,
+    "createdAt": "2026-03-10T10:31:56",
+    "updatedAt": "2026-04-19T16:45:44",
+    "sceneLabel": "SCENE 01",
+    "kicker": "PERSPECTIVE",
+    "badge": "04/19",
+    "visible": true
+  },
+  {
+    "id": 6,
+    "title": "把设计灵感与生活观察写下来",
+    "description": "除了技术内容，也会分享界面审美、产品感受和日常片段，让博客保持更完整的个人气质。",
+    "content": "写博客对我来说不只是输出知识，也是在整理审美、节奏和生活感受；所以这里会同时出现页面设计灵感、使用体验观察，以及那些想慢慢写下来的日常片段。",
+    "imageUrl": "https://ai.lin-xin.top/public/blog/prod/front/home/06d3caa2aee640fbaeb0adfbff4044bb.webp",
+    "sortIndex": 44,
+    "createdAt": "2026-03-10T10:31:27",
+    "updatedAt": "2026-04-19T16:45:51",
+    "sceneLabel": "SCENE 02",
+    "kicker": "PERSPECTIVE",
+    "badge": "04/19",
+    "visible": true
+  },
+  {
+    "id": 5,
+    "title": "持续更新的个人内容实验室",
+    "description": "这里不是一次性展示页，而是会随着项目、阅读和生活持续扩展的长期记录空间。",
+    "content": "相比零散发布内容，我更想把这里做成一个长期更新的个人内容实验室：一边迭代博客本身，一边持续补充文章、想法、作品和阶段性的成长记录。",
+    "imageUrl": "https://ai.lin-xin.top/public/blog/prod/front/home/856e66fde207403995d83a36ddce9569.webp",
+    "sortIndex": 33,
+    "createdAt": "2026-03-10T10:31:10",
+    "updatedAt": "2026-04-19T16:45:56",
+    "sceneLabel": "SCENE 03",
+    "kicker": "PERSPECTIVE",
+    "badge": "04/19",
+    "visible": true
+  },
+  {
+    "id": 4,
+    "title": "在这里沉淀经验、作品与思考",
+    "description": "希望每一篇文章、每一个页面和每一次整理，都能逐步沉淀成更清晰的个人作品集与思考档案。",
+    "content": "如果你想了解我在做什么、如何思考前端页面和内容表达，或者只是想找一个安静浏览技术与生活交叉内容的地方，这里会慢慢变得更完整。",
+    "imageUrl": "https://ai.lin-xin.top/public/blog/prod/front/home/264c3dcb42204ad098c5233f9cbffd68.webp",
+    "sortIndex": 22,
+    "createdAt": "2026-03-10T10:31:01",
+    "updatedAt": "2026-04-19T16:46:03",
+    "sceneLabel": "SCENE 04",
+    "kicker": "PERSPECTIVE",
+    "badge": "04/19",
+    "visible": true
+  },
+  {
+    "id": 3,
+    "title": "一个持续生长的内容实验室",
+    "description": "博客不只展示结果，也保留过程里的思考、试错和那些值得回看的瞬间。",
+    "content": "相比快速堆积内容，我更想让这里成为一个长期更新的内容实验室，慢慢积累清晰、有温度、可回看的文字与作品。",
+    "imageUrl": "https://ai.lin-xin.top/public/blog/prod/front/home/5f92afabdd8447679e0cb7f1f0778179.webp",
+    "sortIndex": 0,
+    "createdAt": "2026-03-06T00:32:26",
+    "updatedAt": "2026-04-19T16:46:09",
+    "sceneLabel": "SCENE 05",
+    "kicker": "PERSPECTIVE",
+    "badge": "04/19",
+    "visible": true
+  }
+]
