@@ -36,6 +36,14 @@
           <label class="admin-field-label">次按钮文字</label>
           <input v-model="form.secondaryBtn" class="admin-input" type="text" placeholder="如：了解更多" />
         </div>
+        <div class="admin-field">
+          <label class="admin-field-label">主按钮跳转目标</label>
+          <AdminSelect v-model="form.primaryTarget" :options="PAGE_TARGETS" />
+        </div>
+        <div class="admin-field">
+          <label class="admin-field-label">次按钮跳转目标</label>
+          <AdminSelect v-model="form.secondaryTarget" :options="PAGE_TARGETS" />
+        </div>
       </div>
     </div>
 
@@ -92,6 +100,7 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import { siteContentApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
+import AdminSelect from './AdminSelect.vue'
 
 const props = defineProps({
   // home-landing | about | archive-hero
@@ -105,7 +114,7 @@ const settings = useSettingsStore()
 const META = {
   'home-landing': {
     title: '首页内容',
-    desc: '此处内容对应前台首页落地页：大标题、副标题、轮播欢迎语和两个按钮的文字。'
+    desc: '此处内容对应前台首页落地页：大标题、副标题、轮播欢迎语与两个按钮的文字和跳转目标。'
   },
   about: {
     title: '关于页',
@@ -119,6 +128,21 @@ const META = {
 
 const meta = computed(() => META[props.contentKey] || { title: '站点文案', desc: '' })
 
+// 按钮可选的跳转目标：# 开头为首页内锚点滚动，其余为站内路由
+const PAGE_TARGETS = [
+  { label: '首页 · 滚动到文章列表', value: '#articles' },
+  { label: '首页 · 滚动到首屏轮播', value: '#hero' },
+  { label: '关于页', value: '/about' },
+  { label: '工具页', value: '/tool' },
+  { label: '番剧记录', value: '/bangumi' },
+  { label: '每日放送', value: '/calendar' },
+  { label: '时间线', value: '/timeline' },
+  { label: '树洞', value: '/tree-hole' },
+  { label: '视差故事', value: '/parallax' },
+  { label: '归档页', value: '/archive' },
+  { label: '组件展示', value: '/components' }
+]
+
 const loading = ref(false)
 const saving = ref(false)
 const form = ref(defaultForm(props.contentKey))
@@ -126,7 +150,7 @@ const form = ref(defaultForm(props.contentKey))
 // 各 key 的默认结构（表单态：数组字段用多行文本承载）
 function defaultForm(key) {
   if (key === 'home-landing') {
-    return { title: '', subtitle: '', welcomeText: '', primaryBtn: '', secondaryBtn: '' }
+    return { title: '', subtitle: '', welcomeText: '', primaryBtn: '', secondaryBtn: '', primaryTarget: '#articles', secondaryTarget: '/about' }
   }
   if (key === 'archive-hero') {
     return { eyebrow: '', title: '', description: '', notesText: '' }
@@ -172,7 +196,9 @@ function fillForm(obj) {
       subtitle: obj.subtitle || '',
       welcomeText: toLines(obj.welcome),
       primaryBtn: obj.primaryBtn || '',
-      secondaryBtn: obj.secondaryBtn || ''
+      secondaryBtn: obj.secondaryBtn || '',
+      primaryTarget: obj.primaryTarget || '#articles',
+      secondaryTarget: obj.secondaryTarget || '/about'
     }
   } else if (key === 'archive-hero') {
     form.value = {
@@ -198,7 +224,9 @@ function buildContent() {
       subtitle: f.subtitle || '',
       welcome: fromLines(f.welcomeText),
       primaryBtn: f.primaryBtn || '',
-      secondaryBtn: f.secondaryBtn || ''
+      secondaryBtn: f.secondaryBtn || '',
+      primaryTarget: f.primaryTarget || '#articles',
+      secondaryTarget: f.secondaryTarget || '/about'
     }
   }
   if (key === 'archive-hero') {

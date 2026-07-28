@@ -384,7 +384,7 @@ function buildPayload() {
         .filter(Boolean)
     } else if (field.type === 'number') {
       payload[field.name] = raw === '' || raw == null ? null : Number(raw)
-    } else if (field.type === 'datetime') {
+    } else if (field.type === 'datetime' || field.type === 'date') {
       payload[field.name] = raw === '' ? null : raw
     } else {
       payload[field.name] = raw

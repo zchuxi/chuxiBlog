@@ -1,5 +1,5 @@
 // 资源 schema 配置：驱动侧边栏菜单、表格列与编辑表单
-// type 取值: text / textarea / markdown / number / boolean / tags / datetime / image
+// type 取值: text / textarea / markdown / number / boolean / tags / date / datetime / image
 // columns 为表格展示列（3-5 个代表字段）；wide 表示编辑用宽抽屉
 // image 字段可配 ratio（宽/高）：站内图裁切时按该比例锁定，与前台显示比例对齐
 // batch: true 的字段参与列表多选后的批量修改（select/boolean 下拉，number/text 弹窗输入）
@@ -113,7 +113,7 @@ export const resourceSchemas = [
       { name: 'title', label: '标题', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'imageUrl', label: '图片', type: 'image' },
-      { name: 'timelineDate', label: '事件日期（如 2026-03-01）', type: 'text' },
+      { name: 'timelineDate', label: '事件日期', type: 'date' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]

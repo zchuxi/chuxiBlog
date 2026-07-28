@@ -11,11 +11,11 @@
             <p v-for="(w, wi) in landingCopy.welcome" :key="wi">{{ w }}</p>
           </div>
           <div class="home-landing__actions">
-            <button type="button" class="home-landing__btn home-landing__btn--primary" @click="scrollToSection('.dashboard-feed-anchor')">
+            <button type="button" class="home-landing__btn home-landing__btn--primary" @click="goTarget(landingCopy.primaryTarget)">
               {{ landingCopy.primaryBtn }}
               <SvgIcon name="common-arrow" size="14px" />
             </button>
-            <button type="button" class="home-landing__btn" @click="scrollToSection('.dashboard-highlight')">
+            <button type="button" class="home-landing__btn" @click="goTarget(landingCopy.secondaryTarget)">
               {{ landingCopy.secondaryBtn }}
               <SvgIcon name="common-person" size="14px" />
             </button>
@@ -272,7 +272,9 @@ const DEFAULT_LANDING = {
   subtitle: '记录一些好用的工具以及番剧内容',
   welcome: ['欢迎来到我的小站！', '希望这些分享，能给你带来一点启发与温暖。'],
   primaryBtn: '查看最新文章',
-  secondaryBtn: '关于我'
+  secondaryBtn: '关于我',
+  primaryTarget: '#articles',
+  secondaryTarget: '/about'
 }
 const landingCopy = ref({ ...DEFAULT_LANDING })
 
@@ -285,7 +287,9 @@ function applyLandingCopy(record) {
       subtitle: parsed.subtitle || DEFAULT_LANDING.subtitle,
       welcome: Array.isArray(parsed.welcome) && parsed.welcome.length ? parsed.welcome : DEFAULT_LANDING.welcome,
       primaryBtn: parsed.primaryBtn || DEFAULT_LANDING.primaryBtn,
-      secondaryBtn: parsed.secondaryBtn || DEFAULT_LANDING.secondaryBtn
+      secondaryBtn: parsed.secondaryBtn || DEFAULT_LANDING.secondaryBtn,
+      primaryTarget: parsed.primaryTarget || DEFAULT_LANDING.primaryTarget,
+      secondaryTarget: parsed.secondaryTarget || DEFAULT_LANDING.secondaryTarget
     }
   } catch { /* JSON 异常时保持默认文案 */ }
 }
@@ -377,6 +381,22 @@ async function loadVisits() {
 function scrollToSection(selector) {
   const el = document.querySelector(selector)
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// 首页内锚点标识 -> 实际滚动目标
+const ANCHOR_TARGETS = {
+  '#articles': '.dashboard-feed-anchor',
+  '#hero': '.dashboard-highlight'
+}
+
+// 按钮跳转：# 开头按锚点滚动，其余走站内路由（后台可配）
+function goTarget(target) {
+  const t = String(target || '')
+  if (t.startsWith('#')) {
+    scrollToSection(ANCHOR_TARGETS[t] || ANCHOR_TARGETS['#articles'])
+    return
+  }
+  if (t.startsWith('/')) router.push(t)
 }
 
 /* 折叠卡片 */
@@ -685,6 +705,11 @@ html.dark .home-page .home-landing__scroll-hint {
 }
 
 /* ========== 第二屏：HERO 轮播全宽一屏 ========== */
+/* 滚动定位目标给悬浮顶栏留位 */
+.home-page .dashboard-feed-anchor,
+.home-page .dashboard-highlight {
+  scroll-margin-top: 82px;
+}
 .home-page .dashboard-highlight {
   grid-template-columns: 1fr;
   align-items: stretch;

@@ -33,6 +33,25 @@
       @input="emit('update:modelValue', $event.target.value)"
     />
 
+    <!-- 日期时间 / 日期：原生日历弹层，color-scheme 跟随明暗主题（admin.css） -->
+    <input
+      v-else-if="field.type === 'datetime'"
+      class="admin-input"
+      type="datetime-local"
+      step="1"
+      :value="dateValue"
+      :disabled="disabled"
+      @input="emit('update:modelValue', $event.target.value)"
+    />
+    <input
+      v-else-if="field.type === 'date'"
+      class="admin-input"
+      type="date"
+      :value="dateValue"
+      :disabled="disabled"
+      @input="emit('update:modelValue', $event.target.value)"
+    />
+
     <!-- 下拉选择（自绘面板，主题一致） -->
     <AdminSelect
       v-else-if="field.type === 'select'"
@@ -94,7 +113,7 @@
       />
     </div>
 
-    <!-- 其余类型统一为文本输入（tags/datetime 带提示） -->
+    <!-- 其余类型统一为文本输入（tags 带提示） -->
     <template v-else>
       <input
         class="admin-input"
@@ -207,8 +226,13 @@ async function onUploadAudio(e) {
   }
 }
 
+// 日历控件只认 "YYYY-MM-DD[THH:mm:ss]"，裁掉后端 LocalDateTime 可能带的纳秒尾巴
+const dateValue = computed(() => {
+  const v = typeof props.modelValue === 'string' ? props.modelValue : ''
+  return props.field.type === 'date' ? v.slice(0, 10) : v.slice(0, 19)
+})
+
 const placeholder = computed(() => {
-  if (props.field.type === 'datetime') return '如 2026-03-01T12:00:00'
   if (props.field.type === 'image') return '图片 URL'
   return ''
 })

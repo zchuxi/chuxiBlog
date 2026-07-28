@@ -149,6 +149,43 @@ html.dark {
   cursor: not-allowed;
 }
 
+/* 数字输入：原生步进箭头是系统白底控件、无法换肤，与主题冲突，统一隐藏；
+   仍可直接键入或用 ↑/↓ 方向键增减 */
+.admin-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.admin-input[type='number']::-webkit-outer-spin-button,
+.admin-input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 日期/日期时间输入：日历弹层是浏览器控件无法自绘，
+   用 color-scheme 让弹层跟随明暗主题，避免暗色下弹出刺眼白底 */
+.admin-input[type='date'],
+.admin-input[type='datetime-local'] {
+  color-scheme: light;
+}
+
+html.dark .admin-input[type='date'],
+html.dark .admin-input[type='datetime-local'] {
+  color-scheme: dark;
+}
+
+.admin-input[type='date']::-webkit-calendar-picker-indicator,
+.admin-input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.admin-input[type='date']::-webkit-calendar-picker-indicator:hover,
+.admin-input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 .admin-textarea {
   resize: vertical;
   min-height: 72px;
