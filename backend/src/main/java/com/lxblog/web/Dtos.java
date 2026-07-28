@@ -56,6 +56,7 @@ public final class Dtos {
         m.put("categoryId", t.getCategoryId());
         m.put("category", t.getCategory());
         m.put("iconUrl", t.getIconUrl() == null ? "" : t.getIconUrl());
+        m.put("imageUrl", t.getImageUrl() == null ? "" : t.getImageUrl());
         m.put("tags", splitTags(t.getTags()));
         m.put("highlight", t.getHighlight() == null ? "" : t.getHighlight());
         m.put("featured", Boolean.TRUE.equals(t.getFeatured()));

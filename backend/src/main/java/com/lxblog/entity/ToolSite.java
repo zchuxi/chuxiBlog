@@ -27,6 +27,9 @@ public class ToolSite {
     private String category;
     @Column(length = 500)
     private String iconUrl;
+    /** 详情页展示图（截图/配图），可空 */
+    @Column(length = 500)
+    private String imageUrl;
     private String tags;
     private String highlight;
     private Boolean featured;

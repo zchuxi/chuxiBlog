@@ -59,14 +59,16 @@
     <header class="app-shell-top">
       <div class="shell-brand">
         <span>初曦的窝</span>
-        <nav ref="navRef" class="shell-nav">
+        <nav ref="navRef" class="shell-nav" @mouseleave="hoverPath = ''">
           <span class="nav-indicator" :style="indicatorStyle"></span>
+          <span class="nav-underline" :style="underlineStyle"></span>
           <RouterLink
             v-for="item in navItems"
             :key="item.path"
             :to="item.path"
             class="nav-link"
             :class="{ 'is-active': isNavActive(item.path) }"
+            @mouseenter="hoverPath = item.path"
           >
             <span class="nav-link__content">
               <SvgIcon :name="item.icon" class="nav-link__icon" />
@@ -178,7 +180,7 @@
                 <button type="button" class="control-btn" @click="cyclePlayMode">
                   <SvgIcon :name="playModeIcon" size="16px" />
                 </button>
-                <button type="button" class="control-btn" @click="seekBy(-10)">
+                <button type="button" class="control-btn is-seek-back" @click="seekBy(-10)">
                   <SvgIcon name="music-back" size="16px" />
                 </button>
                 <button type="button" class="control-btn" @click="prevTrack">
@@ -190,10 +192,10 @@
                 <button type="button" class="control-btn" @click="nextTrack">
                   <SvgIcon name="music-next" size="16px" />
                 </button>
-                <button type="button" class="control-btn" @click="seekBy(10)">
+                <button type="button" class="control-btn is-seek-forward" @click="seekBy(10)">
                   <SvgIcon name="music-forward" size="16px" />
                 </button>
-                <button type="button" class="control-btn" @click="cyclePlayMode">
+                <button type="button" class="control-btn is-repeat-dup" @click="cyclePlayMode">
                   <SvgIcon name="music-repeat" size="16px" />
                 </button>
               </div>
@@ -686,18 +688,21 @@ const navItems = [
 ]
 const navRef = ref(null)
 const indicatorStyle = ref({})
+const underlineStyle = ref({})
+const hoverPath = ref('')
 const mobileNavOpen = ref(false)
 
 function isNavActive(path) {
   if (path === '/index') return route.path === '/index' || route.path.startsWith('/article')
-  return route.path === path
+  // 详情页（/tool/1、/bangumi/1…）保持父级导航高亮
+  return route.path === path || route.path.startsWith(`${path}/`)
 }
 
 function updateIndicator() {
   const nav = navRef.value
   if (!nav) return
   const active = nav.querySelector('.nav-link.is-active')
-  if (!active) { indicatorStyle.value = { opacity: 0 }; return }
+  if (!active) { indicatorStyle.value = { opacity: 0 }; updateUnderline(); return }
   const navRect = nav.getBoundingClientRect()
   const rect = active.getBoundingClientRect()
   const cx = rect.left - navRect.left + rect.width / 2
@@ -708,8 +713,27 @@ function updateIndicator() {
     height: `${rect.height}px`,
     opacity: 1
   }
+  updateUnderline()
 }
 
+/* 下划线：常态停在当前页，悬停时跟随，移开弹回 */
+function updateUnderline() {
+  const nav = navRef.value
+  if (!nav) return
+  const target = hoverPath.value
+    ? nav.querySelector(`.nav-link[href="${hoverPath.value}"]`)
+    : nav.querySelector('.nav-link.is-active')
+  if (!target) { underlineStyle.value = { opacity: 0 }; return }
+  const navRect = nav.getBoundingClientRect()
+  const rect = target.getBoundingClientRect()
+  underlineStyle.value = {
+    transform: `translateX(${rect.left - navRect.left + rect.width / 2}px) translateX(-50%)`,
+    width: `${Math.max(18, rect.width * 0.52)}px`,
+    opacity: 1
+  }
+}
+
+watch(hoverPath, () => nextTick(updateUnderline))
 watch(() => route.path, () => nextTick(updateIndicator))
 
 function goNav(path) {
@@ -1612,5 +1636,206 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(24, 30, 52, 0.72);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ========== 移动端适配（追加段，只在小屏生效，不影响桌面端） ========== */
+
+/* 问题1（基础修复，所有宽度生效且对桌面无副作用）：
+   品牌文字禁止折行、禁止被 flex 压缩，杜绝“初曦的窝”逐字竖排 */
+.shell-brand > span {
+  white-space: nowrap;
+  flex: none;
+}
+
+@media (max-width: 768px) {
+  /* 问题1+6：顶栏岛屿 margin 收紧为 8px 10px 0，内边距同步收紧；
+     顶栏单行布局 = [品牌 | 弹性空隙 | menu 按钮 | 动作按钮组] */
+  .app-shell > .app-shell-top {
+    margin: 8px 10px 0;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .app-shell-top .shell-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .app-shell-top .shell-brand > span {
+    font-size: 15px;
+  }
+
+  /* menu 按钮（在 .shell-brand 内的 popover 包装器里）推到品牌区右端，
+     形成品牌与 menu 之间的弹性空隙 */
+  .app-shell-top .shell-brand > .lx-popover-wrapper {
+    margin-left: auto;
+    flex: none;
+  }
+
+  /* 触控目标 ≥40px（含 menu 按钮，均为 .shell-action-btn） */
+  .app-shell-top .shell-action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .app-shell-top .shell-actions {
+    gap: 5px;
+  }
+
+  /* 问题4（AI 侧栏）：layout.css 在 ≤768px 隐藏了 is-ai 按钮，
+     但它是移动端 AI 侧栏唯一入口（live2d 入口也已隐藏），恢复显示；
+     侧栏本体的 absolute 覆盖层规则 layout.css 原生已有，无需 JS 改动 */
+  .shell-actions .shell-action-btn.is-ai {
+    display: inline-flex;
+  }
+
+  /* AI 侧栏展开时强制满宽兜底（覆盖层位于 .app-shell-body 内，
+     不受顶栏悬浮岛 margin 影响） */
+  .layout-right-sidebar.is-expanded {
+    width: 100%;
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+
+  /* 问题2：live2d 看板娘（含四个浮动操作按钮）在移动端整体隐藏 */
+  .live2d-widget {
+    display: none !important;
+  }
+
+  /* 问题3（音乐岛）：宽度改为 calc(100% - 20px)；
+     track-left 的文字兜底隐藏（layout.css ≤860px 已隐藏整个 .track-left） */
+  .app-shell-body__content-col > .music-bottom-bar-shell {
+    width: calc(100% - 20px);
+  }
+
+  .music-bottom-bar .track-left .meta-wrap {
+    display: none;
+  }
+
+  /* 问题5（搜索浮层）：面板宽度 calc(100vw - 24px)，内边距收紧
+     （加 .app-shell 前缀提升优先级，压过 layout.css 的 ≤900/≤640 同名规则） */
+  .app-shell .layout-article-search-overlay {
+    padding: 8vh 12px 20px;
+  }
+
+  .app-shell .layout-article-search-panel {
+    width: calc(100vw - 24px);
+    padding: 12px;
+    gap: 12px;
+  }
+
+  /* 问题5（设置弹窗）：宽度 calc(100vw - 24px)、内边距收紧、图库改 3 列网格 */
+  .app-shell .setting-dialog {
+    padding: 12px;
+  }
+
+  .app-shell .setting-dialog__card {
+    width: calc(100vw - 24px);
+    padding: 20px 14px 16px;
+  }
+
+  .setting-dialog .gallery-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    overflow-x: visible;
+    padding-bottom: 4px;
+  }
+
+  .setting-dialog .gallery-item,
+  .setting-dialog .gallery-item.is-portrait {
+    width: 100%;
+    height: 64px;
+  }
+
+  .setting-dialog .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .setting-dialog .gallery-item__label {
+    left: 8px;
+    bottom: 8px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  /* 问题5（登录弹窗）：≤720px 侧板已隐藏，这里收紧外层留白；
+     person 菜单 / 移动导航菜单宽度不超出视口 */
+  .app-shell .login-dialog {
+    padding: 12px;
+  }
+
+  .lx-popover.login-person-popover,
+  .lx-popover.top-nav-mobile-popover {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* 问题1（≤480 细化）：品牌 14px、按钮间距进一步收紧，
+     并隐藏两个次要按钮（猫爪 is-cat 及其吊绳容器、设置 is-setting），
+     确保 375px 宽度下 [品牌|空隙|menu|search/theme/ai/music/person] 单行放下 */
+  .app-shell > .app-shell-top {
+    padding: 8px 10px;
+  }
+
+  .app-shell-top .shell-brand > span {
+    font-size: 14px;
+  }
+
+  .app-shell-top .shell-actions {
+    gap: 3px;
+  }
+
+  .app-shell-top .shell-action-cat-wrap,
+  .app-shell-top .shell-action-btn.is-setting {
+    display: none;
+  }
+
+  /* 问题3（≤480 细化）：隐藏快退/快进两个次要按钮，
+     避免控制行与右上角 播放列表/关闭 按钮（absolute）重叠 */
+  .music-bottom-bar .control-btn.is-seek-back,
+  .music-bottom-bar .control-btn.is-seek-forward,
+  .music-bottom-bar .control-btn.is-repeat-dup {
+    display: none;
+  }
+
+  /* 问题5（登录弹窗 ≤480 细化）：表单区内边距与标题字号收紧 */
+  .login-dialog__main {
+    padding: 28px 18px 24px;
+  }
+
+  .login-dialog__title {
+    font-size: 22px;
+  }
+}
+
+/* Tab 下划线：常态停在当前页，悬停跟随，移开带弹性回弹 */
+.app-shell .shell-nav .nav-underline {
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(109, 155, 214, 0.35), #3f77b5 45%, rgba(109, 155, 214, 0.35));
+  box-shadow: 0 2px 8px rgba(63, 119, 181, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition:
+    transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s ease;
+}
+html.dark .app-shell .shell-nav .nav-underline {
+  background: linear-gradient(90deg, rgba(140, 190, 240, 0.3), #8cbef0 45%, rgba(140, 190, 240, 0.3));
+  box-shadow: 0 2px 10px rgba(140, 190, 240, 0.35);
+}
+@media (max-width: 768px) {
+  .app-shell .shell-nav .nav-underline { display: none; }
 }
 </style>

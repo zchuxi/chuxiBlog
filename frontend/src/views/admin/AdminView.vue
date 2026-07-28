@@ -25,7 +25,7 @@
 
     <!-- 已登录：分组侧栏 + 顶部条 + 面板区 -->
     <div v-else class="admin-shell">
-      <aside class="admin-sidebar">
+      <aside class="admin-sidebar" :class="{ open: sidebarOpen }">
         <div class="admin-brand">
           <span class="admin-brand-dot"></span>
           初曦后台
@@ -65,11 +65,21 @@
         </div>
       </aside>
 
+      <!-- 移动端抽屉遮罩：点击收起侧栏（仅 ≤900px 显示） -->
+      <transition name="admin-fade">
+        <div v-if="sidebarOpen" class="admin-sidebar-mask" @click="sidebarOpen = false"></div>
+      </transition>
+
       <div class="admin-main">
         <header class="admin-topbar">
-          <div>
-            <p class="admin-topbar-title">管理后台</p>
-            <p class="admin-topbar-sub">欢迎回来，站长</p>
+          <div class="admin-topbar-left">
+            <button class="admin-menu-toggle" type="button" aria-label="打开菜单" @click="sidebarOpen = true">
+              <SvgIcon name="common-menu" size="20px" />
+            </button>
+            <div>
+              <p class="admin-topbar-title">管理后台</p>
+              <p class="admin-topbar-sub">欢迎回来，站长</p>
+            </div>
           </div>
           <img class="admin-avatar" src="/favicon.png" alt="站长头像" />
         </header>
@@ -170,12 +180,16 @@ const loginForm = reactive({ username: '', password: '' })
 const currentKey = ref('dashboard')
 const currentSchema = computed(() => resourceSchemas.find(s => s.key === currentKey.value))
 
+// 移动端（≤900px）侧栏抽屉开关：选中菜单/点遮罩后收起
+const sidebarOpen = ref(false)
+
 // 仪表盘「写新文章」→ 切到文章面板并携带新建意图（ArticlesPanel 可选 prop initialCreate）
 const articlesInitialCreate = ref(false)
 
 function selectMenu(key) {
   articlesInitialCreate.value = false
   currentKey.value = key
+  sidebarOpen.value = false
 }
 
 function handleGo(key, extra) {

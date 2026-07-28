@@ -58,6 +58,18 @@
           <div class="tool-detail-columns">
             <article class="tool-detail-card" v-reveal="40">
               <h2 class="tool-detail-card-title">站点简介</h2>
+              <figure v-if="site.imageUrl && !shotFailed" class="tool-detail-shot">
+                <img
+                  class="tool-detail-shot-image"
+                  :src="site.imageUrl"
+                  :alt="`${site.websiteName} 展示图`"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  @error="shotFailed = true"
+                  @click="shotZoom = true"
+                />
+                <figcaption class="tool-detail-shot-caption">点击查看大图</figcaption>
+              </figure>
               <p class="tool-detail-intro-text">{{ site.websiteDescription }}</p>
               <blockquote v-if="site.highlight" class="tool-detail-highlight">{{ site.highlight }}</blockquote>
             </article>
@@ -119,6 +131,13 @@
         </LxSection>
       </template>
     </div>
+
+    <!-- 展示图大图查看 -->
+    <transition name="tool-detail-zoom">
+      <div v-if="shotZoom" class="tool-detail-zoom-mask" @click="shotZoom = false">
+        <img class="tool-detail-zoom-image" :src="site && site.imageUrl" :alt="site && site.websiteName" referrerpolicy="no-referrer" />
+      </div>
+    </transition>
   </main>
 </template>
 
@@ -135,6 +154,8 @@ const router = useRouter()
 const tools = ref([])
 const loaded = ref(false)
 const copied = ref(false)
+const shotFailed = ref(false)
+const shotZoom = ref(false)
 let copiedTimer = null
 
 // 按路由参数匹配当前站点（Number 化比较）
@@ -268,5 +289,87 @@ html.dark .tool-detail-empty-icon{color:#9db4cd}
   .tool-detail-hero-title{font-size:24px}
   .tool-detail-hero-main{align-items:flex-start}
   .tool-detail-visit-btn{flex:1}
+}
+
+/* ===== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ===== */
+@media(max-width:768px){
+  .tool-detail-hero{flex-direction:column;align-items:stretch;gap:18px;padding:20px}
+  .tool-detail-hero-main{gap:14px}
+  .tool-detail-hero-actions{width:100%}
+  .tool-detail-visit-btn{flex:1 1 auto}
+  .tool-detail-columns{grid-template-columns:minmax(0,1fr)}
+  .tool-detail-related-row{gap:12px;-webkit-overflow-scrolling:touch}
+  .tool-detail-related-card{flex-basis:210px}
+}
+@media(max-width:480px){
+  .tool-detail-hero{padding:18px 16px}
+  .tool-detail-hero-icon{width:56px;height:56px;border-radius:16px}
+  .tool-detail-hero-title{font-size:22px}
+  .tool-detail-hero-actions{flex-direction:column;align-items:stretch}
+  .tool-detail-hero-actions .lx-button{width:100%}
+  .tool-detail-visit-btn{width:100%;min-width:0}
+  .tool-detail-card{padding:16px 14px}
+  .tool-detail-related-card{flex-basis:180px}
+}
+
+/* 展示图 */
+.tool-detail-shot {
+  margin: 0 0 16px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(126, 160, 198, 0.3);
+  background: rgba(255, 255, 255, 0.24);
+  position: relative;
+}
+.tool-detail-shot-image {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.tool-detail-shot:hover .tool-detail-shot-image { transform: scale(1.03); }
+.tool-detail-shot-caption {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #f3f8ff;
+  background: rgba(20, 36, 56, 0.55);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+html.dark .tool-detail-shot {
+  border-color: rgba(140, 190, 240, 0.22);
+  background: rgba(18, 26, 40, 0.4);
+}
+.tool-detail-zoom-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 14, 24, 0.78);
+  backdrop-filter: blur(8px);
+  cursor: zoom-out;
+}
+.tool-detail-zoom-image {
+  max-width: min(1100px, 94vw);
+  max-height: 90vh;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.tool-detail-zoom-enter-active,
+.tool-detail-zoom-leave-active { transition: opacity 0.24s ease; }
+.tool-detail-zoom-enter-from,
+.tool-detail-zoom-leave-to { opacity: 0; }
+@media (max-width: 768px) {
+  .tool-detail-shot-image { max-height: 220px; }
+  .tool-detail-zoom-mask { padding: 12px; }
 }
 </style>

@@ -142,6 +142,7 @@ export const resourceSchemas = [
       { name: 'categoryId', label: '分类 ID', type: 'number' },
       { name: 'category', label: '分类名', type: 'text' },
       { name: 'iconUrl', label: '图标', type: 'image' },
+      { name: 'imageUrl', label: '展示图（详情页）', type: 'image' },
       { name: 'tags', label: '标签', type: 'tags' },
       { name: 'highlight', label: '亮点', type: 'text' },
       { name: 'featured', label: '是否推荐', type: 'boolean' },

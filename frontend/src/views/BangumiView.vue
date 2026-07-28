@@ -421,4 +421,48 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
     gap: 12px;
   }
 }
+
+/* ===== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ===== */
+@media (max-width: 768px) {
+  .bangumi-page {
+    padding: 84px 14px 56px;
+  }
+  .bangumi-hero {
+    padding: 24px 20px 20px;
+  }
+  .bangumi-hero-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .bangumi-stat-wide {
+    grid-column: 1 / -1;
+  }
+  .bangumi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .bangumi-chip {
+    min-height: 40px;
+    padding: 8px 16px;
+  }
+}
+@media (max-width: 480px) {
+  .bangumi-hero {
+    padding: 20px 16px 18px;
+  }
+  .bangumi-hero-stats {
+    gap: 8px;
+  }
+  .bangumi-stat-card {
+    padding: 10px 12px;
+  }
+  .bangumi-stat-card strong {
+    font-size: 18px;
+  }
+  .bangumi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bangumi-card-body {
+    padding: 10px 12px 12px;
+  }
+}
 </style>

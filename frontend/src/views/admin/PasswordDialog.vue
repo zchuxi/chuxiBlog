@@ -125,4 +125,17 @@ async function onSubmit() {
   gap: 10px;
   margin-top: 6px;
 }
+
+/* ---------- 移动端适配（≤900px，追加） ---------- */
+
+@media (max-width: 900px) {
+  .pwd-mask {
+    padding: 16px;
+  }
+
+  .pwd-dialog {
+    width: calc(100vw - 32px);
+    max-width: 400px;
+  }
+}
 </style>

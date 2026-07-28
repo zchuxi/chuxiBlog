@@ -202,3 +202,16 @@ onMounted(async () => {
   } catch { /* 后端未启动 */ }
 })
 </script>
+
+<style>
+/* 弹幕悬停暂停：方便阅读与点赞（原 CSS 里 .dm.move 是 running，这里悬停时覆盖） */
+.tree-hole-danmaku-stage-inner .dm:hover {
+  animation-play-state: paused !important;
+  z-index: 9 !important;
+}
+.tree-hole-danmaku-stage-inner .dm:hover .tree-hole-danmaku-bubble {
+  transform: scale(1.04);
+  box-shadow: 0 10px 26px rgba(40, 70, 110, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+</style>

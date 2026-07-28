@@ -1004,4 +1004,104 @@ html.dark .bangumi-detail-dist-bar {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 }
+
+/* ===== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ===== */
+@media (max-width: 768px) {
+  .bangumi-detail-page {
+    padding: 84px 14px 56px;
+  }
+  /* HERO 岛上下堆叠，封面居中限宽 */
+  .bangumi-detail-hero {
+    flex-direction: column;
+    padding: 22px 18px;
+    gap: 18px;
+  }
+  .bangumi-detail-cover-box {
+    width: min(56vw, 200px);
+    align-self: center;
+  }
+  .bangumi-detail-meta {
+    gap: 6px 10px;
+  }
+  .bangumi-detail-scores {
+    gap: 10px 18px;
+  }
+  .bangumi-detail-island {
+    padding: 20px 18px 22px;
+  }
+  .bangumi-detail-back {
+    min-height: 40px;
+  }
+  .bangumi-detail-link {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .bangumi-detail-record-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* 评分分布与收藏盒子单列堆叠 */
+  .bangumi-detail-rating-flex {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .bangumi-detail-collect {
+    width: 100%;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .bangumi-detail-collect article {
+    min-width: 0;
+    padding: 10px 6px;
+  }
+  .bangumi-detail-char-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .bangumi-detail-char-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .bangumi-detail-ep-grid {
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    gap: 6px;
+  }
+  .bangumi-detail-staff {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* 更多记录：容器自身横滑，不影响页面 */
+  .bangumi-detail-more {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bangumi-detail-more-card {
+    width: 104px;
+  }
+}
+@media (max-width: 480px) {
+  .bangumi-detail-score-big strong {
+    font-size: 32px;
+  }
+  .bangumi-detail-dist-count {
+    width: 60px;
+  }
+  .bangumi-detail-collect {
+    gap: 6px;
+  }
+  .bangumi-detail-collect strong {
+    font-size: 14px;
+  }
+  .bangumi-detail-record-grid strong {
+    font-size: 16px;
+  }
+  .bangumi-detail-char-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bangumi-detail-char-card {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .bangumi-detail-char-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
 </style>

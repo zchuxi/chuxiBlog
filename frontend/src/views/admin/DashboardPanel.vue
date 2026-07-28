@@ -283,4 +283,59 @@ function barWidth(count) {
   font-weight: bold;
   color: var(--adm-text);
 }
+
+/* ---------- 移动端适配（≤900px，追加） ---------- */
+
+@media (max-width: 900px) {
+  .dash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .dash-stat {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .dash-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-quick-btn {
+    padding: 12px 10px;
+  }
+
+  .dash-card {
+    padding: 16px;
+  }
+
+  /* 分类分布条：名称收窄，条形自适应剩余宽度 */
+  .dash-cat-name {
+    width: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .dash-stat-num {
+    font-size: 20px;
+  }
+
+  .dash-stat-label {
+    font-size: 12px;
+  }
+
+  .dash-stat-sub {
+    font-size: 11.5px;
+  }
+}
 </style>

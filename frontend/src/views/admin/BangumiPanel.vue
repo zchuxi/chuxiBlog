@@ -282,4 +282,33 @@ async function importItem(item) {
   font-size: 13px;
   opacity: 0.65;
 }
+
+/* ---------- 移动端适配（≤900px，追加） ---------- */
+
+@media (max-width: 900px) {
+  /* 导入工具条：标签独占一行，输入框与搜索按钮同行伸缩 */
+  .bgm-import-label {
+    flex: 1 1 100%;
+  }
+
+  .bgm-import-input {
+    min-width: 0;
+    flex: 1 1 160px;
+  }
+
+  /* 结果列表：允许换行堆叠，导入按钮不挤压标题 */
+  .bgm-result-item {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .bgm-result-info {
+    flex: 1 1 160px;
+  }
+
+  .bgm-result-item .admin-btn-ghost {
+    margin-left: auto;
+    padding: 8px 16px;
+  }
+}
 </style>

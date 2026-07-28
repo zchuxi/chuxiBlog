@@ -17,6 +17,10 @@ public class SiteContentController {
 
     static final String VIEWS_KEY = "site-views";
 
+    /** 公开可读的文案 key 白名单：其余（如 admin-password）一律不对外暴露 */
+    private static final java.util.Set<String> PUBLIC_KEYS =
+            java.util.Set.of("home-landing", "about", "archive-hero", VIEWS_KEY);
+
     private final SiteContentRepo repo;
     private final ObjectMapper mapper;
 
@@ -29,6 +33,8 @@ public class SiteContentController {
     @GetMapping("/api/front/site-content/{key}")
     @Transactional(readOnly = true)
     public R<SiteContent> front(@PathVariable String key) {
+        // 非白名单 key 与不存在返回同样的响应，避免通过差异探测内部数据
+        if (!PUBLIC_KEYS.contains(key)) return R.fail("内容不存在");
         return repo.findByContentKey(key).map(R::ok).orElseGet(() -> R.fail("内容不存在"));
     }
 

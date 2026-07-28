@@ -805,4 +805,73 @@ html.dark .scene-visible-check {
 html.dark .scene-img-preview {
   border-color: rgba(255, 255, 255, 0.1);
 }
+
+/* ---------- 移动端适配（≤900px，追加） ---------- */
+
+@media (max-width: 900px) {
+  .scene-head {
+    flex-wrap: wrap;
+  }
+
+  /* 行卡两行布局：第一行 勾选+缩略图+文案；第二行 badge/显隐/操作 */
+  .scene-row {
+    display: grid;
+    grid-template-columns: auto 68px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check thumb info info"
+      "badge badge vis  ops";
+    gap: 8px 10px;
+    align-items: center;
+  }
+
+  .scene-row > .scene-check {
+    grid-area: check;
+  }
+
+  .scene-thumb {
+    grid-area: thumb;
+    width: 68px;
+    height: 46px;
+  }
+
+  .scene-info {
+    grid-area: info;
+  }
+
+  .scene-badge {
+    grid-area: badge;
+    justify-self: start;
+  }
+
+  .scene-visible {
+    grid-area: vis;
+    justify-self: start;
+    padding: 8px 14px;
+  }
+
+  .scene-ops {
+    grid-area: ops;
+    justify-self: end;
+  }
+
+  /* 编辑弹窗：占满可视宽度、可滚动 */
+  .scene-modal-mask {
+    padding: 12px;
+  }
+
+  .scene-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .scene-modal-body {
+    padding: 14px 16px;
+  }
+
+  .scene-modal-head,
+  .scene-modal-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
 </style>

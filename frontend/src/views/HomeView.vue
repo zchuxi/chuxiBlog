@@ -627,4 +627,45 @@ onMounted(async () => {
   .home-page .dashboard-highlight { height: auto; }
   .home-page .dashboard-highlight__hero .hero-visual { height: var(--home-hero-height, 480px); }
 }
+
+/* ========== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ========== */
+@media (max-width: 768px) {
+  .home-page .home-landing {
+    padding: 16px 4px 0;
+    gap: 24px;
+  }
+  .home-page .home-landing__copy,
+  .home-page .home-landing__aside {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .home-page .home-landing__copy { padding-left: 0; }
+  .home-page .home-landing__title {
+    font-size: clamp(34px, 9vw, 46px);
+    letter-spacing: 1px;
+    overflow-wrap: anywhere;
+  }
+  .home-page .home-landing__subtitle { font-size: 16px; }
+  .home-page .home-landing__aside { gap: 16px; }
+  .home-page .home-landing__aside .profile-card,
+  .home-page .home-landing__aside .signal-board-card { padding: 18px 16px; }
+  /* 第二屏：窄屏交还原站 CSS 的 aspect-ratio 高度，避免固定 480px 底部留白 */
+  .home-page .dashboard-highlight__hero .hero-bento-frame,
+  .home-page .dashboard-highlight__hero .hero-visual { height: auto; }
+}
+@media (max-width: 480px) {
+  .home-page .home-landing__title { font-size: clamp(30px, 8.6vw, 38px); }
+  .home-page .home-landing__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .home-page .home-landing__btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .home-page .home-landing__aside .profile-card,
+  .home-page .home-landing__aside .signal-board-card { padding: 16px 14px; }
+}
 </style>

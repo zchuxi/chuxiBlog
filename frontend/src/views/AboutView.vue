@@ -337,4 +337,53 @@ html.dark .about-page .about-quick-icon {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ========== */
+@media (max-width: 768px) {
+  .about-page .about-card {
+    gap: 20px;
+    padding: 26px 20px;
+  }
+
+  .about-page .about-quick-row {
+    gap: 14px;
+  }
+
+  .about-page .about-avatar-ring {
+    width: 112px;
+    height: 112px;
+  }
+
+  .about-page .about-site-name {
+    font-size: 23px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-page .about-card {
+    gap: 16px;
+    padding: 22px 16px;
+  }
+
+  .about-page .about-avatar-ring {
+    width: 96px;
+    height: 96px;
+  }
+
+  .about-page .about-site-name {
+    font-size: 21px;
+  }
+
+  .about-page .about-body-title {
+    font-size: 18px;
+  }
+
+  .about-page .about-placeholder {
+    padding: 24px 16px;
+  }
+
+  .about-page .about-quick-card {
+    padding: 14px 16px;
+  }
+}
 </style>

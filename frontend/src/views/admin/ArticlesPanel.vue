@@ -807,4 +807,60 @@ html.dark .ap-pin-check {
 html.dark .ap-cover-preview {
   border-color: rgba(255, 255, 255, 0.1);
 }
+
+/* ---------- 移动端适配（≤900px，追加） ---------- */
+
+@media (max-width: 900px) {
+  /* 列表工具栏：标题独占一行，筛选与新建换行排布 */
+  .ap-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .ap-toolbar-title {
+    flex: 1 1 100%;
+  }
+
+  .ap-filter {
+    flex-wrap: wrap;
+  }
+
+  .ap-filter-btn {
+    padding: 8px 15px;
+  }
+
+  /* 列表行允许换行，操作按钮不挤压标题 */
+  .ap-row {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+
+  .ap-row-main {
+    flex: 1 1 220px;
+  }
+
+  .ap-row-ops {
+    margin-left: auto;
+  }
+
+  /* 编辑态：顶部条换行（保留「隐藏预览」开关），左右两列已由 960px 规则改上下堆叠，预览在下 */
+  .ap-editor-top {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .ap-editor-heading {
+    flex: 1 1 auto;
+  }
+
+  .ap-content-input {
+    min-height: 40vh;
+  }
+
+  .ap-row-2col {
+    display: block;
+  }
+}
 </style>

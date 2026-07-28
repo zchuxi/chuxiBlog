@@ -48,6 +48,8 @@ public class ArticleController {
     @Transactional(readOnly = true)
     public R<Dtos.ArticleDetail> detail(@PathVariable Long id) {
         return articleRepo.findById(id)
+                // 草稿与不存在返回同样的响应，避免通过差异探测草稿 id
+                .filter(a -> !"草稿".equals(a.getStatus()))
                 .map(a -> R.ok(Dtos.ArticleDetail.of(a)))
                 .orElseGet(() -> R.fail("文章不存在"));
     }

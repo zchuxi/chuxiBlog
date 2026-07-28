@@ -370,4 +370,23 @@ html.dark .scp-head-title {
 html.dark .scp-head-sub {
   color: #8fa0ba;
 }
+
+/* ---------- 移动端适配（≤900px，追加）
+   表单单列与 about 编辑/预览上下堆叠已由上方 960px 规则覆盖，
+   此处补充头部换行与内边距收紧 ---------- */
+
+@media (max-width: 900px) {
+  .scp-head {
+    flex-wrap: wrap;
+  }
+
+  .scp-head,
+  .scp-card {
+    padding: 14px 16px;
+  }
+
+  .scp-md-input {
+    min-height: 38vh;
+  }
+}
 </style>
