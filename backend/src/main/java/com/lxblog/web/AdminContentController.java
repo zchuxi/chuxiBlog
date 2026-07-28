@@ -26,6 +26,7 @@ public class AdminContentController {
 
     private final ObjectMapper mapper;
     private final CommentRepo commentRepo;
+    private final BangumiRecordRepo bangumiRecordRepo;
     private final Map<String, ResourceHandler<?>> handlers = new LinkedHashMap<>();
 
     public AdminContentController(ObjectMapper springMapper,
@@ -46,6 +47,7 @@ public class AdminContentController {
         // 复制一份 Spring 的 ObjectMapper，容忍未知字段
         this.mapper = springMapper.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.commentRepo = commentRepo;
+        this.bangumiRecordRepo = bangumiRecordRepo;
         handlers.put("articles", new ResourceHandler<>(articleRepo, Article.class, false, true, false));
         handlers.put("home-carousels", new ResourceHandler<>(homeCarouselRepo, HomeCarousel.class, false, false, false));
         handlers.put("collapse-cards", new ResourceHandler<>(collapseCardRepo, CollapseCard.class, false, false, false));
@@ -75,7 +77,27 @@ public class AdminContentController {
     public R<?> create(@PathVariable String res, @RequestBody Map<String, Object> body) {
         ResourceHandler<?> h = handlers.get(res);
         if (h == null) return R.fail("未知资源: " + res);
+        String dup = checkBangumiDuplicate(res, body, null);
+        if (dup != null) return R.fail(dup);
         return R.ok(h.create(body));
+    }
+
+    /** 番剧按 bgm subjectId 去重：同一部只允许收录一次（excludeId 为当前正在编辑的记录） */
+    private String checkBangumiDuplicate(String res, Map<String, Object> body, Long excludeId) {
+        if (!"bangumi-records".equals(res)) return null;
+        Object raw = body.get("subjectId");
+        if (raw == null || String.valueOf(raw).isBlank()) return null;
+        long subjectId;
+        try {
+            subjectId = Long.parseLong(String.valueOf(raw).trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return bangumiRecordRepo.findBySubjectId(subjectId)
+                .filter(exist -> excludeId == null || !exist.getId().equals(excludeId))
+                .map(exist -> "「" + (exist.getNameCn() != null && !exist.getNameCn().isBlank()
+                        ? exist.getNameCn() : exist.getName()) + "」已经收录过了")
+                .orElse(null);
     }
 
     @PutMapping("/{res}/{id}")
@@ -83,6 +105,8 @@ public class AdminContentController {
     public R<?> update(@PathVariable String res, @PathVariable Long id, @RequestBody Map<String, Object> body) {
         ResourceHandler<?> h = handlers.get(res);
         if (h == null) return R.fail("未知资源: " + res);
+        String dup = checkBangumiDuplicate(res, body, id);
+        if (dup != null) return R.fail(dup);
         Object saved = h.update(id, body);
         return saved == null ? R.fail("记录不存在") : R.ok(saved);
     }

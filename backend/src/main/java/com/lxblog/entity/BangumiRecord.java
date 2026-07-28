@@ -23,6 +23,8 @@ public class BangumiRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     /** bgm.tv 条目 id */
+    /** bgm 条目 id，同一部番剧只允许收录一次 */
+    @Column(unique = true)
     private Long subjectId;
     private String name;
     private String nameCn;

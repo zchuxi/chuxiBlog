@@ -45,26 +45,29 @@
       </div>
     </div>
 
-    <!-- 编辑抽屉 -->
+    <!-- 编辑弹窗：居中卡片 + 双列紧凑表单 -->
     <transition name="admin-fade">
       <div v-if="drawerOpen" class="admin-mask" @click.self="closeDrawer"></div>
     </transition>
-    <transition name="admin-slide">
-      <aside v-if="drawerOpen" class="admin-drawer" :class="{ wide: schema.wide }">
-        <header class="admin-drawer-head">
-          <h3>{{ editingId == null ? '新建' : '编辑' }} · {{ schema.label }}</h3>
-          <button class="admin-drawer-close" @click="closeDrawer">×</button>
+    <transition name="admin-pop">
+      <aside v-if="drawerOpen" class="admin-modal" :class="{ wide: schema.wide }">
+        <header class="admin-modal-head">
+          <h3>{{ editingId == null ? '新建' : '编辑' }}{{ schema.label.replace(/管理$/, '') }}</h3>
+          <button class="admin-modal-close" @click="closeDrawer">×</button>
         </header>
-        <div class="admin-drawer-body">
-          <FieldInput
-            v-for="field in schema.fields"
-            :key="field.name"
-            v-model="form[field.name]"
-            :field="field"
-            :disabled="field.name === 'id' && editingId != null"
-          />
+        <div class="admin-modal-body">
+          <div class="admin-form-grid">
+            <FieldInput
+              v-for="field in schema.fields"
+              :key="field.name"
+              v-model="form[field.name]"
+              :field="field"
+              :disabled="field.name === 'id' && editingId != null"
+              :class="fieldSpanClass(field)"
+            />
+          </div>
         </div>
-        <footer class="admin-drawer-foot">
+        <footer class="admin-modal-foot">
           <button class="admin-btn admin-btn-ghost" @click="closeDrawer">取消</button>
           <button class="admin-btn" :disabled="saving" @click="onSave">{{ saving ? '保存中…' : '保存' }}</button>
         </footer>
@@ -77,6 +80,14 @@
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
+
+// 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
+const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image'])
+function fieldSpanClass(field) {
+  return FULL_ROW_TYPES.has(field.type) || /title|name|summary|url|content/i.test(field.name)
+    ? 'admin-field-full'
+    : ''
+}
 
 const props = defineProps({
   schema: { type: Object, required: true }

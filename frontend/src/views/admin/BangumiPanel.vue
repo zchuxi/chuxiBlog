@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { inject, ref } from 'vue'
+import { inject, onMounted, ref } from 'vue'
 import { adminApi } from '../../api/admin'
 import ResourcePanel from './ResourcePanel.vue'
 import resourceSchemas from './resourceSchemas'
@@ -64,6 +64,18 @@ const searching = ref(false)
 const searched = ref(false)
 const importingId = ref(null)
 const panelKey = ref(0)
+
+// 已收录的 bgm 条目 id，用于搜索结果里标注与拦截重复导入
+const existingSubjectIds = ref(new Set())
+
+async function loadExisting() {
+  try {
+    const list = await adminApi['bangumi-records'].list()
+    existingSubjectIds.value = new Set((list || []).map(r => Number(r.subjectId)).filter(Boolean))
+  } catch { /* 拉取失败时不拦截，交由后端兜底去重 */ }
+}
+
+onMounted(loadExisting)
 
 /** bgm v0 / 旧版搜索结果统一成一个形状 */
 function normalize(item) {
@@ -170,6 +182,11 @@ function buildDetailRecord(item, s) {
 }
 
 async function importItem(item) {
+  // 先查重：已收录的直接提示，省掉一次 bgm 详情请求
+  if (existingSubjectIds.value.has(Number(item.id))) {
+    toast && toast(`「${item.nameCn || item.name}」已经收录过了`, 'error')
+    return
+  }
   importingId.value = item.id
   let usedFallback = false
   let record
@@ -188,6 +205,7 @@ async function importItem(item) {
     } else {
       toast && toast(`已导入「${item.nameCn || item.name}」`)
     }
+    existingSubjectIds.value.add(Number(item.id))
     panelKey.value += 1
   } catch (err) {
     if (err && err.unauthorized) {

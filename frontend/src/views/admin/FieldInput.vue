@@ -33,10 +33,23 @@
       @input="emit('update:modelValue', $event.target.value)"
     />
 
-    <!-- 其余类型统一为文本输入（tags/datetime/image 带提示与预览） -->
-    <template v-else>
-      <!-- image 字段：URL 输入 + 图库选择 -->
-      <div v-if="field.type === 'image'" class="admin-img-row">
+    <!-- 下拉选择 -->
+    <select
+      v-else-if="field.type === 'select'"
+      class="admin-input admin-select"
+      :value="modelValue"
+      @change="emit('update:modelValue', $event.target.value)"
+    >
+      <option v-for="opt in field.options || []" :key="opt" :value="opt">{{ opt }}</option>
+    </select>
+
+    <!-- 图片：缩略图 + URL 输入 + 上传/图库 -->
+    <div v-else-if="field.type === 'image'" class="admin-img-field">
+      <div class="admin-img-thumb" :class="{ 'is-empty': !modelValue }">
+        <img v-if="modelValue" :src="modelValue" alt="预览" referrerpolicy="no-referrer" @error="thumbBroken = true" />
+        <span v-else>暂无图片</span>
+      </div>
+      <div class="admin-img-side">
         <input
           class="admin-input"
           type="text"
@@ -44,10 +57,20 @@
           :placeholder="placeholder"
           @input="emit('update:modelValue', $event.target.value)"
         />
-        <button type="button" class="admin-btn admin-btn-ghost admin-img-pick" @click="pickerOpen = true">图库</button>
+        <div class="admin-img-actions">
+          <button type="button" class="admin-btn admin-btn-ghost" :disabled="uploading" @click="fileRef?.click()">
+            {{ uploading ? '上传中…' : '上传图片' }}
+          </button>
+          <button type="button" class="admin-btn admin-btn-ghost" @click="pickerOpen = true">从图库选择</button>
+        </div>
+        <input ref="fileRef" type="file" accept="image/*" hidden @change="onUpload" />
       </div>
+      <MediaPicker v-model="pickerOpen" @select="url => emit('update:modelValue', url)" />
+    </div>
+
+    <!-- 其余类型统一为文本输入（tags/datetime 带提示） -->
+    <template v-else>
       <input
-        v-else
         class="admin-input"
         type="text"
         :value="modelValue"
@@ -55,24 +78,14 @@
         @input="emit('update:modelValue', $event.target.value)"
       />
       <p v-if="field.type === 'tags'" class="admin-field-tip">多个标签用逗号分隔</p>
-      <img
-        v-if="field.type === 'image' && modelValue"
-        class="admin-img-preview"
-        :src="modelValue"
-        alt="预览"
-      />
-      <MediaPicker
-        v-if="field.type === 'image'"
-        v-model="pickerOpen"
-        @select="url => emit('update:modelValue', url)"
-      />
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import MediaPicker from './MediaPicker.vue'
+import { mediaApi } from '../../api/admin'
 
 const props = defineProps({
   field: { type: Object, required: true },
@@ -83,6 +96,28 @@ const emit = defineEmits(['update:modelValue'])
 
 // 图库选择弹窗开关（仅 image 字段用）
 const pickerOpen = ref(false)
+const fileRef = ref(null)
+const uploading = ref(false)
+const thumbBroken = ref(false)
+const toast = inject('adminToast', () => {})
+
+// 直接上传并回填 URL，省去先去图片库再回来的往返
+async function onUpload(e) {
+  const file = e.target.files && e.target.files[0]
+  e.target.value = ''
+  if (!file) return
+  uploading.value = true
+  try {
+    const data = await mediaApi.upload(file)
+    emit('update:modelValue', data.url)
+    thumbBroken.value = false
+    toast('图片已上传')
+  } catch (err) {
+    toast((err && err.message) || '上传失败', 'error')
+  } finally {
+    uploading.value = false
+  }
+}
 
 const placeholder = computed(() => {
   if (props.field.type === 'datetime') return '如 2026-03-01T12:00:00'
