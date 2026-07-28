@@ -1289,7 +1289,69 @@ html.dark {
 .admin-pop-enter-active, .admin-pop-leave-active { transition: opacity 0.2s ease, transform 0.24s cubic-bezier(0.34, 1.4, 0.64, 1); }
 .admin-pop-enter-from, .admin-pop-leave-to { opacity: 0; transform: translate(-50%, -46%) scale(0.97); }
 
-/* 下拉选择 */
+/* 下拉选择（AdminSelect 自绘组件） */
+.adm-select { position: relative; width: 100%; }
+.adm-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.adm-select-trigger:disabled { opacity: 0.6; cursor: not-allowed; }
+.adm-select-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.adm-select-label.is-placeholder { color: var(--adm-text-faint); }
+.adm-select-arrow {
+  flex-shrink: 0;
+  color: var(--adm-text-dim);
+  transition: transform 0.22s ease;
+}
+.adm-select.is-open .adm-select-arrow { transform: rotate(180deg); }
+.adm-select-panel {
+  z-index: 3000;
+  max-height: 264px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--adm-border);
+  border-radius: 14px;
+  background: var(--adm-card);
+  box-shadow: var(--adm-shadow-lg);
+  scrollbar-width: thin;
+}
+.adm-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--adm-text);
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.adm-select-option.is-hover { background: var(--adm-accent-soft); }
+.adm-select-option.is-active {
+  color: var(--adm-accent-ink);
+  font-weight: 700;
+}
+.adm-select-check { flex-shrink: 0; color: var(--adm-accent-ink); }
+.adm-select-fade-enter-active, .adm-select-fade-leave-active { transition: opacity 0.16s ease, transform 0.16s ease; }
+.adm-select-fade-enter-from, .adm-select-fade-leave-to { opacity: 0; transform: translateY(-5px); }
+
+/* 旧原生 select 箭头规则保留给残余用途 */
 .admin-select { appearance: none; cursor: pointer; padding-right: 34px;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position: calc(100% - 18px) center, calc(100% - 13px) center;
@@ -1311,6 +1373,45 @@ html.dark {
 .admin-img-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .admin-img-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .admin-img-actions .admin-btn { flex: 1; min-width: 118px; }
+
+/* 资源表格分页栏 */
+.admin-pager {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-top: 1px solid var(--admin-border, rgba(127, 127, 127, 0.16));
+}
+.admin-pager-info { font-size: 13px; opacity: 0.65; }
+.admin-pager-btns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.admin-pager-btn {
+  min-width: 34px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--admin-border, rgba(127, 127, 127, 0.22));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.admin-pager-btn:hover:not(:disabled) { border-color: #5f95cf; color: #5f95cf; }
+.admin-pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.admin-pager-num.is-active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  font-weight: 700;
+}
+.admin-pager-ellipsis { padding: 0 2px; opacity: 0.5; }
+.admin-pager-size { width: auto; min-width: 108px; }
+.admin-pager-size .adm-select-trigger { height: 30px; padding: 0 10px; font-size: 13px; border-radius: 8px; }
+@media (max-width: 900px) {
+  .admin-pager { gap: 10px; padding: 12px; }
+  .admin-pager-btns { margin-left: 0; }
+}
 
 /* 音频字段：URL 输入 + 导入按钮 + 试听条 */
 .admin-audio-field { display: flex; flex-direction: column; gap: 10px; }
@@ -1440,11 +1541,12 @@ html.dark {
 
 .admin-batch-select {
   width: auto;
-  min-width: 140px;
+  min-width: 150px;
+}
+
+.admin-batch-select .adm-select-trigger {
   padding: 7px 11px;
   font-size: 14.5px;
-  appearance: auto;
-  cursor: pointer;
 }
 
 .admin-btn-danger {

@@ -537,30 +537,100 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 .home-page .home-landing__btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
   border-radius: 999px;
-  border: 1px solid rgba(126, 160, 198, 0.4);
-  background: color-mix(in srgb, var(--nested-outer-card-bg, rgba(255, 255, 255, 0.6)) 92%, transparent);
-  color: var(--text-color);
+  border: 1px solid var(--accent-border);
+  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  color: var(--accent-text);
   font: inherit;
   font-size: 16.5px;
   font-weight: 600;
   cursor: pointer;
-  backdrop-filter: blur(10px);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 20px rgba(63, 119, 181, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transition: transform 0.24s ease, box-shadow 0.28s ease, background 0.24s ease, border-color 0.24s ease, color 0.24s ease;
+}
+/* 扫光层：悬停时掠过一道高光 */
+.home-page .home-landing__btn::before {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -40%;
+  z-index: -1;
+  width: 42%;
+  height: 340%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  opacity: 0;
+  transform: rotate(18deg) translate(-180%);
+  pointer-events: none;
+}
+.home-page .home-landing__btn .svg-icon {
+  transition: transform 0.24s ease;
 }
 .home-page .home-landing__btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(63, 119, 181, 0.22);
+  border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
+  box-shadow: 0 12px 28px rgba(63, 119, 181, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.home-page .home-landing__btn:hover::before {
+  opacity: 0.6;
+  animation: home-landing-btn-sheen 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.home-page .home-landing__btn:active {
+  transform: translateY(0) scale(0.98);
 }
 .home-page .home-landing__btn--primary {
-  border-color: transparent;
-  background: linear-gradient(135deg, #6d9bd6 0%, #3f77b5 100%);
+  border-color: color-mix(in srgb, var(--accent-strong) 58%, rgba(255, 255, 255, 0.4));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-solid) 88%, #ffffff) 0%, var(--accent-strong) 100%);
+  color: #f7fbff;
+  text-shadow: 0 1px 3px rgba(31, 68, 110, 0.35);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent-strong) 38%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -8px 16px color-mix(in srgb, var(--accent-strong) 40%, transparent);
+}
+.home-page .home-landing__btn--primary:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 66%, rgba(255, 255, 255, 0.5));
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--accent-strong) 46%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -8px 16px color-mix(in srgb, var(--accent-strong) 38%, transparent);
+}
+.home-page .home-landing__btn--primary:hover .svg-icon {
+  transform: translateY(2px);
+}
+@keyframes home-landing-btn-sheen {
+  0% { transform: rotate(18deg) translate(-220%); }
+  100% { transform: rotate(18deg) translate(300%); }
+}
+html.dark .home-page .home-landing__btn {
+  border-color: var(--accent-border);
+  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  color: var(--accent-text);
+  box-shadow: 0 8px 20px rgba(3, 8, 17, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+html.dark .home-page .home-landing__btn:hover {
+  border-color: color-mix(in srgb, var(--accent-solid) 48%, transparent);
+  box-shadow: 0 12px 28px rgba(3, 8, 17, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+html.dark .home-page .home-landing__btn--primary {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-solid) 88%, #ffffff 8%) 0%, var(--accent-strong) 100%);
   color: #f5f9ff;
-  box-shadow: 0 10px 26px rgba(63, 119, 181, 0.32);
+  text-shadow: 0 1px 3px rgba(3, 8, 17, 0.4);
+  box-shadow: 0 10px 26px rgba(3, 8, 17, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.22);
+}
+html.dark .home-page .home-landing__btn--primary:hover {
+  box-shadow: 0 14px 32px rgba(3, 8, 17, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.2);
 }
 .home-page .home-landing__aside {
   display: flex;
@@ -581,12 +651,23 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border-radius: 999px;
-  border: 1px solid rgba(126, 160, 198, 0.4);
-  background: color-mix(in srgb, var(--nested-outer-card-bg, rgba(255, 255, 255, 0.6)) 90%, transparent);
-  color: var(--text-color);
+  border: 1px solid var(--accent-border);
+  background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+  color: var(--accent-text);
   font-size: 20px;
   cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(63, 119, 181, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, color 0.24s ease;
   animation: home-landing-bounce 1.8s ease-in-out infinite;
+}
+.home-page .home-landing__scroll-hint:hover {
+  border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
+  box-shadow: 0 12px 26px rgba(63, 119, 181, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+html.dark .home-page .home-landing__scroll-hint {
+  box-shadow: 0 8px 20px rgba(3, 8, 17, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 @keyframes home-landing-bounce {
   0%, 100% { transform: translate(-50%, 0); }

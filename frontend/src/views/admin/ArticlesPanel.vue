@@ -107,10 +107,11 @@
           <div class="ap-row-2col">
             <div class="admin-field">
               <label class="admin-field-label">分类</label>
-              <select v-model="form.categoryPick" class="admin-input ap-select">
-                <option v-for="name in categoryOptions" :key="name" :value="name">{{ name }}</option>
-                <option :value="CUSTOM_CATEGORY">自定义…</option>
-              </select>
+              <AdminSelect
+                v-model="form.categoryPick"
+                class="ap-select"
+                :options="[...categoryOptions, { label: '自定义…', value: CUSTOM_CATEGORY }]"
+              />
               <input
                 v-if="form.categoryPick === CUSTOM_CATEGORY"
                 v-model="form.customCategory"
@@ -121,10 +122,7 @@
             </div>
             <div class="admin-field">
               <label class="admin-field-label">状态</label>
-              <select v-model="form.status" class="admin-input ap-select">
-                <option value="已发布">已发布</option>
-                <option value="草稿">草稿</option>
-              </select>
+              <AdminSelect v-model="form.status" class="ap-select" :options="['已发布', '草稿']" />
               <label class="ap-pin-check">
                 <input v-model="form.pinned" type="checkbox" class="ap-check" />
                 <span>置顶到首页文章列表</span>
@@ -192,6 +190,7 @@ import { adminApi, mediaApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
 import MediaPicker from './MediaPicker.vue'
+import AdminSelect from './AdminSelect.vue'
 
 const props = defineProps({
   // true 时挂载后直接进入「写新文章」编辑态（供概览页快捷操作使用）

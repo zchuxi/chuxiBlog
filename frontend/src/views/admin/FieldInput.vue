@@ -33,15 +33,13 @@
       @input="emit('update:modelValue', $event.target.value)"
     />
 
-    <!-- 下拉选择 -->
-    <select
+    <!-- 下拉选择（自绘面板，主题一致） -->
+    <AdminSelect
       v-else-if="field.type === 'select'"
-      class="admin-input admin-select"
-      :value="modelValue"
-      @change="emit('update:modelValue', $event.target.value)"
-    >
-      <option v-for="opt in field.options || []" :key="opt" :value="opt">{{ opt }}</option>
-    </select>
+      :model-value="modelValue"
+      :options="field.options || []"
+      @update:model-value="v => emit('update:modelValue', v)"
+    />
 
     <!-- 音频：试听 + URL 输入 + 导入音频文件 -->
     <div v-else-if="field.type === 'audio'" class="admin-audio-field">
@@ -112,6 +110,7 @@
 import { computed, inject, ref } from 'vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
+import AdminSelect from './AdminSelect.vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({

@@ -1,1 +1,310 @@
-.lx-button{--btn-bg: #dbeafe;--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 94%, #ffffff);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 88%, #ffffff);--btn-border: #bfdbfe;--btn-text: #1e40af;--btn-plain-text: #1d4ed8;--btn-shadow-light: color-mix(in srgb, #ffffff 82%, var(--btn-bg));--btn-shadow-dark: color-mix(in srgb, var(--btn-border) 62%, #89a4c8);position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:92px;height:36px;padding:0 16px;border:1px solid var(--btn-border);border-radius:10px;background:var(--btn-bg);box-shadow:inset 2px 2px 4px color-mix(in srgb,var(--btn-shadow-dark) 45%,transparent),inset -2px -2px 4px var(--btn-shadow-light);color:var(--btn-text);font-size:15.5px;line-height:1;font-weight:600;transition:transform .2s ease,box-shadow .24s ease,background-color .2s ease,color .2s ease,border-color .2s ease;-webkit-tap-highlight-color:transparent;cursor:pointer}.lx-button:before{content:"";position:absolute;top:-120%;left:-40%;z-index:0;width:42%;height:340%;background:linear-gradient(90deg,transparent,color-mix(in srgb,#ffffff 62%,var(--btn-bg)),transparent);opacity:0;transform:rotate(18deg) translate(-180%);pointer-events:none}.lx-button__content{display:inline-flex;align-items:center;justify-content:center;gap:6px;position:relative;z-index:1;transition:transform .22s ease}.lx-button__label{white-space:nowrap}.lx-button--primary{--btn-bg: #dbeafe;--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 94%, #ffffff);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 88%, #ffffff);--btn-border: #bfdbfe;--btn-text: #1e40af;--btn-plain-text: #1d4ed8}.lx-button--info{--btn-bg: #ccfbf1;--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 94%, #ffffff);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 88%, #ffffff);--btn-border: #99f6e4;--btn-text: #0f766e;--btn-plain-text: #0f766e}.lx-button--warning{--btn-bg: #fef3c7;--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 94%, #ffffff);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 88%, #ffffff);--btn-border: #fde68a;--btn-text: #b45309;--btn-plain-text: #b45309}.lx-button--danger{--btn-bg: #fee2e2;--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 94%, #ffffff);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 88%, #ffffff);--btn-border: #fecaca;--btn-text: #b91c1c;--btn-plain-text: #b91c1c}.lx-button--section{--btn-bg: var(--nested-outer-card-bg);--btn-bg-hover: var(--nested-outer-card-bg);--btn-bg-active: var(--nested-outer-card-bg);--btn-border: var(--nested-outer-card-border);--btn-text: var(--text-color);--btn-plain-text: var(--text-color);box-shadow:var(--nested-outer-card-shadow)}.lx-button:hover{transform:translateY(-2px);background:var(--btn-bg-hover);box-shadow:inset 3px 3px 8px color-mix(in srgb,var(--btn-shadow-dark) 52%,transparent),inset -3px -3px 8px color-mix(in srgb,#ffffff 88%,var(--btn-bg))}.lx-button:hover .lx-button__content{transform:scale(1.02)}.lx-button:hover:before{opacity:.55;animation:lx-button-sheen-fb930535 .9s cubic-bezier(.22,.61,.36,1)}.lx-button:active{transform:translateY(0) scale(.985);background:var(--btn-bg-active);box-shadow:inset 5px 5px 10px color-mix(in srgb,var(--btn-shadow-dark) 82%,transparent),inset -5px -5px 10px color-mix(in srgb,var(--btn-shadow-light) 86%,transparent)}.lx-button:active .lx-button__content{transform:scale(.98)}.lx-button:focus-visible{outline:none}.lx-button.is-round{border-radius:999px}.lx-button.is-circle{width:36px;min-width:36px;padding:0;border-radius:999px}.lx-button.is-plain{background:var(--card-bg);color:var(--btn-plain-text);border-color:var(--btn-border);box-shadow:none}.lx-button.is-plain:hover{background:var(--btn-bg);color:var(--btn-text)}.lx-button.is-loading,.lx-button.is-disabled{transform:none;box-shadow:none;opacity:.5;cursor:not-allowed}.lx-button.is-loading:before,.lx-button.is-disabled:before{opacity:0;animation:none}.lx-button__loading{animation:lx-button-rotate-fb930535 .9s linear infinite}html.dark .lx-button{--btn-shadow-light: rgba(255, 255, 255, .05);--btn-shadow-dark: rgba(0, 0, 0, .3)}html.dark .lx-button--primary{--btn-bg: rgba(77, 102, 130, .34);--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 80%, #ffffff 10%);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 70%, #000000 20%);--btn-border: var(--accent-border);--btn-text: var(--accent-text);--btn-plain-text: #bdd0e4}html.dark .lx-button--info{--btn-bg: rgba(13, 148, 136, .4);--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 80%, #ffffff 10%);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 70%, #000000 20%);--btn-border: rgba(20, 184, 166, .4);--btn-text: #5eead4;--btn-plain-text: #2dd4bf}html.dark .lx-button--warning{--btn-bg: rgba(180, 83, 9, .4);--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 80%, #ffffff 10%);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 70%, #000000 20%);--btn-border: rgba(217, 119, 6, .4);--btn-text: #fcd34d;--btn-plain-text: #fbbf24}html.dark .lx-button--danger{--btn-bg: rgba(153, 27, 27, .4);--btn-bg-hover: color-mix(in srgb, var(--btn-bg) 80%, #ffffff 10%);--btn-bg-active: color-mix(in srgb, var(--btn-bg) 70%, #000000 20%);--btn-border: rgba(185, 28, 28, .4);--btn-text: #fca5a5;--btn-plain-text: #f87171}html.dark .lx-button--section{--btn-bg: var(--nested-outer-card-bg);--btn-bg-hover: var(--nested-outer-card-bg);--btn-bg-active: var(--nested-outer-card-bg);--btn-border: var(--nested-outer-card-border);--btn-text: var(--text-color);--btn-plain-text: var(--text-color);box-shadow:var(--nested-outer-card-shadow)}@keyframes lx-button-rotate-fb930535{0%{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes lx-button-sheen-fb930535{0%{transform:rotate(18deg) translate(-220%)}to{transform:rotate(18deg) translate(300%)}}
+/* ============================================================
+   lx-button —— 全站通用按钮组件
+   设计语言：与全站玻璃拟态主题统一
+   - 浅色：磨砂玻璃底 + 主题色描边 + 顶部内高光 + 柔和外阴影
+   - 深色：半透明色染玻璃 + 微弱内高光 + 深色投影
+   变体：primary / info / warning / danger / success / section
+   状态：is-round / is-circle / is-plain / is-loading / is-disabled
+   ============================================================ */
+
+.lx-button {
+  /* 默认（primary）主题色变量，可通过行内 style 覆盖 */
+  --btn-bg: color-mix(in srgb, var(--accent-solid) 18%, var(--card-bg));
+  --btn-bg-hover: color-mix(in srgb, var(--accent-solid) 26%, var(--card-bg));
+  --btn-bg-active: color-mix(in srgb, var(--accent-solid) 32%, var(--card-bg));
+  --btn-border: var(--accent-border);
+  --btn-text: var(--accent-text);
+  --btn-plain-text: var(--accent-strong);
+  /* 玻璃高光与投影（深色模式下重写） */
+  --btn-highlight: rgba(255, 255, 255, 0.6);
+  --btn-shadow: 0 6px 16px color-mix(in srgb, var(--btn-border) 52%, transparent);
+  --btn-shadow-hover: 0 10px 24px color-mix(in srgb, var(--btn-border) 68%, transparent);
+  --btn-shadow-active: 0 3px 8px color-mix(in srgb, var(--btn-border) 40%, transparent);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 92px;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--btn-border);
+  border-radius: 10px;
+  background: var(--btn-bg);
+  box-shadow: var(--btn-shadow), inset 0 1px 0 var(--btn-highlight);
+  color: var(--btn-text);
+  font-size: 15.5px;
+  line-height: 1;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.2s ease, box-shadow 0.24s ease, background-color 0.2s ease,
+    color 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* 扫光层：悬停时掠过一道高光 */
+.lx-button::before {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -40%;
+  z-index: 0;
+  width: 42%;
+  height: 340%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  opacity: 0;
+  transform: rotate(18deg) translate(-180%);
+  pointer-events: none;
+}
+
+.lx-button__content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.22s ease;
+}
+
+.lx-button__label {
+  white-space: nowrap;
+}
+
+/* ---------- 变体：浅色 ---------- */
+.lx-button--primary {
+  --btn-bg: color-mix(in srgb, var(--accent-solid) 18%, var(--card-bg));
+  --btn-bg-hover: color-mix(in srgb, var(--accent-solid) 26%, var(--card-bg));
+  --btn-bg-active: color-mix(in srgb, var(--accent-solid) 32%, var(--card-bg));
+  --btn-border: var(--accent-border);
+  --btn-text: var(--accent-text);
+  --btn-plain-text: var(--accent-strong);
+}
+
+.lx-button--info {
+  --btn-bg: color-mix(in srgb, #14b8a6 14%, var(--card-bg));
+  --btn-bg-hover: color-mix(in srgb, #14b8a6 22%, var(--card-bg));
+  --btn-bg-active: color-mix(in srgb, #14b8a6 28%, var(--card-bg));
+  --btn-border: rgba(20, 184, 166, 0.42);
+  --btn-text: #0f766e;
+  --btn-plain-text: #0f766e;
+}
+
+.lx-button--warning {
+  --btn-bg: color-mix(in srgb, #f59e0b 16%, var(--card-bg));
+  --btn-bg-hover: color-mix(in srgb, #f59e0b 24%, var(--card-bg));
+  --btn-bg-active: color-mix(in srgb, #f59e0b 30%, var(--card-bg));
+  --btn-border: rgba(217, 119, 6, 0.38);
+  --btn-text: #b45309;
+  --btn-plain-text: #b45309;
+}
+
+.lx-button--danger {
+  --btn-bg: color-mix(in srgb, #ef4444 13%, var(--card-bg));
+  --btn-bg-hover: color-mix(in srgb, #ef4444 20%, var(--card-bg));
+  --btn-bg-active: color-mix(in srgb, #ef4444 26%, var(--card-bg));
+  --btn-border: rgba(185, 28, 28, 0.32);
+  --btn-text: #b91c1c;
+  --btn-plain-text: #b91c1c;
+}
+
+.lx-button--success {
+  --btn-bg: color-mix(in srgb, #10b981 14%, var(--card-bg));
+  --btn-bg-hover: color-mix(in srgb, #10b981 22%, var(--card-bg));
+  --btn-bg-active: color-mix(in srgb, #10b981 28%, var(--card-bg));
+  --btn-border: rgba(5, 150, 105, 0.38);
+  --btn-text: #047857;
+  --btn-plain-text: #047857;
+}
+
+.lx-button--section {
+  --btn-bg: var(--nested-outer-card-bg);
+  --btn-bg-hover: var(--nested-outer-card-bg);
+  --btn-bg-active: var(--nested-outer-card-bg);
+  --btn-border: var(--nested-outer-card-border);
+  --btn-text: var(--text-color);
+  --btn-plain-text: var(--text-color);
+  --btn-shadow: var(--nested-outer-card-shadow);
+  --btn-shadow-hover: var(--nested-outer-card-shadow);
+  --btn-shadow-active: var(--nested-outer-card-shadow);
+}
+
+/* ---------- 交互状态 ---------- */
+.lx-button:hover {
+  transform: translateY(-2px);
+  background: var(--btn-bg-hover);
+  border-color: color-mix(in srgb, var(--btn-border) 80%, currentColor);
+  box-shadow: var(--btn-shadow-hover), inset 0 1px 0 var(--btn-highlight);
+}
+
+.lx-button:hover .lx-button__content {
+  transform: scale(1.02);
+}
+
+.lx-button:hover::before {
+  opacity: 0.55;
+  animation: lx-button-sheen-fb930535 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.lx-button:active {
+  transform: translateY(0) scale(0.985);
+  background: var(--btn-bg-active);
+  box-shadow: var(--btn-shadow-active), inset 0 2px 6px rgba(31, 68, 110, 0.1);
+}
+
+.lx-button:active .lx-button__content {
+  transform: scale(0.98);
+}
+
+.lx-button:focus-visible {
+  outline: none;
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-solid) 16%, transparent),
+    var(--btn-shadow), inset 0 1px 0 var(--btn-highlight);
+}
+
+/* ---------- 形状 ---------- */
+.lx-button.is-round {
+  border-radius: 999px;
+}
+
+.lx-button.is-circle {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+/* ---------- 朴素（未选中）状态 ---------- */
+.lx-button.is-plain {
+  background: color-mix(in srgb, var(--card-bg) 86%, transparent);
+  color: var(--btn-plain-text);
+  border-color: var(--btn-border);
+  box-shadow: inset 0 1px 0 var(--btn-highlight);
+}
+
+.lx-button.is-plain:hover {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  box-shadow: var(--btn-shadow-hover), inset 0 1px 0 var(--btn-highlight);
+}
+
+/* ---------- 加载 / 禁用 ---------- */
+.lx-button.is-loading,
+.lx-button.is-disabled {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lx-button.is-loading::before,
+.lx-button.is-disabled::before {
+  opacity: 0;
+  animation: none;
+}
+
+.lx-button__loading {
+  animation: lx-button-rotate-fb930535 0.9s linear infinite;
+}
+
+/* ---------- 深色模式 ---------- */
+html.dark .lx-button {
+  --btn-highlight: rgba(255, 255, 255, 0.07);
+  --btn-shadow: 0 6px 16px rgba(3, 8, 17, 0.3);
+  --btn-shadow-hover: 0 10px 24px rgba(3, 8, 17, 0.42);
+  --btn-shadow-active: 0 3px 8px rgba(3, 8, 17, 0.26);
+}
+
+html.dark .lx-button::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+}
+
+html.dark .lx-button--primary {
+  --btn-bg: rgba(77, 102, 130, 0.34);
+  --btn-bg-hover: rgba(77, 102, 130, 0.46);
+  --btn-bg-active: rgba(77, 102, 130, 0.56);
+  --btn-border: var(--accent-border);
+  --btn-text: var(--accent-text);
+  --btn-plain-text: #bdd0e4;
+}
+
+html.dark .lx-button--info {
+  --btn-bg: rgba(13, 148, 136, 0.34);
+  --btn-bg-hover: rgba(13, 148, 136, 0.46);
+  --btn-bg-active: rgba(13, 148, 136, 0.56);
+  --btn-border: rgba(20, 184, 166, 0.4);
+  --btn-text: #5eead4;
+  --btn-plain-text: #2dd4bf;
+}
+
+html.dark .lx-button--warning {
+  --btn-bg: rgba(180, 83, 9, 0.34);
+  --btn-bg-hover: rgba(180, 83, 9, 0.46);
+  --btn-bg-active: rgba(180, 83, 9, 0.56);
+  --btn-border: rgba(217, 119, 6, 0.4);
+  --btn-text: #fcd34d;
+  --btn-plain-text: #fbbf24;
+}
+
+html.dark .lx-button--danger {
+  --btn-bg: rgba(153, 27, 27, 0.34);
+  --btn-bg-hover: rgba(153, 27, 27, 0.46);
+  --btn-bg-active: rgba(153, 27, 27, 0.56);
+  --btn-border: rgba(185, 28, 28, 0.4);
+  --btn-text: #fca5a5;
+  --btn-plain-text: #f87171;
+}
+
+html.dark .lx-button--success {
+  --btn-bg: rgba(6, 95, 70, 0.36);
+  --btn-bg-hover: rgba(6, 95, 70, 0.48);
+  --btn-bg-active: rgba(6, 95, 70, 0.58);
+  --btn-border: rgba(16, 185, 129, 0.36);
+  --btn-text: #6ee7b7;
+  --btn-plain-text: #34d399;
+}
+
+html.dark .lx-button--section {
+  --btn-bg: var(--nested-outer-card-bg);
+  --btn-bg-hover: var(--nested-outer-card-bg);
+  --btn-bg-active: var(--nested-outer-card-bg);
+  --btn-border: var(--nested-outer-card-border);
+  --btn-text: var(--text-color);
+  --btn-plain-text: var(--text-color);
+  --btn-shadow: var(--nested-outer-card-shadow);
+  --btn-shadow-hover: var(--nested-outer-card-shadow);
+  --btn-shadow-active: var(--nested-outer-card-shadow);
+}
+
+html.dark .lx-button.is-plain {
+  background: color-mix(in srgb, var(--card-bg) 80%, transparent);
+}
+
+html.dark .lx-button:active {
+  box-shadow: var(--btn-shadow-active), inset 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* ---------- 动画 ---------- */
+@keyframes lx-button-rotate-fb930535 {
+  0% {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lx-button-sheen-fb930535 {
+  0% {
+    transform: rotate(18deg) translate(-220%);
+  }
+  to {
+    transform: rotate(18deg) translate(300%);
+  }
+}

@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.lxblog</groupId>
+    <groupId>com.chuxi</groupId>
     <artifactId>blog-backend</artifactId>
     <version>1.0.0</version>
     <name>blog-backend</name>

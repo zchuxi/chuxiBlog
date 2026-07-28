@@ -1,24 +1,5 @@
 <template>
   <div class="app-shell">
-    <!-- 主题切换日月过渡 -->
-    <div
-      class="sun-moon-theme-transition"
-      :class="[settings.isDark ? 'is-dark' : 'is-light', { 'is-visible': themeAnimating }]"
-    >
-      <div class="sun-moon-theme-transition__bg"></div>
-      <div class="sun-moon-theme-transition__stars">
-        <div
-          v-for="(s, i) in stars"
-          :key="i"
-          class="star"
-          :style="{ left: s.left, top: s.top, width: s.size, height: s.size, animationDelay: s.delay }"
-        ></div>
-      </div>
-      <div class="sun-moon-theme-transition__sun celestial"></div>
-      <div class="sun-moon-theme-transition__moon celestial"></div>
-      <div class="sun-moon-theme-transition__sea"></div>
-    </div>
-
     <!-- 背景 -->
     <div class="app-shell__background" :class="{ 'has-image': settings.backgroundImageEnabled, 'has-depth-motion': settings.backgroundImageEnabled }">
       <span
@@ -687,20 +668,8 @@ const route = useRoute()
 const router = useRouter()
 
 /* ---------- 主题 ---------- */
-const themeAnimating = ref(false)
-let themeTimer = null
-const stars = Array.from({ length: 90 }, () => ({
-  left: `${(Math.random() * 100).toFixed(4)}%`,
-  top: `${(Math.random() * 60).toFixed(4)}%`,
-  size: `${(1 + Math.random() * 2).toFixed(4)}px`,
-  delay: `${(Math.random() * 3).toFixed(2)}s`
-}))
-
 function toggleTheme() {
-  themeAnimating.value = true
   settings.setTheme(settings.isDark ? 'light' : 'dark')
-  clearTimeout(themeTimer)
-  themeTimer = setTimeout(() => { themeAnimating.value = false }, 1600)
 }
 
 /* ---------- 背景 ---------- */
@@ -749,12 +718,12 @@ watch(() => settings.backgroundImageEnabled, startBgCarousel)
 /* ---------- 导航 ---------- */
 const navItems = [
   { path: '/index', label: '首页', icon: 'common-home' },
+  { path: '/tool', label: '工具', icon: 'common-tool' },
+  { path: '/bangumi', label: '番剧', icon: 'common-articlePages' },
   { path: '/timeline', label: '时间线', icon: 'common-timeline' },
   { path: '/tree-hole', label: '树洞', icon: 'common-tree' },
   { path: '/parallax', label: '视差', icon: 'common-parallax' },
   { path: '/archive', label: '归档', icon: 'common-archive' },
-  { path: '/tool', label: '工具', icon: 'common-tool' },
-  { path: '/bangumi', label: '番剧', icon: 'common-articlePages' },
   { path: '/about', label: '关于', icon: 'common-person' },
   { path: '/components', label: '组件', icon: 'common-component' }
 ]
@@ -1137,7 +1106,6 @@ onBeforeUnmount(() => {
   if (pawScrollEl) pawScrollEl.removeEventListener('scroll', onMainScroll)
   stopBgCarousel()
   stopSakura()
-  clearTimeout(themeTimer)
 })
 </script>
 
@@ -2022,15 +1990,41 @@ html.dark .app-shell .shell-nav .nav-underline {
 html.dark .setting-dialog .setting-dialog__mask {
   background: rgba(0, 0, 0, 0.26);
 }
-/* 面板半透毛玻璃：透度适中 + 强模糊，背后内容只成柔和色块不干扰阅读
+/* 面板参考站透明感：低色浆半透、仅极轻模糊，背景图案透过面板清晰可见
    （双类选择器压过 layout.css 的 .setting-dialog__card 单类规则） */
 .setting-dialog .setting-dialog__card {
-  background: rgba(252, 253, 255, 0.88);
-  backdrop-filter: blur(22px) saturate(1.1);
-  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  background: rgba(252, 253, 255, 0.5);
+  backdrop-filter: blur(6px) saturate(1.08);
+  -webkit-backdrop-filter: blur(6px) saturate(1.08);
 }
 html.dark .setting-dialog .setting-dialog__card {
-  background: rgba(25, 27, 33, 0.86);
+  background: rgba(14, 16, 21, 0.52);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* 内部分区与卡片同步改半透，否则实底 --card-bg/--input-bg 会把透明感全部遮掉 */
+.setting-dialog .setting-section {
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: none;
+}
+.setting-dialog .effect-card,
+.setting-dialog .background-mode-card,
+.setting-dialog .background-rotation-card,
+.setting-dialog .gallery-card,
+.setting-dialog .theme-pick-card {
+  background: rgba(255, 255, 255, 0.32);
+}
+html.dark .setting-dialog .setting-section {
+  background: rgba(22, 25, 32, 0.4);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+html.dark .setting-dialog .effect-card,
+html.dark .setting-dialog .background-mode-card,
+html.dark .setting-dialog .background-rotation-card,
+html.dark .setting-dialog .gallery-card,
+html.dark .setting-dialog .theme-pick-card {
+  background: rgba(26, 29, 37, 0.38);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .setting-section__head {

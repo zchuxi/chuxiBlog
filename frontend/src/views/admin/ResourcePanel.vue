@@ -14,27 +14,24 @@
       <div v-if="selected.size" class="admin-batch-bar">
         <span class="admin-batch-count">已选 {{ selected.size }} 条</span>
         <template v-for="field in batchFields" :key="field.name">
-          <select
+          <AdminSelect
             v-if="field.type === 'select'"
-            class="admin-input admin-batch-select"
+            class="admin-batch-select"
+            :model-value="''"
+            :options="field.options"
+            :placeholder="`批量改${shortLabel(field)}…`"
             :disabled="batching"
-            :value="''"
-            @change="e => applyBatch(field, e.target.value, e)"
-          >
-            <option value="" disabled>批量改{{ shortLabel(field) }}…</option>
-            <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
-          </select>
-          <select
+            @change="v => applyBatch(field, v)"
+          />
+          <AdminSelect
             v-else-if="field.type === 'boolean'"
-            class="admin-input admin-batch-select"
+            class="admin-batch-select"
+            :model-value="''"
+            :options="[{ label: '是', value: true }, { label: '否', value: false }]"
+            :placeholder="`批量改${shortLabel(field)}…`"
             :disabled="batching"
-            :value="''"
-            @change="e => applyBatch(field, e.target.value === 'true', e)"
-          >
-            <option value="" disabled>批量改{{ shortLabel(field) }}…</option>
-            <option value="true">是</option>
-            <option value="false">否</option>
-          </select>
+            @change="v => applyBatch(field, v)"
+          />
           <button
             v-else
             class="admin-btn admin-btn-ghost"
@@ -63,8 +60,8 @@
                 <input
                   type="checkbox"
                   class="admin-check"
-                  :checked="rows.length > 0 && selected.size === rows.length"
-                  :indeterminate.prop="selected.size > 0 && selected.size < rows.length"
+                  :checked="pagedRows.length > 0 && pagedRows.every(r => selected.has(r.id))"
+                  :indeterminate.prop="pagedRows.some(r => selected.has(r.id)) && !pagedRows.every(r => selected.has(r.id))"
                   @change="toggleAll"
                 />
               </th>
@@ -73,7 +70,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :key="row.id" :class="{ 'is-checked': selected.has(row.id) }">
+            <tr v-for="row in pagedRows" :key="row.id" :class="{ 'is-checked': selected.has(row.id) }">
               <td class="admin-col-check">
                 <input
                   type="checkbox"
@@ -101,6 +98,34 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <!-- 分页栏：前端切页，仅多于一页时展示翻页按钮 -->
+      <div v-if="!loading && rows.length > 0" class="admin-pager">
+        <span class="admin-pager-info">共 {{ rows.length }} 条 · 第 {{ pageNo }}/{{ totalPages }} 页</span>
+        <div v-if="totalPages > 1" class="admin-pager-btns">
+          <button class="admin-pager-btn" :disabled="pageNo === 1" @click="gotoPage(pageNo - 1)">上一页</button>
+          <template v-for="(item, i) in pageItems" :key="i">
+            <span v-if="item === '…'" class="admin-pager-ellipsis">…</span>
+            <button
+              v-else
+              class="admin-pager-btn admin-pager-num"
+              :class="{ 'is-active': item === pageNo }"
+              @click="gotoPage(item)"
+            >
+              {{ item }}
+            </button>
+          </template>
+          <button class="admin-pager-btn" :disabled="pageNo === totalPages" @click="gotoPage(pageNo + 1)">下一页</button>
+        </div>
+        <AdminSelect
+          v-model="pageSize"
+          class="admin-pager-size"
+          :options="[
+            { label: '10 条/页', value: 10 },
+            { label: '20 条/页', value: 20 },
+            { label: '50 条/页', value: 50 }
+          ]"
+        />
       </div>
     </div>
 
@@ -139,6 +164,7 @@
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
+import AdminSelect from './AdminSelect.vue'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
 const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image', 'audio'])
@@ -164,6 +190,38 @@ const form = ref({})
 // 多选：选中行 id 集合；批量操作进行中标记
 const selected = ref(new Set())
 const batching = ref(false)
+
+// 前端分页：list 接口返回全量，这里切页展示
+const pageNo = ref(1)
+const pageSize = ref(10)
+const totalPages = computed(() => Math.max(1, Math.ceil(rows.value.length / pageSize.value)))
+const pagedRows = computed(() =>
+  rows.value.slice((pageNo.value - 1) * pageSize.value, pageNo.value * pageSize.value)
+)
+// 页码列表：总页数多时用省略号收敛（首页 + 当前页邻域 + 尾页）
+const pageItems = computed(() => {
+  const total = totalPages.value
+  const cur = pageNo.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const items = [1]
+  if (cur > 3) items.push('…')
+  for (let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) items.push(p)
+  if (cur < total - 2) items.push('…')
+  items.push(total)
+  return items
+})
+
+function gotoPage(p) {
+  pageNo.value = Math.min(Math.max(1, p), totalPages.value)
+}
+
+// 数据量变化（删除/改每页条数）后把当前页钉回合法范围
+watch([totalPages], () => {
+  if (pageNo.value > totalPages.value) pageNo.value = totalPages.value
+})
+watch(pageSize, () => {
+  pageNo.value = 1
+})
 
 const api = computed(() => adminApi[props.schema.key])
 const columns = computed(() =>
@@ -210,8 +268,15 @@ function toggleRow(row) {
   selected.value = next
 }
 
+// 表头全选作用于当前页；跨页已选的行保持选中状态
 function toggleAll() {
-  selected.value = selected.value.size === rows.value.length ? new Set() : new Set(rows.value.map(r => r.id))
+  const next = new Set(selected.value)
+  const allChecked = pagedRows.value.every(r => next.has(r.id))
+  for (const r of pagedRows.value) {
+    if (allChecked) next.delete(r.id)
+    else next.add(r.id)
+  }
+  selected.value = next
 }
 
 function clearSelection() {
@@ -362,6 +427,7 @@ watch(
   () => {
     drawerOpen.value = false
     rows.value = []
+    pageNo.value = 1
     load()
   }
 )
