@@ -132,13 +132,6 @@ onMounted(async () => {
     renderedHtml.value = renderMarkdown(content.value.markdown).html
   } catch { /* 无数据或解析失败时展示占位文案 */ }
 
-  // 读取站点设置（头像、站名、标语）
-  try {
-    const record = await api.siteContent('site-settings')
-    const parsed = JSON.parse((record && record.contentJson) || '{}')
-    if (parsed && typeof parsed === 'object') siteSettings.value = parsed
-  } catch { /* 无数据时保留默认值 */ }
-
   // 读取友情链接
   try {
     const list = await api.friendLinks()

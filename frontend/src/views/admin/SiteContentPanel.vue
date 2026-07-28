@@ -67,8 +67,14 @@
       </div>
     </div>
 
-    <!-- about：关于页（左编右预览） -->
+    <!-- about：关于页（头像 + 标题，左编右预览） -->
     <template v-else>
+      <div class="scp-card">
+        <FieldInput :field="AVATAR_FIELD" v-model="avatarUrl" />
+        <p class="admin-field-tip scp-avatar-tip">
+          展示在前台「关于」页左侧圆形头像，随本页保存合并写入站点设置（不影响站名、SEO 等其他配置）；留空则回退为站点 Logo。
+        </p>
+      </div>
       <div class="scp-card">
         <div class="admin-field">
           <label class="admin-field-label">页面标题</label>
@@ -101,6 +107,7 @@ import { siteContentApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
 import AdminSelect from './AdminSelect.vue'
+import FieldInput from './FieldInput.vue'
 
 const props = defineProps({
   // home-landing | about | archive-hero
@@ -118,7 +125,7 @@ const META = {
   },
   about: {
     title: '关于页',
-    desc: '此处内容对应前台「关于」页面：页面标题与 Markdown 正文。'
+    desc: '此处内容对应前台「关于」页面：左侧头像、页面标题与 Markdown 正文。'
   },
   'archive-hero': {
     title: '归档页文案',
@@ -146,6 +153,13 @@ const PAGE_TARGETS = [
 const loading = ref(false)
 const saving = ref(false)
 const form = ref(defaultForm(props.contentKey))
+
+// 关于页头像存在站点设置（site-settings）里，与站名/Logo 同一条记录；
+// 这里只改 avatarUrl，保存时把原记录其余字段原样带回，避免覆盖站点设置面板的内容
+const SETTINGS_KEY = 'site-settings'
+const AVATAR_FIELD = { name: 'avatarUrl', label: '关于页头像', type: 'image', ratio: 1 }
+const avatarUrl = ref('')
+const settingsRest = ref({})
 
 // 各 key 的默认结构（表单态：数组字段用多行文本承载）
 function defaultForm(key) {
@@ -266,12 +280,32 @@ async function load() {
   } finally {
     loading.value = false
   }
+  if (props.contentKey === 'about') await loadAvatar()
+}
+
+async function loadAvatar() {
+  try {
+    const obj = parseContent(await siteContentApi.get(SETTINGS_KEY)) || {}
+    const { avatarUrl: saved, ...rest } = obj
+    avatarUrl.value = saved || ''
+    settingsRest.value = rest
+  } catch {
+    // 站点设置尚未创建时按空处理，保存会新建记录
+    avatarUrl.value = ''
+    settingsRest.value = {}
+  }
 }
 
 async function save() {
   saving.value = true
   try {
     await siteContentApi.save(props.contentKey, JSON.stringify(buildContent()))
+    if (props.contentKey === 'about') {
+      await siteContentApi.save(
+        SETTINGS_KEY,
+        JSON.stringify({ ...settingsRest.value, avatarUrl: avatarUrl.value })
+      )
+    }
     toast('保存成功，前台已生效')
   } catch (err) {
     if (err && err.unauthorized) {
@@ -353,6 +387,10 @@ onMounted(load)
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #8aa5c4;
+}
+
+.scp-avatar-tip {
+  margin: 10px 0 0;
 }
 
 /* 双类选择器压过 admin.css 的 .admin-textarea{min-height:72px}（同特异性按加载顺序取胜会失效） */
