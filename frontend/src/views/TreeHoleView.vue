@@ -151,7 +151,10 @@ function addDanmu(b, initial = false) {
   const stageHeight = stage ? stage.clientHeight : 420
   const lanes = Math.max(4, Math.floor(stageHeight / 58))
   const lane = laneCursor++ % lanes
-  const width = Math.min(280, 120 + String(b.content || '').length * 14)
+  // 宽度要装下整块胶囊：mood+昵称+点赞约 150px，正文按字数估算；
+  // 估窄了 flex 会把 overflow:hidden 的正文压成 0 宽（只显示昵称和点赞）
+  const fixedW = 150 + String(b.nickname || '').length * 9
+  const width = Math.min(360, Math.round(stageWidth * 0.7), fixedW + String(b.content || '').length * 15)
   const duration = 14 + Math.random() * 8
   danmus.value.push({
     key: `dm-${keySeq++}`,
