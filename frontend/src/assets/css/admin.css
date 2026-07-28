@@ -1312,6 +1312,12 @@ html.dark {
 .admin-img-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .admin-img-actions .admin-btn { flex: 1; min-width: 118px; }
 
+/* 音频字段：URL 输入 + 导入按钮 + 试听条 */
+.admin-audio-field { display: flex; flex-direction: column; gap: 10px; }
+.admin-audio-field .admin-img-actions { align-items: center; }
+.admin-audio-field .admin-img-actions .admin-btn { flex: 0 0 auto; }
+.admin-audio-preview { flex: 1; min-width: 200px; height: 36px; }
+
 @media (max-width: 900px) {
   .admin-modal, .admin-modal.wide { width: calc(100vw - 24px); max-height: calc(100vh - 24px); }
   .admin-form-grid { grid-template-columns: minmax(0, 1fr); }

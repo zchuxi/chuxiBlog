@@ -141,7 +141,7 @@ import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
-const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image'])
+const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image', 'audio'])
 function fieldSpanClass(field) {
   return FULL_ROW_TYPES.has(field.type) || /title|name|summary|url|content/i.test(field.name)
     ? 'admin-field-full'

@@ -180,7 +180,7 @@ export const resourceSchemas = [
       { name: 'imageUrl', label: '配图', type: 'image', ratio: 16 / 10 },
       { name: 'readTime', label: '阅读时长', type: 'text' },
       { name: 'sortIndex', label: '排序值', type: 'number' },
-      { name: 'audioUrl', label: '音频地址', type: 'text' },
+      { name: 'audioUrl', label: '音频（可导入本地文件）', type: 'audio' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]
@@ -195,7 +195,7 @@ export const resourceSchemas = [
       { name: 'artist', label: '歌手', type: 'text' },
       { name: 'album', label: '专辑', type: 'text' },
       { name: 'coverUrl', label: '封面', type: 'image', ratio: 1 },
-      { name: 'musicUrl', label: '音频地址', type: 'text' },
+      { name: 'musicUrl', label: '音频（可导入本地文件）', type: 'audio' },
       { name: 'lyric', label: '歌词', type: 'textarea' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]

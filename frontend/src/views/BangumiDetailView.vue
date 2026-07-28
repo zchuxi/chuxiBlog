@@ -416,7 +416,8 @@ watch(
 /* ===== 番剧详情页（bangumi-detail- 前缀，非 scoped） ===== */
 .bangumi-detail-page {
   min-height: 100%;
-  padding: 96px 20px 72px;
+  /* 顶栏悬浮覆盖，全局已留位，页面不再叠加大留白 */
+  padding: 10px 20px 72px;
 }
 .bangumi-detail-shell {
   max-width: 1080px;
@@ -983,7 +984,7 @@ html.dark .bangumi-detail-dist-bar {
 /* 响应式 */
 @media (max-width: 720px) {
   .bangumi-detail-page {
-    padding: 84px 14px 56px;
+    padding: 6px 14px 56px;
   }
   .bangumi-detail-hero {
     flex-direction: column;
@@ -1013,7 +1014,7 @@ html.dark .bangumi-detail-dist-bar {
 /* ===== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ===== */
 @media (max-width: 768px) {
   .bangumi-detail-page {
-    padding: 84px 14px 56px;
+    padding: 6px 14px 56px;
   }
   /* HERO 岛上下堆叠，封面居中限宽 */
   .bangumi-detail-hero {

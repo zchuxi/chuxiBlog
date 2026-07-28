@@ -170,7 +170,9 @@ onMounted(async () => {
 /* ===== 番剧记录页（bangumi- 前缀，非 scoped） ===== */
 .bangumi-page {
   min-height: 100%;
-  padding: 96px 20px 72px;
+  /* 顶栏已改悬浮覆盖（.app-shell-main 全局 padding-top 82px 让位），
+     页面自身不再叠加大留白 */
+  padding: 10px 20px 72px;
 }
 .bangumi-shell {
   max-width: 1200px;
@@ -486,7 +488,7 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
 /* 响应式 */
 @media (max-width: 720px) {
   .bangumi-page {
-    padding: 84px 14px 56px;
+    padding: 6px 14px 56px;
   }
   .bangumi-hero {
     padding: 24px 20px 20px;
@@ -506,7 +508,7 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
 /* ===== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ===== */
 @media (max-width: 768px) {
   .bangumi-page {
-    padding: 84px 14px 56px;
+    padding: 6px 14px 56px;
   }
   .bangumi-hero {
     padding: 24px 20px 20px;

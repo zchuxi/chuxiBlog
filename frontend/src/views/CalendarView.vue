@@ -123,7 +123,8 @@ onMounted(async () => {
 /* ===== 每日放送页（calendar- 前缀，非 scoped） ===== */
 .calendar-page {
   min-height: 100%;
-  padding: 96px 20px 72px;
+  /* 顶栏悬浮覆盖，全局已留位，页面不再叠加大留白 */
+  padding: 10px 20px 72px;
 }
 .calendar-shell {
   max-width: 1200px;
@@ -309,7 +310,7 @@ onMounted(async () => {
 /* 移动端 */
 @media (max-width: 768px) {
   .calendar-page {
-    padding: 84px 14px 56px;
+    padding: 6px 14px 56px;
   }
   .calendar-hero {
     padding: 24px 20px 20px;

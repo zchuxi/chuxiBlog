@@ -327,10 +327,12 @@ onMounted(load)
   color: #8aa5c4;
 }
 
-.scp-md-input {
-  min-height: 46vh;
+/* 双类选择器压过 admin.css 的 .admin-textarea{min-height:72px}（同特异性按加载顺序取胜会失效） */
+.admin-textarea.scp-md-input {
+  min-height: 62vh;
   font-size: 14.5px;
   line-height: 1.7;
+  resize: vertical;
 }
 
 .scp-preview-card {
@@ -385,8 +387,8 @@ html.dark .scp-head-sub {
     padding: 14px 16px;
   }
 
-  .scp-md-input {
-    min-height: 38vh;
+  .admin-textarea.scp-md-input {
+    min-height: 46vh;
   }
 }
 </style>

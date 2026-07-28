@@ -19,6 +19,20 @@
         </button>
       </div>
 
+      <!-- 用 Bangumi 访问令牌同步个人收藏（token 只存本地浏览器，不入库不入仓） -->
+      <div class="bgm-import-row bgm-sync-row">
+        <span class="bgm-import-label">同步我的收藏</span>
+        <input
+          v-model.trim="bgmToken"
+          class="admin-input bgm-import-input"
+          type="password"
+          placeholder="粘贴 Bangumi 访问令牌（next.bgm.tv/demo/access-token 生成）"
+        />
+        <button class="admin-btn" :disabled="syncing" @click="syncCollections">
+          {{ syncing ? syncTip || '同步中…' : '同步收藏' }}
+        </button>
+      </div>
+
       <ul v-if="results.length" class="bgm-result-list">
         <li v-for="item in results" :key="item.id" class="bgm-result-item">
           <img
@@ -69,6 +83,12 @@ const importingId = ref(null)
 const cleaning = ref(false)
 const panelKey = ref(0)
 
+// Bangumi 访问令牌：仅存当前浏览器 localStorage
+const TOKEN_KEY = 'lx-bgm-token'
+const bgmToken = ref(localStorage.getItem(TOKEN_KEY) || '')
+const syncing = ref(false)
+const syncTip = ref('')
+
 // 已收录的 bgm 条目 id，用于搜索结果里标注与拦截重复导入
 const existingSubjectIds = ref(new Set())
 
@@ -80,6 +100,116 @@ async function loadExisting() {
 }
 
 onMounted(loadExisting)
+
+/* ===== 同步个人收藏（bgm v0 API，Bearer 认证） ===== */
+
+// bgm 收藏类型 -> 本站五状态
+const COLLECTION_STATUS = { 1: '想看', 2: '看过', 3: '在看', 4: '搁置', 5: '弃番' }
+
+function authHeaders() {
+  return { Authorization: `Bearer ${bgmToken.value}` }
+}
+
+/** 收藏条目 -> 新建 record（subject 为收藏接口附带的精简条目信息） */
+function buildCollectionRecord(item) {
+  const s = item.subject || {}
+  const images = s.images || {}
+  return {
+    subjectId: item.subject_id,
+    name: s.name || '',
+    nameCn: s.name_cn || s.name || '',
+    coverUrl: images.common || images.large || images.medium || '',
+    totalEps: Number(s.eps) || 0,
+    watchedEps: Number(item.ep_status) || 0,
+    status: COLLECTION_STATUS[item.type] || '想看',
+    rating: item.rate > 0 ? Number(item.rate) : null,
+    score: s.score == null ? null : Number(s.score),
+    airDate: s.date || '',
+    rank: s.rank ? Number(s.rank) : null,
+    summary: s.short_summary || '',
+    tags: Array.isArray(item.tags) ? item.tags.slice(0, 4) : [],
+    visible: true
+  }
+}
+
+async function syncCollections() {
+  if (!bgmToken.value) {
+    toast && toast('先粘贴 Bangumi 访问令牌吧', 'error')
+    return
+  }
+  syncing.value = true
+  syncTip.value = ''
+  try {
+    localStorage.setItem(TOKEN_KEY, bgmToken.value)
+    // 1. 拿用户名
+    const meRes = await fetch('https://api.bgm.tv/v0/me', { headers: authHeaders() })
+    if (meRes.status === 401) throw new Error('令牌无效或已过期')
+    if (!meRes.ok) throw new Error(`获取用户信息失败: ${meRes.status}`)
+    const me = await meRes.json()
+    // 2. 分页拉全部动画收藏
+    const items = []
+    let offset = 0
+    let total = Infinity
+    while (offset < total && offset < 1000) {
+      syncTip.value = `拉取中 ${items.length}…`
+      const res = await fetch(
+        `https://api.bgm.tv/v0/users/${encodeURIComponent(me.username)}/collections?subject_type=2&limit=50&offset=${offset}`,
+        { headers: authHeaders() }
+      )
+      if (!res.ok) throw new Error(`获取收藏失败: ${res.status}`)
+      const data = await res.json()
+      total = Number(data.total) || 0
+      const page = Array.isArray(data.data) ? data.data : []
+      items.push(...page)
+      if (!page.length) break
+      offset += page.length
+    }
+    if (!items.length) {
+      toast && toast(`${me.nickname || me.username} 的收藏是空的，去 bgm 标几部吧`) 
+      return
+    }
+    // 3. 新条目创建，已收录的按 bgm 收藏更新状态/进度/评分（后端 update 为整体替换，回传完整行）
+    const list = (await adminApi['bangumi-records'].list()) || []
+    const bySubject = new Map(list.filter(r => r.subjectId).map(r => [Number(r.subjectId), r]))
+    let created = 0
+    let updated = 0
+    for (const [i, item] of items.entries()) {
+      syncTip.value = `同步中 ${i + 1}/${items.length}`
+      const exist = bySubject.get(Number(item.subject_id))
+      if (!exist) {
+        await adminApi['bangumi-records'].create(buildCollectionRecord(item))
+        created += 1
+      } else {
+        const next = {
+          ...exist,
+          status: COLLECTION_STATUS[item.type] || exist.status,
+          watchedEps: Number(item.ep_status) || 0,
+          rating: item.rate > 0 ? Number(item.rate) : exist.rating
+        }
+        if (
+          next.status !== exist.status ||
+          next.watchedEps !== (exist.watchedEps || 0) ||
+          next.rating !== exist.rating
+        ) {
+          await adminApi['bangumi-records'].update(exist.id, next)
+          updated += 1
+        }
+      }
+    }
+    toast && toast(`同步完成：新增 ${created} 部，更新 ${updated} 部（共 ${items.length} 条收藏）`)
+    await loadExisting()
+    panelKey.value += 1
+  } catch (err) {
+    if (err && err.unauthorized) {
+      onUnauthorized && onUnauthorized()
+      return
+    }
+    toast && toast((err && err.message) || '同步失败，可能是网络或跨域限制', 'error')
+  } finally {
+    syncing.value = false
+    syncTip.value = ''
+  }
+}
 
 /** 清理重复：同一 subjectId 只保留最早收录的一条 */
 async function cleanDuplicates() {
@@ -273,6 +403,11 @@ async function importItem(item) {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+.bgm-sync-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--adm-border-soft, rgba(63, 119, 181, 0.15));
 }
 .bgm-import-label {
   font-size: 14.5px;

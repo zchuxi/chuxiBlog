@@ -4,8 +4,9 @@ server:
 spring:
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 25MB
+      # 音频导入需要更大体积上限
+      max-file-size: 100MB
+      max-request-size: 110MB
   datasource:
     url: jdbc:mysql://localhost:3306/blog_db?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
@@ -25,3 +26,17 @@ spring:
 logging:
   level:
     org.hibernate.SQL: warn
+
+# 阿里云 OSS：配齐 access-key 后上传自动走 OSS；留空则回退本地 uploads/ 目录
+# AK/SK 务必通过环境变量注入，不要写死在配置文件里提交到仓库
+aliyun:
+  oss:
+    enabled: ${OSS_ENABLED:true}
+    endpoint: ${OSS_ENDPOINT:https://oss-cn-beijing.aliyuncs.com}
+    bucket: ${OSS_BUCKET:chuxisleep}
+    access-key-id: ${OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+    # 对象前缀（目录），统一收拢媒体文件
+    dir: ${OSS_DIR:media/}
+    # 自定义域名（可选，如 CDN 域名）；留空则用 bucket.endpoint 公网地址
+    public-host: ${OSS_PUBLIC_HOST:}

@@ -87,6 +87,7 @@
                       type="button"
                       class="hero-nav-item"
                       :class="{ 'is-active': heroIndex === i }"
+                      @mouseenter="goHero(i)"
                       @click="goHero(i)"
                     >
                       <span class="hero-nav-item__bg-number">{{ i + 1 }}</span>

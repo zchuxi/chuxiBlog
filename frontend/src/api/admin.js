@@ -68,13 +68,19 @@ const RESOURCE_KEYS = [
   'bangumi-records'
 ]
 
-// 图片库
+// 媒体库（图片/音频）：音频文件体积大，上传单独放宽超时并支持进度回调
 export const mediaApi = {
   list: () => http.get('/admin/media'),
-  upload: (file, filename) => {
+  upload: (file, filename, onProgress) => {
     const form = new FormData()
     form.append('file', file, filename || file.name)
-    return http.post('/admin/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return http.post('/admin/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 300000,
+      onUploadProgress: e => {
+        if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100))
+      }
+    })
   },
   remove: name => http.delete(`/admin/media/${encodeURIComponent(name)}`)
 }

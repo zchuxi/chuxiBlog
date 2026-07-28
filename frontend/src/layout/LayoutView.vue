@@ -20,20 +20,20 @@
     </div>
 
     <!-- 背景 -->
-    <div class="app-shell__background has-image has-depth-motion">
+    <div class="app-shell__background" :class="{ 'has-image': settings.backgroundImageEnabled, 'has-depth-motion': settings.backgroundImageEnabled }">
       <span
         v-for="(layer, i) in bgLayers"
         :key="i"
         class="app-shell__background-layer"
         :class="{ 'is-active': activeBgLayer === i, 'is-depth-animated': activeBgLayer === i }"
-        :style="{ backgroundImage: layer ? `linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.3)), url(${JSON.stringify(layer)})` : 'none' }"
+        :style="{ backgroundImage: layer && settings.backgroundImageEnabled ? `linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.3)), url(${JSON.stringify(layer)})` : 'none' }"
       ></span>
       <span class="app-shell__background-glow app-shell__background-glow--left"></span>
       <span class="app-shell__background-glow app-shell__background-glow--right"></span>
     </div>
 
     <!-- 顶栏 -->
-    <header class="app-shell-top">
+    <header class="app-shell-top" :class="{ 'is-solid': topbarSolid }">
       <div class="shell-brand">
         <span title="返回首页" @click="router.push('/index')">初曦的窝</span>
         <nav ref="navRef" class="shell-nav" @mouseleave="hoverPath = ''">
@@ -428,24 +428,128 @@
           <div class="setting-dialog__header">
             <span class="setting-dialog__badge"><SvgIcon name="common-setting" size="16px" /></span>
             <div class="setting-dialog__title-row">
-              <h3>站点设置</h3>
-              <p>背景、主题与小组件的偏好都在这里。</p>
+              <h3>偏好设置</h3>
+              <p>主题、背景与小组件的偏好都在这里。</p>
             </div>
           </div>
           <div class="setting-panel">
+            <!-- 外观主题：双预览卡，参考站同款布局 -->
             <section class="setting-section">
-              <div class="setting-section__title-wrap"><h4>页面特效</h4></div>
-              <div class="effect-card">
-                <div class="effect-card__content">
-                  <span>背景轮播</span>
-                  <button
-                    class="lx-switch"
-                    :class="{ 'is-checked': settings.backgroundCarouselEnabled }"
-                    @click="settings.update({ backgroundCarouselEnabled: !settings.backgroundCarouselEnabled })"
-                  >
-                    <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
-                  </button>
+              <div class="setting-section__head">
+                <span class="setting-section__icon"><SvgIcon :name="settings.isDark ? 'common-moon' : 'common-sun'" size="18px" /></span>
+                <div>
+                  <h4>外观主题</h4>
+                  <p>切换亮色 / 暗色，亮色模式采用浅透明毛玻璃质感。</p>
                 </div>
+              </div>
+              <div class="theme-pick-grid">
+                <button
+                  type="button"
+                  class="theme-pick-card"
+                  :class="{ 'is-active': !settings.isDark }"
+                  @click="settings.setTheme('light')"
+                >
+                  <span class="theme-pick-preview theme-pick-preview--light"><i></i></span>
+                  <span v-if="!settings.isDark" class="theme-pick-check"><SvgIcon name="common-sun" size="12px" /></span>
+                  <span class="theme-pick-name"><SvgIcon name="common-sun" size="15px" /> 亮色模式</span>
+                  <span class="theme-pick-desc">浅透明毛玻璃质感，明亮通透</span>
+                </button>
+                <button
+                  type="button"
+                  class="theme-pick-card"
+                  :class="{ 'is-active': settings.isDark }"
+                  @click="settings.setTheme('dark')"
+                >
+                  <span class="theme-pick-preview theme-pick-preview--dark"><i></i></span>
+                  <span v-if="settings.isDark" class="theme-pick-check"><SvgIcon name="common-moon" size="12px" /></span>
+                  <span class="theme-pick-name"><SvgIcon name="common-moon" size="15px" /> 暗色模式</span>
+                  <span class="theme-pick-desc">深色沉浸背景，夜间更护眼</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- 背景设置：背景模式 + 轮播 + 图库 -->
+            <section class="setting-section">
+              <div class="setting-section__head">
+                <span class="setting-section__icon"><SvgIcon name="common-archive" size="18px" /></span>
+                <div>
+                  <h4>背景设置</h4>
+                  <p>统一管理背景图、轮播切换与近远景效果。横屏与竖屏分别记忆选择。</p>
+                </div>
+              </div>
+              <div class="background-mode-card">
+                <div class="background-mode-card__header">
+                  <strong>背景模式</strong>
+                  <span>{{ settings.backgroundImageEnabled ? '已启用背景图' : '已关闭背景图' }}</span>
+                </div>
+                <div class="background-mode-card__group setting-radio-row">
+                  <label class="setting-radio" :class="{ 'is-checked': !settings.backgroundImageEnabled }">
+                    <input
+                      type="radio"
+                      name="bg-mode"
+                      :checked="!settings.backgroundImageEnabled"
+                      @change="settings.update({ backgroundImageEnabled: false })"
+                    />
+                    <i class="setting-radio__dot"></i>
+                    <span>无背景图</span>
+                  </label>
+                  <label class="setting-radio" :class="{ 'is-checked': settings.backgroundImageEnabled }">
+                    <input
+                      type="radio"
+                      name="bg-mode"
+                      :checked="settings.backgroundImageEnabled"
+                      @change="settings.update({ backgroundImageEnabled: true })"
+                    />
+                    <i class="setting-radio__dot"></i>
+                    <span>选择背景图</span>
+                  </label>
+                </div>
+              </div>
+              <div class="background-rotation-card" :class="{ 'is-disabled': !settings.backgroundImageEnabled }">
+                <div>
+                  <strong>背景轮播</strong>
+                  <p>开启后，背景会在图库中逐渐平滑切换图片；关闭时仅显示选中的单张背景。</p>
+                </div>
+                <button
+                  class="lx-switch"
+                  :class="{ 'is-checked': settings.backgroundCarouselEnabled }"
+                  :disabled="!settings.backgroundImageEnabled"
+                  @click="settings.update({ backgroundCarouselEnabled: !settings.backgroundCarouselEnabled })"
+                >
+                  <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
+                </button>
+              </div>
+              <div class="gallery-card" :class="{ 'is-disabled': !settings.backgroundImageEnabled }">
+                <div class="gallery-card__header">
+                  <strong>横屏背景</strong>
+                  <span>{{ settings.landscapeImages.length }} 张</span>
+                </div>
+                <div class="gallery-strip">
+                  <div
+                    v-for="img in settings.landscapeImages"
+                    :key="img"
+                    class="gallery-item"
+                    :class="{ 'is-active': settings.selectedLandscapeImage === img }"
+                    @click="settings.backgroundImageEnabled && chooseBackground(img)"
+                  >
+                    <img :src="img" alt="背景" loading="lazy" />
+                    <div class="gallery-item__overlay"></div>
+                    <span class="gallery-item__label">{{ img.split('/').pop() }}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 页面特效 -->
+            <section class="setting-section">
+              <div class="setting-section__head">
+                <span class="setting-section__icon"><SvgIcon name="common-component" size="18px" /></span>
+                <div>
+                  <h4>页面特效</h4>
+                  <p>氛围小组件，按喜好自由开关。</p>
+                </div>
+              </div>
+              <div class="effect-card">
                 <div class="effect-card__content">
                   <span>樱花飘落</span>
                   <button
@@ -465,27 +569,6 @@
                   >
                     <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
                   </button>
-                </div>
-              </div>
-            </section>
-            <section class="setting-section">
-              <div class="setting-section__title-wrap"><h4>背景图片</h4></div>
-              <div class="background-mode-card">
-                <div class="background-mode-card__header"><span>横屏背景</span></div>
-                <div class="background-mode-card__group gallery-stack">
-                  <div class="gallery-strip">
-                    <div
-                      v-for="img in settings.landscapeImages"
-                      :key="img"
-                      class="gallery-item"
-                      :class="{ 'is-active': settings.selectedLandscapeImage === img }"
-                      @click="chooseBackground(img)"
-                    >
-                      <img :src="img" alt="背景" loading="lazy" />
-                      <div class="gallery-item__overlay"></div>
-                      <span class="gallery-item__label">{{ img.split('/').pop() }}</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </section>
@@ -646,7 +729,7 @@ function chooseBackground(img) {
 
 function startBgCarousel() {
   stopBgCarousel()
-  if (!settings.backgroundCarouselEnabled) return
+  if (!settings.backgroundCarouselEnabled || !settings.backgroundImageEnabled) return
   bgTimer = setInterval(() => {
     const pool = currentPool()
     const cur = bgLayers.value[activeBgLayer.value]
@@ -661,6 +744,7 @@ function stopBgCarousel() {
 }
 
 watch(() => settings.backgroundCarouselEnabled, startBgCarousel)
+watch(() => settings.backgroundImageEnabled, startBgCarousel)
 
 /* ---------- 导航 ---------- */
 const navItems = [
@@ -945,14 +1029,20 @@ function scrollMainToTop() {
   if (main) main.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 向下滚动自动展开吊绳，回到顶部自动收起
+// 向下滚动自动展开吊绳，回到顶部自动收起；顶栏同步在透明/磨砂玻璃态间切换
 let pawScrollEl = null
+const topbarSolid = ref(false)
 function onMainScroll() {
-  pawOpen.value = pawScrollEl && pawScrollEl.scrollTop > 120
+  const st = pawScrollEl ? pawScrollEl.scrollTop : 0
+  pawOpen.value = st > 120
+  topbarSolid.value = st > 24
 }
 function bindPawScroll() {
   pawScrollEl = document.querySelector('.app-shell-main')
-  if (pawScrollEl) pawScrollEl.addEventListener('scroll', onMainScroll, { passive: true })
+  if (pawScrollEl) {
+    pawScrollEl.addEventListener('scroll', onMainScroll, { passive: true })
+    onMainScroll()
+  }
 }
 
 /* ---------- 搜索 ---------- */
@@ -1032,6 +1122,11 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
   window.addEventListener('keydown', onAuthKeydown)
   startBgCarousel()
+  // 后台可配置背景图库；拉取后若选中图变化（被移除回落）则平滑切换
+  settings.loadRemoteGallery().then(() => {
+    const img = isPortrait() ? settings.selectedVerticalImage : settings.selectedLandscapeImage
+    if (img && bgLayers.value[activeBgLayer.value] !== img) swapBackground(img)
+  })
   if (settings.live2dEnabled) initLive2d()
   if (settings.sakuraEnabled) nextTick(startSakura)
 })
@@ -1619,15 +1714,43 @@ html.dark .login-dialog__submit:hover {
   }
 }
 
-/* ========== 顶栏悬浮岛（覆盖 layout.css 的通栏样式） ========== */
-.app-shell > .app-shell-top {
-  margin: 10px 14px 0;
+/* ========== 顶栏悬浮岛（覆盖 layout.css 的通栏样式） ==========
+   顶栏绝对定位悬浮在内容上方，页面滚动时内容从栏后穿过，
+   透过半透明栏体能看到背后的正文/卡片而不只是背景图 */
+/* header 元素选择器提高特异性，压过 layout.css 的 position:relative 通栏规则 */
+.app-shell > header.app-shell-top {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  right: 14px;
+  margin: 0;
+  z-index: 30;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  box-shadow: 0 10px 28px rgba(88, 111, 214, 0.14), 0 2px 8px rgba(88, 111, 214, 0.08);
+  border: 1px solid transparent;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transition: background-color 0.36s ease, border-color 0.36s ease, box-shadow 0.36s ease,
+    backdrop-filter 0.36s ease;
+}
+
+.app-shell > .app-shell-top.is-solid {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(5px) saturate(1.1);
+  -webkit-backdrop-filter: blur(5px) saturate(1.1);
+  box-shadow: 0 6px 18px rgba(88, 111, 214, 0.08);
+}
+
+/* 内容区顶部留出顶栏高度，滚动时内容自然滑入栏后 */
+.app-shell .app-shell-main {
+  padding-top: 82px;
+}
+
+/* 右侧 AI 侧栏展开时内容下移，避免工具栏被悬浮顶栏遮住 */
+.layout-right-sidebar .layout-right-sidebar__inner {
+  padding-top: 62px;
 }
 
 /* 路由过渡遮罩跟随圆角，避免直角溢出 */
@@ -1636,9 +1759,18 @@ html.dark .login-dialog__submit:hover {
 }
 
 html.dark .app-shell > .app-shell-top {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(24, 30, 52, 0.66);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.26);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+html.dark .app-shell > .app-shell-top.is-solid {
+  border-color: rgba(255, 255, 255, 0.08);
+  /* 参考项目暗色主题：纯 alpha 色浆不加模糊，背景图清晰透出 */
+  background: rgba(24, 24, 24, 0.34);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
 /* ========== 底部音乐条悬浮岛（覆盖 layout.css 的通栏样式） ========== */
@@ -1689,10 +1821,12 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 }
 
 @media (max-width: 768px) {
-  /* 问题1+6：顶栏岛屿 margin 收紧为 8px 10px 0，内边距同步收紧；
+  /* 问题1+6：顶栏岛屿边距收紧，内边距同步收紧；
      顶栏单行布局 = [品牌 | 弹性空隙 | menu 按钮 | 动作按钮组] */
-  .app-shell > .app-shell-top {
-    margin: 8px 10px 0;
+  .app-shell > header.app-shell-top {
+    top: 8px;
+    left: 10px;
+    right: 10px;
     padding: 8px 12px;
     gap: 10px;
   }
@@ -1878,5 +2012,214 @@ html.dark .app-shell .shell-nav .nav-underline {
 }
 @media (max-width: 768px) {
   .app-shell .shell-nav .nav-underline { display: none; }
+}
+
+/* ===== 偏好设置弹窗（参考站同款分区布局） ===== */
+/* 遮罩变淡：去掉重渐变叠加，让弹窗背后的页面更清晰可见 */
+.setting-dialog .setting-dialog__mask {
+  background: rgba(0, 0, 0, 0.14);
+}
+html.dark .setting-dialog .setting-dialog__mask {
+  background: rgba(0, 0, 0, 0.26);
+}
+/* 面板半透毛玻璃：透度适中 + 强模糊，背后内容只成柔和色块不干扰阅读
+   （双类选择器压过 layout.css 的 .setting-dialog__card 单类规则） */
+.setting-dialog .setting-dialog__card {
+  background: rgba(252, 253, 255, 0.88);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+}
+html.dark .setting-dialog .setting-dialog__card {
+  background: rgba(25, 27, 33, 0.86);
+}
+
+.setting-section__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.setting-section__head h4 {
+  margin: 0 0 4px;
+  color: var(--text-color);
+  font-size: 20px;
+}
+.setting-section__head p {
+  margin: 0;
+  color: var(--text-color);
+  opacity: 0.62;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.setting-section__icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--topbar-border);
+  border-radius: 12px;
+  background: var(--action-btn-hover-bg);
+  color: var(--accent-text, var(--text-color));
+}
+
+/* 外观主题：双预览卡 */
+.theme-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.theme-pick-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--topbar-border);
+  border-radius: 18px;
+  background: var(--input-bg);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+}
+.theme-pick-card:hover {
+  transform: translateY(-2px);
+  border-color: #5f95cf;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+.theme-pick-card.is-active {
+  border-color: #7ab0e6;
+  box-shadow: 0 0 0 2px rgba(122, 176, 230, 0.35), 0 14px 28px rgba(0, 0, 0, 0.14);
+}
+.theme-pick-preview {
+  position: relative;
+  width: 100%;
+  height: 84px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--topbar-border);
+}
+.theme-pick-preview i {
+  position: absolute;
+  left: 12%;
+  bottom: 18%;
+  width: 62%;
+  height: 26%;
+  border-radius: 8px;
+}
+.theme-pick-preview--light {
+  background: linear-gradient(135deg, #dcebfb 0%, #f6fafe 55%, #ffffff 100%);
+}
+.theme-pick-preview--light i {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 16px rgba(120, 158, 202, 0.35);
+}
+.theme-pick-preview--dark {
+  background: linear-gradient(135deg, #10151f 0%, #1a2333 55%, #0b0e14 100%);
+}
+.theme-pick-preview--dark i {
+  background: rgba(38, 50, 70, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  left: auto;
+  right: 10%;
+}
+.theme-pick-check {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-solid, #3b82f6), var(--accent-strong, #2563eb));
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.4);
+}
+.theme-pick-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 700;
+}
+.theme-pick-desc {
+  color: var(--text-color);
+  opacity: 0.6;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* 背景模式单选 */
+.setting-radio-row {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.setting-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 15px;
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+.setting-radio input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.setting-radio__dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid var(--topbar-border);
+  background: var(--input-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.setting-radio__dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-solid, #3b82f6);
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+.setting-radio.is-checked {
+  opacity: 1;
+  font-weight: 700;
+}
+.setting-radio.is-checked .setting-radio__dot {
+  border-color: var(--accent-solid, #3b82f6);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+}
+.setting-radio.is-checked .setting-radio__dot::after {
+  transform: scale(1);
+}
+
+/* 禁用态下屏蔽交互 */
+.background-rotation-card.is-disabled,
+.setting-dialog .gallery-card.is-disabled {
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .theme-pick-grid {
+    grid-template-columns: 1fr;
+  }
+  .setting-radio-row {
+    gap: 18px;
+    flex-wrap: wrap;
+  }
 }
 </style>

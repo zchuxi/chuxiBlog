@@ -43,6 +43,24 @@
       <option v-for="opt in field.options || []" :key="opt" :value="opt">{{ opt }}</option>
     </select>
 
+    <!-- 音频：试听 + URL 输入 + 导入音频文件 -->
+    <div v-else-if="field.type === 'audio'" class="admin-audio-field">
+      <input
+        class="admin-input"
+        type="text"
+        :value="modelValue"
+        placeholder="音频 URL，可直接粘贴或点击下方导入"
+        @input="emit('update:modelValue', $event.target.value)"
+      />
+      <div class="admin-img-actions">
+        <button type="button" class="admin-btn admin-btn-ghost" :disabled="uploading" @click="fileRef?.click()">
+          {{ uploading ? `上传中…${uploadPercent}%` : '导入音频文件' }}
+        </button>
+        <audio v-if="modelValue" class="admin-audio-preview" :src="modelValue" controls preload="none"></audio>
+      </div>
+      <input ref="fileRef" type="file" accept="audio/*" hidden @change="onUploadAudio" />
+    </div>
+
     <!-- 图片：缩略图 + URL 输入 + 上传/图库 -->
     <div v-else-if="field.type === 'image'" class="admin-img-field">
       <div class="admin-img-thumb" :class="{ 'is-empty': !modelValue }">
@@ -107,6 +125,7 @@ const emit = defineEmits(['update:modelValue'])
 const pickerOpen = ref(false)
 const fileRef = ref(null)
 const uploading = ref(false)
+const uploadPercent = ref(0)
 const thumbBroken = ref(false)
 const cropTarget = ref(null)
 const toast = inject('adminToast', () => {})
@@ -143,6 +162,24 @@ async function onUpload(e) {
     toast('图片已上传')
   } catch (err) {
     toast((err && err.message) || '上传失败', 'error')
+  } finally {
+    uploading.value = false
+  }
+}
+
+// 音频导入：文件大，带上传进度提示
+async function onUploadAudio(e) {
+  const file = e.target.files && e.target.files[0]
+  e.target.value = ''
+  if (!file) return
+  uploading.value = true
+  uploadPercent.value = 0
+  try {
+    const data = await mediaApi.upload(file, file.name, p => (uploadPercent.value = p))
+    emit('update:modelValue', data.url)
+    toast('音频已导入')
+  } catch (err) {
+    toast((err && err.message) || '导入失败', 'error')
   } finally {
     uploading.value = false
   }

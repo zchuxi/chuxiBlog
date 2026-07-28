@@ -93,6 +93,7 @@
             :content-key="SITE_CONTENT_KEYS[currentKey]"
           />
           <MediaPanel v-else-if="currentKey === 'media'" />
+          <BackgroundPanel v-else-if="currentKey === 'background-gallery'" />
           <BangumiPanel v-else-if="currentKey === 'bangumi-records'" />
           <ResourcePanel v-else-if="currentSchema" :key="currentKey" :schema="currentSchema" />
         </main>
@@ -120,6 +121,7 @@ import resourceSchemas from './resourceSchemas'
 import SvgIcon from '../../components/SvgIcon.vue'
 import ResourcePanel from './ResourcePanel.vue'
 import MediaPanel from './MediaPanel.vue'
+import BackgroundPanel from './BackgroundPanel.vue'
 import BangumiPanel from './BangumiPanel.vue'
 import DashboardPanel from './DashboardPanel.vue'
 import PasswordDialog from './PasswordDialog.vue'
@@ -166,6 +168,7 @@ const menuGroups = [
     title: '资源',
     items: [
       { key: 'media', label: '图片管理', icon: 'common-icons' },
+      { key: 'background-gallery', label: '背景图库', icon: 'common-parallax' },
       { key: 'musics', label: '音乐管理', icon: 'common-music' },
       { key: 'tool-sites', label: '工具站点', icon: 'common-tool' },
       { key: 'bangumi-records', label: '番剧管理', icon: 'common-open' }
