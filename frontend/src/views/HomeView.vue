@@ -506,7 +506,7 @@ onMounted(async () => {
 }
 .home-page .home-landing__title {
   margin: 0;
-  font-size: clamp(46px, 6.2vw, 86px);
+  font-size: clamp(51px, 6.2vw, 95px);
   font-weight: 800;
   letter-spacing: 2px;
   line-height: 1.1;
@@ -515,7 +515,7 @@ onMounted(async () => {
 }
 .home-page .home-landing__subtitle {
   margin: 2px 0 0;
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 600;
   color: color-mix(in srgb, var(--text-color) 82%, transparent);
 }
@@ -526,7 +526,7 @@ onMounted(async () => {
 }
 .home-page .home-landing__welcome p {
   margin: 0;
-  font-size: 14px;
+  font-size: 15.5px;
   color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
 .home-page .home-landing__actions {
@@ -545,7 +545,7 @@ onMounted(async () => {
   background: color-mix(in srgb, var(--nested-outer-card-bg, rgba(255, 255, 255, 0.6)) 92%, transparent);
   color: var(--text-color);
   font: inherit;
-  font-size: 15px;
+  font-size: 16.5px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(10px);
@@ -569,7 +569,7 @@ onMounted(async () => {
 }
 .home-page .home-landing__views {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   color: color-mix(in srgb, var(--text-color) 55%, transparent);
 }
 .home-page .home-landing__scroll-hint {
@@ -583,7 +583,7 @@ onMounted(async () => {
   border: 1px solid rgba(126, 160, 198, 0.4);
   background: color-mix(in srgb, var(--nested-outer-card-bg, rgba(255, 255, 255, 0.6)) 90%, transparent);
   color: var(--text-color);
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   animation: home-landing-bounce 1.8s ease-in-out infinite;
 }
@@ -641,11 +641,11 @@ onMounted(async () => {
   }
   .home-page .home-landing__copy { padding-left: 0; }
   .home-page .home-landing__title {
-    font-size: clamp(34px, 9vw, 46px);
+    font-size: clamp(37px, 9vw, 51px);
     letter-spacing: 1px;
     overflow-wrap: anywhere;
   }
-  .home-page .home-landing__subtitle { font-size: 16px; }
+  .home-page .home-landing__subtitle { font-size: 17.5px; }
   .home-page .home-landing__aside { gap: 16px; }
   .home-page .home-landing__aside .profile-card,
   .home-page .home-landing__aside .signal-board-card { padding: 18px 16px; }
@@ -654,7 +654,7 @@ onMounted(async () => {
   .home-page .dashboard-highlight__hero .hero-visual { height: auto; }
 }
 @media (max-width: 480px) {
-  .home-page .home-landing__title { font-size: clamp(30px, 8.6vw, 38px); }
+  .home-page .home-landing__title { font-size: clamp(33px, 8.6vw, 42px); }
   .home-page .home-landing__actions {
     flex-direction: column;
     align-items: stretch;

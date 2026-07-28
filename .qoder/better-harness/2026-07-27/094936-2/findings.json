@@ -1,0 +1,169 @@
+{
+  "summary": {
+    "projectName": "网站2（初曦の巢博客）",
+    "locale": "zh-CN",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 25,
+    "overview": "本次为 session-limited 评审：30 天窗口内会话事实信封未产出任何候选任务片段（存在被禁用的来源根警告），结论主要由项目静态证据支撑。项目 README 与启动脚本的文档-现实一致性较好，但全仓零测试、构建默认跳过测试、schema 靠 ddl-auto 静默演进、工作区基线不干净，使代理变更缺少可机械验证与可回滚的边界。项目 Memory 仅有清单计数（2 条）且标题级审查覆盖为 0，本报告不对 Memory 健康做任何断言。",
+    "aiAgentPractice": {
+      "inspectedSurfaces": [],
+      "coverageRows": [
+        {
+          "surface": "Rules",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Skills",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        }
+      ]
+    },
+    "assignmentSummaries": [],
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "任务理解",
+        "score": 45,
+        "summary": "README 是唯一上下文入口且覆盖尚可，但「必须 java -jar 启动」等硬约束无保证性加载路径，且 31 个文件约 427 行未提交使 diff 无法充当范围边界；无会话证据可证明意图与验收边界曾被保持。",
+        "findingRefs": [
+          "critical-constraints-not-routable",
+          "dirty-working-baseline"
+        ]
+      },
+      {
+        "id": "controlled-execution",
+        "label": "可控执行",
+        "score": 50,
+        "summary": "一键启动脚本存在且与 README 静态吻合（未实际运行验证），但环境强绑定本机 MySQL 与明文默认凭据，项目内还残留自动放行全部 git push 形态的宽泛权限配置。",
+        "findingRefs": [
+          "machine-bound-environment",
+          "broad-push-auto-allow"
+        ]
+      },
+      {
+        "id": "change-validation",
+        "label": "改动验证",
+        "score": 35,
+        "summary": "后端 47 个、前端 12 个源文件对应 0 个测试文件，pom.xml 无 test 依赖，启动脚本显式 -DskipTests，前端无 lint/test 脚本：相关验证机制经检查确认缺失，唯一机械信号是编译/打包。",
+        "findingRefs": [
+          "no-behavior-validation-signal"
+        ]
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "可靠交付",
+        "score": 38,
+        "summary": "无 CI、无评审/合并保护、无发布记录，交付验收边界不可观测；schema 变更经 ddl-auto:update 直接生效且无迁移脚本或回滚路径，实体是变更热点却缺少风险相称的恢复面。",
+        "findingRefs": [
+          "schema-drift-no-rollback"
+        ]
+      },
+      {
+        "id": "learning-capture",
+        "label": "经验沉淀",
+        "score": 35,
+        "summary": "窗口内 0 个候选任务片段叠加被禁用的会话来源根（disabled-source-root），该证据缺口保留在证据边界内：既不能确认重复工作机会也不能宣告充分干净的无候选窗口；零 Skills 因缺少两次可比重复程序证据而未晋升为覆盖缺口。建议核对会话来源根配置后在下一窗口复评。",
+        "findingRefs": []
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "no-behavior-validation-signal",
+      "title": "全仓零测试且构建默认跳过测试，代理变更后无任何行为验证信号",
+      "severity": "High",
+      "reason": "事实：backend/pom.xml 无任何 test 依赖（java 47 源文件/0 测试），frontend/package.json 仅 dev/build/preview 三个脚本（js 12 源文件/0 测试），start-backend.bat 使用 mvn -DskipTests package。推断：代理交付任何后端/前端变更后，唯一可机械确认的证据是编译/打包通过，鉴权、API 返回体、级联删除等行为回归只能靠人工点检。所有者：backend/pom.xml、frontend/package.json 与 start-backend.bat。不确定性：编译/打包当前是否可通过未实际执行（静态证据）。",
+      "expectedOutput": [
+        "为核心变更热点提供一条项目自有的行为验证路径，使「编译通过」不再是变更后的唯一机械信号。"
+      ],
+      "expectedArtifact": "Test suite",
+      "aiFixPrompt": "/better-harness fix this issue\n\n在 backend/pom.xml 引入 spring-boot-starter-test（test scope），针对 30 天窗口内的变更热点（AdminContentController、AuthController）编写最小 API 行为测试；在 frontend/package.json 补充最小 lint 脚本作为前端第一层信号；保留 start-backend.bat 的打包路径但在 README 中声明测试的独立执行方式。\n\n## Validation\n\n- 在 backend/ 目录运行 mvn test，确认测试被执行且结果被完整报告\n- 在 frontend/ 目录运行新增的 lint 脚本，确认可产出可读结果或失败明细",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "critical-constraints-not-routable",
+      "title": "「必须 java -jar 启动」等违背即失败的硬约束仅存于 README，代理无保证性加载入口",
+      "severity": "Medium",
+      "reason": "事实：README 记载了多条硬约束——中文路径下 mvn spring-boot:run 因 GBK argfile 报 ClassNotFoundException 故必须 java -jar 运行、后端固定 8081、tags 在 API 层为数组而库内为 CSV、种子数据可清库重建；同时项目零 Rules、零 AGENTS.md（Glob 与资产清单双重确认）。推断：代理只能依赖偶然读取 README 才能避开这些陷阱，跨层约定无面向变更者的路由入口。不确定性：代理实际因此踩坑未被观测（无会话证据）。",
+      "expectedOutput": [
+        "给进入仓库的代理一个保证性加载的硬约束入口，使关键操作约定不再依赖偶然读取 README。"
+      ],
+      "expectedArtifact": "Rule",
+      "aiFixPrompt": "/better-harness fix this issue\n\n在仓库根创建最小代理指引入口（AGENTS.md 或等价规则资产），提炼 README 中 3-5 条违背即失败的硬约束（java -jar 启动方式、8081 端口、GBK argfile 陷阱、tags CSV 与数组互转、种子重建机制），每条指回 README 对应章节作为详情源，避免双份维护。\n\n## Validation\n\n- 核对指引中每条约束与 README 及实际配置（application.yml、start-backend.bat）逐条一致\n- 确认指引不复制凭据等敏感值",
+      "dimensionRefs": [
+        "task-understanding"
+      ]
+    },
+    {
+      "id": "dirty-working-baseline",
+      "title": "31 个已跟踪文件约 427 行未提交，diff 无法作为变更验收与回滚边界",
+      "severity": "Medium",
+      "reason": "事实：git status 显示 31 个已跟踪文件约 427 行未提交改动（集中于 frontend/src/views 与 frontend/src/assets/css），本地历史仅 4 个 commit 且全部落在同一天，历史置信度 low。推断：代理开启新任务时无法区分自己的改动与既有未提交改动，git diff 作为验收边界失效，出错回退会连带清掉用户未提交的工作。不确定性：未提交改动的意图（进行中还是遗忘）无法从静态证据判断。",
+      "expectedOutput": [
+        "恢复干净的工作区基线，使 git diff 重新成为代理变更的验收与安全回退边界。"
+      ],
+      "expectedArtifact": "Runbook",
+      "aiFixPrompt": "/better-harness fix this issue\n\n先向用户逐项确认 31 个未提交文件的意图（进行中、可提交、应丢弃），经用户明确批准后按语义切分为若干次提交；不得在未获用户确认前执行任何 commit 或 checkout 丢弃操作。\n\n## Validation\n\n- git status 显示工作区干净或仅剩用户明确声明的进行中改动\n- 每次提交的文件集合与其提交说明语义一致",
+      "dimensionRefs": [
+        "task-understanding"
+      ]
+    },
+    {
+      "id": "machine-bound-environment",
+      "title": "启动强绑定本机 MySQL 与明文默认凭据，环境不可迁移且凭据入仓",
+      "severity": "Medium",
+      "reason": "事实：application.yml 以默认值形式内置数据库凭据（已有 ${DB_PASSWORD:...} 环境变量占位但默认值为真实弱口令），start-backend.bat 再次硬编码同一密码，README 将管理端默认口令与「本机 8080 被占用」这一机器特定状态写入项目文档。推断：任何缺少该特定 MySQL 的环境（含代理沙箱）都无法启动后端做运行时验证；换机器后文档与现实脱节。不确定性：项目部署意图未知，不能断言已构成生产安全事故，仅能确认凭据存在于仓库。",
+      "expectedOutput": [
+        "使后端启动路径在任何提供了环境变量的机器上可复现，且仓库不再承载真实凭据。"
+      ],
+      "expectedArtifact": "Config",
+      "aiFixPrompt": "/better-harness fix this issue\n\n将 application.yml 与 start-backend.bat 中的真实口令默认值移出仓库：保留 ${DB_PASSWORD} 等已有环境变量占位但不再内置真实值，改由本地未跟踪的环境文件或启动参数注入；轮换已入仓的数据库与管理端口令；将 README 中机器特定描述（端口占用原因）改写为可迁移的配置说明。涉及口令轮换与外部环境改动前须获得用户明确授权。\n\n## Validation\n\n- 仓库内（含 git 历史外的当前跟踪文件）不再出现明文真实口令\n- 按 README 更新后的说明可在提供环境变量后走 start-backend.bat 原路径启动",
+      "dimensionRefs": [
+        "controlled-execution"
+      ]
+    },
+    {
+      "id": "schema-drift-no-rollback",
+      "title": "实体变更经 ddl-auto:update 静默改库，无迁移脚本与回滚路径",
+      "severity": "Medium",
+      "reason": "事实：application.yml 配置 ddl-auto: update，pom.xml 无 Flyway/Liquibase 依赖，entity 目录 15 个实体即 schema 事实源，且实体文件位于 30 天变更热点前列。推断：代理修改实体字段会在下次启动时静默变更数据库结构，删列/改类型不同步、失败无回滚，schema 漂移无任何检测点。不确定性：实际数据库当前状态与漂移程度未验证（未连接运行时）。",
+      "expectedOutput": [
+        "让实体/schema 变更留下可审计、可回退的痕迹，替代静默的 ddl-auto 漂移。"
+      ],
+      "expectedArtifact": "Migration baseline",
+      "aiFixPrompt": "/better-harness fix this issue\n\n为 schema 演进建立最小可回滚路径：优先评估引入迁移工具（如 Flyway）并以当前实体状态生成基线迁移；若暂不引入工具，则在 README 增补「实体变更须知」章节，声明破坏性变更（删列/改类型）的手工规程与备份要求。数据库结构基线化操作前须获得用户明确授权。\n\n## Validation\n\n- 存在与当前 15 个实体一致的 schema 基线（迁移脚本或书面规程）\n- 破坏性实体变更有明确的执行前检查点与恢复说明",
+      "dimensionRefs": [
+        "reliable-delivery"
+      ]
+    },
+    {
+      "id": "broad-push-auto-allow",
+      "title": "项目内残留的 Claude 本地设置自动放行全部 git push 形态，无逐次决策",
+      "severity": "Low",
+      "reason": "事实：项目内 .claude/settings.local.json 的 permissions.allow 含 Bash(git push *) 通配放行，覆盖含 force push 在内的所有 push 形态；该文件属 Claude 提供商，不在 Qoder 资产清单内（projectAssets=0）。推断：若该提供商仍在此项目使用，外发推送这一外向操作将默认开放、无逐次审批。不确定性：无使用证据，该提供商是否在役未确认；未观测到实际风险事件。",
+      "expectedOutput": [
+        "使外发推送回到逐次决策或最小放行范围，消除默认开放的强制推送通道。"
+      ],
+      "expectedArtifact": "Config",
+      "aiFixPrompt": "/better-harness fix this issue\n\n先与用户确认 Claude 提供商是否仍在此项目使用：在役则将 .claude/settings.local.json 中 Bash(git push *) 收窄为具体分支的非强制推送形态；已弃用则在用户批准后清理该残留条目。任何修改前展示当前条目并获得确认。\n\n## Validation\n\n- .claude/settings.local.json 中不再存在覆盖 force push 的通配放行\n- 修改后的放行范围与用户声明的实际工作流一致",
+      "dimensionRefs": [
+        "controlled-execution"
+      ]
+    }
+  ]
+}

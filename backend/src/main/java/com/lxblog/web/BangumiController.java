@@ -28,8 +28,12 @@ public class BangumiController {
     @Transactional(readOnly = true)
     public R<List<Map<String, Object>>> list() {
         return R.ok(bangumiRecordRepo.findAll().stream()
-                .sorted(Comparator.comparing(BangumiRecord::getUpdatedAt,
-                        Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder())))
+                // 后台关掉展示开关的记录仅在管理端可见
+                .filter(b -> b.getVisible() == null || b.getVisible())
+                .sorted(Comparator
+                        .comparing((BangumiRecord b) -> b.getSortIndex() == null ? Integer.MAX_VALUE : b.getSortIndex())
+                        .thenComparing(BangumiRecord::getUpdatedAt,
+                                Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder())))
                 .map(this::toOut).toList());
     }
 
@@ -60,6 +64,8 @@ public class BangumiController {
         m.put("ratingTotal", b.getRatingTotal());
         m.put("summary", b.getSummary());
         m.put("tags", Dtos.splitTags(b.getTags()));
+        m.put("category", b.getCategory() == null ? "" : b.getCategory());
+        m.put("sortIndex", b.getSortIndex());
         m.put("createdAt", b.getCreatedAt());
         m.put("updatedAt", b.getUpdatedAt());
         return m;

@@ -19,14 +19,45 @@
         <button class="admin-btn" type="button" @click="openCreate">+ 写新文章</button>
       </header>
 
+      <!-- 批量操作条：选中后浮现（复用通用 admin-batch-bar 样式） -->
+      <div v-if="selected.size" class="admin-batch-bar">
+        <span class="admin-batch-count">已选 {{ selected.size }} 篇</span>
+        <button class="admin-btn admin-btn-ghost" type="button" :disabled="batching" @click="applyBatchStatus('已发布')">设为已发布</button>
+        <button class="admin-btn admin-btn-ghost" type="button" :disabled="batching" @click="applyBatchStatus('草稿')">设为草稿</button>
+        <button class="admin-btn admin-btn-danger" type="button" :disabled="batching" @click="batchRemove">
+          {{ batching ? '处理中…' : '批量删除' }}
+        </button>
+        <button class="admin-link" type="button" :disabled="batching" @click="selected = new Set()">取消选择</button>
+      </div>
+
       <div class="ap-card">
         <div v-if="loading" class="admin-state">加载中…</div>
         <div v-else-if="filteredRows.length === 0" class="admin-state">
           {{ rows.length === 0 ? '还没有文章，点击「+ 写新文章」开始创作吧' : '该状态下暂无文章' }}
         </div>
-        <ul v-else class="ap-list">
-          <li v-for="row in filteredRows" :key="row.id" class="ap-row">
-            <div class="ap-row-main">
+        <template v-else>
+          <div class="ap-list-head">
+            <label class="ap-select-all">
+              <input
+                type="checkbox"
+                class="admin-check"
+                :checked="filteredRows.length > 0 && selected.size === filteredRows.length"
+                :indeterminate.prop="selected.size > 0 && selected.size < filteredRows.length"
+                @change="toggleAll"
+              />
+              <span>全选</span>
+            </label>
+            <span class="ap-list-total">共 {{ filteredRows.length }} 篇</span>
+          </div>
+          <ul class="ap-list">
+            <li v-for="row in filteredRows" :key="row.id" class="ap-row" :class="{ 'is-checked': selected.has(row.id) }">
+              <input
+                type="checkbox"
+                class="admin-check ap-row-check"
+                :checked="selected.has(row.id)"
+                @change="toggleRow(row)"
+              />
+              <div class="ap-row-main">
               <div class="ap-row-title-line">
                 <span v-if="row.pinned" class="ap-pin" title="置顶文章">★</span>
                 <h3 class="ap-row-title">{{ row.title || '无标题' }}</h3>
@@ -37,12 +68,13 @@
               </div>
               <p class="ap-row-meta">更新于 {{ fmtTime(row.updatedAt) }}</p>
             </div>
-            <div class="ap-row-ops">
-              <button class="admin-link" type="button" @click="openEdit(row)">✎ 编辑</button>
-              <button class="admin-link danger" type="button" @click="removeOne(row)">删除</button>
-            </div>
-          </li>
-        </ul>
+              <div class="ap-row-ops">
+                <button class="admin-link" type="button" @click="openEdit(row)">✎ 编辑</button>
+                <button class="admin-link danger" type="button" @click="removeOne(row)">删除</button>
+              </div>
+            </li>
+          </ul>
+        </template>
       </div>
     </template>
 
@@ -155,7 +187,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref, watch } from 'vue'
 import { adminApi, mediaApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
@@ -178,6 +210,9 @@ const mode = ref('list') // list | edit
 const rows = ref([])
 const loading = ref(false)
 const filter = ref('全部')
+// 多选：选中文章 id 集合；批量操作进行中标记
+const selected = ref(new Set())
+const batching = ref(false)
 
 const editingId = ref(null)
 const saving = ref(false)
@@ -248,10 +283,72 @@ async function load() {
   loading.value = true
   try {
     rows.value = (await api.list()) || []
+    selected.value = new Set()
   } catch (err) {
     handleError(err, '加载失败')
   } finally {
     loading.value = false
+  }
+}
+
+// ---- 多选与批量操作 ----
+
+// 切换筛选时清空选择，避免跨状态误操作不可见行
+watch(filter, () => {
+  selected.value = new Set()
+})
+
+function toggleRow(row) {
+  const next = new Set(selected.value)
+  if (next.has(row.id)) next.delete(row.id)
+  else next.add(row.id)
+  selected.value = next
+}
+
+function toggleAll() {
+  selected.value =
+    selected.value.size === filteredRows.value.length ? new Set() : new Set(filteredRows.value.map(r => r.id))
+}
+
+// 后端 update 是整体替换，回传完整行再覆盖 status
+async function applyBatchStatus(status) {
+  const targets = rows.value.filter(r => selected.value.has(r.id))
+  if (!targets.length) return
+  batching.value = true
+  let ok = 0
+  try {
+    for (const row of targets) {
+      await api.update(row.id, { ...row, status })
+      ok += 1
+    }
+    toast(`已将 ${ok} 篇文章设为「${status}」`)
+    await load()
+  } catch (err) {
+    handleError(err, `批量修改失败（已成功 ${ok}/${targets.length} 篇）`)
+    await load()
+  } finally {
+    batching.value = false
+  }
+}
+
+async function batchRemove() {
+  const targets = rows.value.filter(r => selected.value.has(r.id))
+  if (!targets.length) return
+  if (!window.confirm(`确定删除选中的 ${targets.length} 篇文章吗？其评论会一并删除`)) return
+  batching.value = true
+  let ok = 0
+  try {
+    for (const row of targets) {
+      await api.remove(row.id)
+      ok += 1
+    }
+    toast(`已删除 ${ok} 篇文章`)
+    await load()
+  } catch (err) {
+    handleError(err, `批量删除失败（已成功 ${ok}/${targets.length} 篇）`)
+    await load()
+  } finally {
+    batching.value = false
   }
 }
 
@@ -451,7 +548,7 @@ onMounted(async () => {
 .ap-toolbar-title {
   flex: 1;
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   color: #3f77b5;
 }
 
@@ -467,7 +564,7 @@ onMounted(async () => {
   background-color: transparent;
   color: rgba(31, 49, 72, 0.6);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -489,6 +586,38 @@ onMounted(async () => {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* 列表头：全选 + 总数 */
+.ap-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px;
+  border-bottom: 1px dashed rgba(63, 119, 181, 0.15);
+}
+
+.ap-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(31, 49, 72, 0.6);
+  cursor: pointer;
+}
+
+.ap-list-total {
+  font-size: 13px;
+  color: rgba(31, 49, 72, 0.45);
+}
+
+.ap-row-check {
+  flex: none;
+}
+
+.ap-row.is-checked {
+  background-color: rgba(63, 119, 181, 0.07);
+  border-radius: 12px;
 }
 
 .ap-row {
@@ -517,13 +646,13 @@ onMounted(async () => {
 
 .ap-pin {
   color: #e5a33c;
-  font-size: 14px;
+  font-size: 15.5px;
   flex: none;
 }
 
 .ap-row-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 16.5px;
   color: #1f3148;
   white-space: nowrap;
   overflow: hidden;
@@ -534,7 +663,7 @@ onMounted(async () => {
   flex: none;
   padding: 2px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .ap-badge-cat {
@@ -554,7 +683,7 @@ onMounted(async () => {
 
 .ap-row-meta {
   margin: 4px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(31, 49, 72, 0.5);
 }
 
@@ -579,7 +708,7 @@ onMounted(async () => {
 .ap-editor-heading {
   flex: 1;
   margin: 0;
-  font-size: 16px;
+  font-size: 17.5px;
   color: #3f77b5;
 }
 
@@ -595,7 +724,7 @@ onMounted(async () => {
 }
 
 .ap-title-input {
-  font-size: 18px;
+  font-size: 20px;
   padding: 12px 14px;
 }
 
@@ -613,7 +742,7 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   margin-top: 10px;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
 }
 
@@ -660,7 +789,7 @@ onMounted(async () => {
   border-radius: 999px;
   background-color: rgba(63, 119, 181, 0.12);
   color: #3f77b5;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .ap-tag button {
@@ -668,7 +797,7 @@ onMounted(async () => {
   background: none;
   padding: 0;
   color: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1;
   cursor: pointer;
 }
@@ -680,15 +809,16 @@ onMounted(async () => {
   outline: none;
   background: transparent;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   color: inherit;
   padding: 4px 0;
 }
 
-.ap-content-input {
-  min-height: 44vh;
-  font-size: 13px;
-  line-height: 1.7;
+.admin-textarea.ap-content-input {
+  min-height: 62vh;
+  font-size: 15px;
+  line-height: 1.85;
+  resize: vertical;
 }
 
 .ap-preview-card {
@@ -700,7 +830,7 @@ onMounted(async () => {
 
 .ap-preview-label {
   margin: 4px 2px 10px;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #8aa5c4;
@@ -708,7 +838,7 @@ onMounted(async () => {
 
 .ap-preview-title {
   margin: 0 0 14px;
-  font-size: 22px;
+  font-size: 24px;
   color: #1f3148;
 }
 
@@ -749,6 +879,22 @@ html.dark .ap-editor-heading {
 
 html.dark .ap-row {
   border-color: rgba(255, 255, 255, 0.06);
+}
+
+html.dark .ap-list-head {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+html.dark .ap-select-all {
+  color: #b9c6da;
+}
+
+html.dark .ap-list-total {
+  color: #8fa0ba;
+}
+
+html.dark .ap-row.is-checked {
+  background-color: rgba(95, 149, 207, 0.12);
 }
 
 html.dark .ap-row-title,
@@ -855,8 +1001,8 @@ html.dark .ap-cover-preview {
     flex: 1 1 auto;
   }
 
-  .ap-content-input {
-    min-height: 40vh;
+  .admin-textarea.ap-content-input {
+    min-height: 46vh;
   }
 
   .ap-row-2col {

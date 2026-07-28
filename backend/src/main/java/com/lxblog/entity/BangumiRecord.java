@@ -32,7 +32,7 @@ public class BangumiRecord {
     private String coverUrl;
     private Integer totalEps;
     private Integer watchedEps;
-    /** 想看 / 在看 / 看完 */
+    /** 想看 / 在看 / 看过 / 搁置 / 弃番（旧数据可能为“看完”） */
     private String status;
     /** 个人评分 0-10，可空 */
     private Integer rating;
@@ -50,6 +50,12 @@ public class BangumiRecord {
     private String summary;
     /** CSV 存储，API 层转数组 */
     private String tags;
+    /** 分类（热血 / 日常 / 奇幻…） */
+    private String category;
+    /** 排序值，越小越靠前 */
+    private Integer sortIndex;
+    /** 前台是否展示，默认展示 */
+    private Boolean visible;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -289,13 +289,13 @@ onMounted(load)
 
 .scp-head-title {
   margin: 0 0 4px;
-  font-size: 18px;
+  font-size: 20px;
   color: #3f77b5;
 }
 
 .scp-head-sub {
   margin: 0;
-  font-size: 13px;
+  font-size: 14.5px;
   color: rgba(31, 49, 72, 0.55);
 }
 
@@ -321,7 +321,7 @@ onMounted(load)
 
 .scp-col-label {
   margin: 0 0 10px;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #8aa5c4;
@@ -329,7 +329,7 @@ onMounted(load)
 
 .scp-md-input {
   min-height: 46vh;
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1.7;
 }
 

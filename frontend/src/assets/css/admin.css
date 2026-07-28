@@ -56,7 +56,7 @@ html.dark {
   background: var(--adm-bg-grad);
   color: var(--adm-text);
   font-family: var(--font-family-cute, "Comic Sans MS", cursive, sans-serif);
-  font-size: 15px;
+  font-size: 16.5px;
 }
 
 /* ---------- 通用按钮 / 链接 ---------- */
@@ -68,7 +68,7 @@ html.dark {
   background-color: var(--adm-accent);
   color: #fff;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16.5px;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
@@ -106,7 +106,7 @@ html.dark {
   padding: 3px 8px;
   color: var(--adm-accent-ink);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15.5px;
   cursor: pointer;
   border-radius: 8px;
 }
@@ -133,7 +133,7 @@ html.dark {
   background-color: var(--adm-input-bg);
   color: var(--adm-text);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16.5px;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -153,12 +153,12 @@ html.dark {
   resize: vertical;
   min-height: 72px;
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 16.5px;
 }
 
 .admin-md {
   min-height: 50vh;
-  font-size: 14.5px;
+  font-size: 16px;
   line-height: 1.7;
 }
 
@@ -171,13 +171,13 @@ html.dark {
 .admin-field-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--adm-text-dim);
 }
 
 .admin-field-tip {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--adm-text-faint);
 }
 
@@ -278,7 +278,7 @@ html.dark {
 
 .admin-login-title {
   margin: 0;
-  font-size: 26px;
+  font-size: 29px;
   text-align: center;
   color: var(--adm-text);
 }
@@ -286,13 +286,13 @@ html.dark {
 .admin-login-sub {
   margin: 8px 0 26px;
   text-align: center;
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--adm-text-dim);
 }
 
 .admin-login-error {
   margin: 0 0 10px;
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--adm-danger);
 }
 
@@ -319,10 +319,18 @@ html.dark {
   align-items: center;
   gap: 10px;
   padding: 22px 22px 18px;
-  font-size: 19px;
+  font-size: 21px;
   font-weight: bold;
   color: var(--adm-text);
   border-bottom: 1px solid var(--adm-border-soft);
+  /* 品牌区是返回网站首页的链接 */
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.admin-brand:hover {
+  color: var(--adm-accent-ink);
 }
 
 .admin-brand-dot {
@@ -357,7 +365,7 @@ html.dark {
 .admin-nav-group-title {
   margin: 0 0 4px;
   padding: 0 12px;
-  font-size: 12.5px;
+  font-size: 14px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--adm-text-faint);
@@ -374,7 +382,7 @@ html.dark {
   background: none;
   text-align: left;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16.5px;
   color: var(--adm-text-dim);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -433,14 +441,14 @@ html.dark {
 
 .admin-topbar-title {
   margin: 0;
-  font-size: 17px;
+  font-size: 18.5px;
   font-weight: bold;
   color: var(--adm-text);
 }
 
 .admin-topbar-sub {
   margin: 2px 0 0;
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--adm-text-faint);
 }
 
@@ -476,7 +484,7 @@ html.dark {
 
 .admin-toolbar-title {
   margin: 0;
-  font-size: 21px;
+  font-size: 23px;
   color: var(--adm-text);
 }
 
@@ -496,7 +504,7 @@ html.dark {
 .admin-state {
   padding: 48px 16px;
   text-align: center;
-  font-size: 15px;
+  font-size: 16.5px;
   color: var(--adm-text-faint);
 }
 
@@ -507,13 +515,13 @@ html.dark {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14.5px;
+  font-size: 16px;
 }
 
 .admin-table th {
   padding: 12px 14px;
   text-align: left;
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--adm-accent-ink);
   background-color: var(--adm-card-2);
   white-space: nowrap;
@@ -563,7 +571,7 @@ html.dark {
   display: inline-block;
   padding: 2px 11px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 14.5px;
   background-color: var(--adm-accent-soft);
   color: var(--adm-accent-ink);
 }
@@ -616,14 +624,14 @@ html.dark {
 
 .admin-drawer-head h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   color: var(--adm-text);
 }
 
 .admin-drawer-close {
   border: none;
   background: none;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
   color: var(--adm-text-faint);
   cursor: pointer;
@@ -687,7 +695,7 @@ html.dark {
   background-color: var(--adm-card);
   border: 1px solid var(--adm-border-soft);
   color: var(--adm-success-ink);
-  font-size: 14.5px;
+  font-size: 16px;
   box-shadow: var(--adm-shadow-lg);
   border-left: 4px solid var(--adm-success);
 }
@@ -712,7 +720,7 @@ html.dark {
 
 .media-tip {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--adm-text-faint);
 }
 
@@ -751,7 +759,7 @@ html.dark {
 
 .media-name {
   margin: 0;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--adm-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -763,7 +771,7 @@ html.dark {
   justify-content: space-between;
   gap: 8px;
   margin: 4px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--adm-text-faint);
 }
 
@@ -809,7 +817,7 @@ html.dark {
 
 .media-picker-head h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17.5px;
   color: var(--adm-text);
 }
 
@@ -858,7 +866,7 @@ html.dark {
 
 .media-pick-name {
   padding: 5px 8px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--adm-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -903,7 +911,7 @@ html.dark {
 .crop-head h3 {
   margin: 0;
   max-width: 60vw;
-  font-size: 15px;
+  font-size: 16.5px;
   color: var(--adm-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -979,7 +987,7 @@ html.dark {
   background-color: transparent;
   color: var(--adm-accent-ink);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -996,7 +1004,7 @@ html.dark {
 
 .crop-format {
   margin-left: auto;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--adm-text-faint);
 }
 
@@ -1253,12 +1261,12 @@ html.dark {
   justify-content: space-between;
   padding: 20px 24px 12px;
 }
-.admin-modal-head h3 { margin: 0; font-size: 19px; color: var(--adm-text); }
+.admin-modal-head h3 { margin: 0; font-size: 21px; color: var(--adm-text); }
 .admin-modal-close {
   width: 34px; height: 34px;
   border: 0; border-radius: 10px;
   background: transparent; color: var(--adm-text-dim);
-  font-size: 22px; line-height: 1; cursor: pointer;
+  font-size: 24px; line-height: 1; cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
 }
 .admin-modal-close:hover { background: var(--adm-accent-soft); color: var(--adm-text); }
@@ -1297,7 +1305,7 @@ html.dark {
   border: 1px solid var(--adm-border-soft);
   background: var(--adm-card-2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: var(--adm-text-dim);
+  font-size: 13px; color: var(--adm-text-dim);
 }
 .admin-img-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .admin-img-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -1310,3 +1318,147 @@ html.dark {
   .admin-img-field { grid-template-columns: 84px minmax(0, 1fr); }
   .admin-img-thumb { width: 84px; height: 84px; }
 }
+
+/* ---------- Markdown 实时预览（文章/站点内容面板共用） ----------
+   md-editor 自带主题背景（亮色纯白/暗色纯黑）与后台卡片色冲突，
+   这里映射到 --adm-* 变量，让预览融入后台主题 */
+.ap-preview-card .md-editor,
+.scp-preview-card .md-editor {
+  --md-color: var(--adm-text);
+  --md-bk-color: transparent;
+  --md-bk-color-outstand: var(--adm-card-2);
+  --md-bk-hover-color: var(--adm-card-2);
+  --md-border-color: var(--adm-border);
+  background-color: transparent;
+  font-family: inherit;
+}
+
+.ap-preview-card .md-editor-preview,
+.scp-preview-card .md-editor-preview {
+  --md-theme-color: var(--adm-text);
+  --md-theme-bg-color: transparent;
+  --md-theme-bg-color-inset: var(--adm-card-2);
+  --md-theme-border-color: var(--adm-border);
+  --md-theme-border-color-inset: var(--adm-border);
+  --md-theme-link-color: var(--adm-accent-ink);
+  --md-theme-link-hover-color: var(--adm-accent-strong);
+  --md-theme-quote-bg-color: var(--adm-card-2);
+  --md-theme-quote-color: var(--adm-text-dim);
+  --md-theme-table-stripe-color: var(--adm-card-2);
+  --md-theme-table-thead-bg-color: var(--adm-card-2);
+  --md-theme-code-block-bg-color: var(--adm-card-2);
+  --md-theme-code-inline-bg-color: var(--adm-accent-soft);
+  --md-theme-code-inline-color: var(--adm-accent-ink);
+  color: var(--adm-text);
+  font-size: 15.5px;
+  line-height: 1.85;
+  font-family: inherit;
+}
+
+.ap-preview-card .md-editor-preview h1,
+.ap-preview-card .md-editor-preview h2,
+.ap-preview-card .md-editor-preview h3,
+.ap-preview-card .md-editor-preview h4,
+.scp-preview-card .md-editor-preview h1,
+.scp-preview-card .md-editor-preview h2,
+.scp-preview-card .md-editor-preview h3,
+.scp-preview-card .md-editor-preview h4 {
+  color: var(--adm-text);
+}
+
+.ap-preview-card .md-editor-preview pre code,
+.scp-preview-card .md-editor-preview pre code {
+  border-radius: 10px;
+}
+
+.ap-preview-card .md-editor-preview blockquote,
+.scp-preview-card .md-editor-preview blockquote {
+  border-inline-start: 3px solid var(--adm-accent);
+  border-radius: 0 10px 10px 0;
+}
+
+.ap-preview-card .md-editor-preview img,
+.scp-preview-card .md-editor-preview img {
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+/* 预览空态提示 */
+.ap-preview-card .md-editor-preview:empty::before,
+.scp-preview-card .md-editor-preview:empty::before {
+  content: '在左侧输入 Markdown，这里实时预览渲染效果';
+  display: block;
+  padding: 24px 0;
+  color: var(--adm-text-faint);
+  font-size: 14.5px;
+}
+
+/* ---------- 列表多选与批量操作（通用，追加） ---------- */
+
+.admin-col-check {
+  width: 40px;
+  text-align: center;
+}
+
+.admin-check {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--adm-accent);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr.is-checked {
+  background-color: var(--adm-accent-soft);
+}
+
+.admin-batch-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 16px;
+  border: 1px solid var(--adm-border-soft);
+  border-radius: 14px;
+  background-color: var(--adm-card);
+  box-shadow: var(--adm-shadow);
+}
+
+.admin-batch-count {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--adm-accent-ink);
+  white-space: nowrap;
+}
+
+.admin-batch-select {
+  width: auto;
+  min-width: 140px;
+  padding: 7px 11px;
+  font-size: 14.5px;
+  appearance: auto;
+  cursor: pointer;
+}
+
+.admin-btn-danger {
+  background-color: var(--adm-danger);
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background-color: var(--adm-danger);
+  filter: brightness(0.92);
+}
+
+@media (max-width: 900px) {
+  .admin-batch-bar {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .admin-batch-select {
+    flex: 1 1 130px;
+    min-width: 0;
+  }
+}
+

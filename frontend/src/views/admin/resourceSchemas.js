@@ -2,6 +2,7 @@
 // type 取值: text / textarea / markdown / number / boolean / tags / datetime / image
 // columns 为表格展示列（3-5 个代表字段）；wide 表示编辑用宽抽屉
 // image 字段可配 ratio（宽/高）：站内图裁切时按该比例锁定，与前台显示比例对齐
+// batch: true 的字段参与列表多选后的批量修改（select/boolean 下拉，number/text 弹窗输入）
 
 export const resourceSchemas = [
   {
@@ -42,7 +43,7 @@ export const resourceSchemas = [
       { name: 'sceneLabel', label: '编号标签（如 SCENE 01）', type: 'text' },
       { name: 'kicker', label: '眉标 Kicker（如 PERSPECTIVE）', type: 'text' },
       { name: 'badge', label: '角标 Badge（如 04/19）', type: 'text' },
-      { name: 'visible', label: '在首页显示', type: 'boolean' },
+      { name: 'visible', label: '在首页显示', type: 'boolean', batch: true },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]
@@ -146,7 +147,7 @@ export const resourceSchemas = [
       { name: 'imageUrl', label: '展示图（详情页）', type: 'image' },
       { name: 'tags', label: '标签', type: 'tags' },
       { name: 'highlight', label: '亮点', type: 'text' },
-      { name: 'featured', label: '是否推荐', type: 'boolean' },
+      { name: 'featured', label: '是否推荐', type: 'boolean', batch: true },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]
@@ -215,23 +216,26 @@ export const resourceSchemas = [
   {
     key: 'bangumi-records',
     label: '番剧记录',
-    columns: ['id', 'coverUrl', 'nameCn', 'platform', 'status', 'watchedEps', 'rating'],
+    columns: ['id', 'coverUrl', 'nameCn', 'category', 'status', 'watchedEps', 'rating', 'visible'],
     fields: [
       { name: 'subjectId', label: 'bgm 条目 ID', type: 'number' },
       { name: 'name', label: '原名', type: 'text' },
       { name: 'nameCn', label: '中文名', type: 'text' },
-      { name: 'coverUrl', label: '封面', type: 'image', ratio: 2 / 3 },
-      { name: 'status', label: '状态（想看 / 在看 / 看完）', type: 'text' },
+      { name: 'coverUrl', label: '封面（竖版 2:3）', type: 'image', ratio: 2 / 3 },
+      { name: 'status', label: '状态', type: 'select', options: ['想看', '在看', '看过', '搁置', '弃番'], batch: true },
+      { name: 'rating', label: '个人评分（1-10，可空）', type: 'number', batch: true },
       { name: 'watchedEps', label: '已看集数', type: 'number' },
       { name: 'totalEps', label: '总集数', type: 'number' },
-      { name: 'rating', label: '个人评分（0-10，可空）', type: 'number' },
+      { name: 'category', label: '分类（热血 / 日常 / 奇幻…）', type: 'text' },
+      { name: 'tags', label: '标签', type: 'tags' },
+      { name: 'summary', label: '简介', type: 'textarea' },
+      { name: 'sortIndex', label: '排序（越小越靠前）', type: 'number' },
+      { name: 'visible', label: '在页面显示', type: 'boolean', default: true, batch: true },
       { name: 'score', label: 'bgm 均分（可空）', type: 'number' },
       { name: 'airDate', label: '放送日期（如 2023-09-29）', type: 'text' },
       { name: 'platform', label: '放送形态（TV / 剧场版 / OVA）', type: 'text' },
       { name: 'rank', label: 'bgm 排名（可空）', type: 'number' },
       { name: 'ratingTotal', label: 'bgm 评分人数（可空）', type: 'number' },
-      { name: 'summary', label: '简介', type: 'textarea' },
-      { name: 'tags', label: '标签', type: 'tags' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]

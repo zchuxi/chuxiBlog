@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/tool/:id', name: 'toolDetail', component: () => import('../views/ToolDetailView.vue') },
     { path: '/bangumi', name: 'bangumi', component: () => import('../views/BangumiView.vue') },
     { path: '/bangumi/:id', name: 'bangumiDetail', component: () => import('../views/BangumiDetailView.vue') },
+    { path: '/calendar', name: 'calendar', component: () => import('../views/CalendarView.vue') },
     { path: '/components', name: 'components', component: () => import('../views/ComponentsShowView.vue') },
     { path: '/about', name: 'about', component: () => import('../views/AboutView.vue') },
     { path: '/article/:id', name: 'article', component: () => import('../views/ArticleView.vue') },

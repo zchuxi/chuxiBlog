@@ -105,7 +105,7 @@ async function onSubmit() {
 
 .pwd-head h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18.5px;
   color: var(--adm-text);
 }
 
@@ -115,7 +115,7 @@ async function onSubmit() {
 
 .pwd-error {
   margin: 0 0 10px;
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--adm-danger);
 }
 

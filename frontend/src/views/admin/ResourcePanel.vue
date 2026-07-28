@@ -9,6 +9,48 @@
       </div>
     </header>
 
+    <!-- 批量操作条：选中行后浮现 -->
+    <transition name="admin-fade">
+      <div v-if="selected.size" class="admin-batch-bar">
+        <span class="admin-batch-count">已选 {{ selected.size }} 条</span>
+        <template v-for="field in batchFields" :key="field.name">
+          <select
+            v-if="field.type === 'select'"
+            class="admin-input admin-batch-select"
+            :disabled="batching"
+            :value="''"
+            @change="e => applyBatch(field, e.target.value, e)"
+          >
+            <option value="" disabled>批量改{{ shortLabel(field) }}…</option>
+            <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+          </select>
+          <select
+            v-else-if="field.type === 'boolean'"
+            class="admin-input admin-batch-select"
+            :disabled="batching"
+            :value="''"
+            @change="e => applyBatch(field, e.target.value === 'true', e)"
+          >
+            <option value="" disabled>批量改{{ shortLabel(field) }}…</option>
+            <option value="true">是</option>
+            <option value="false">否</option>
+          </select>
+          <button
+            v-else
+            class="admin-btn admin-btn-ghost"
+            :disabled="batching"
+            @click="promptBatch(field)"
+          >
+            批量改{{ shortLabel(field) }}
+          </button>
+        </template>
+        <button class="admin-btn admin-btn-danger" :disabled="batching" @click="batchRemove">
+          {{ batching ? '处理中…' : '批量删除' }}
+        </button>
+        <button class="admin-link" :disabled="batching" @click="clearSelection">取消选择</button>
+      </div>
+    </transition>
+
     <!-- 数据表格 -->
     <div class="admin-table-card">
       <div v-if="loading" class="admin-state">加载中…</div>
@@ -17,12 +59,29 @@
         <table class="admin-table">
           <thead>
             <tr>
+              <th class="admin-col-check">
+                <input
+                  type="checkbox"
+                  class="admin-check"
+                  :checked="rows.length > 0 && selected.size === rows.length"
+                  :indeterminate.prop="selected.size > 0 && selected.size < rows.length"
+                  @change="toggleAll"
+                />
+              </th>
               <th v-for="col in columns" :key="col.name">{{ col.label }}</th>
               <th class="admin-col-ops">操作</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :key="row.id">
+            <tr v-for="row in rows" :key="row.id" :class="{ 'is-checked': selected.has(row.id) }">
+              <td class="admin-col-check">
+                <input
+                  type="checkbox"
+                  class="admin-check"
+                  :checked="selected.has(row.id)"
+                  @change="toggleRow(row)"
+                />
+              </td>
               <td v-for="col in columns" :key="col.name">
                 <img
                   v-if="col.type === 'image' && row[col.name]"
@@ -102,6 +161,9 @@ const drawerOpen = ref(false)
 const saving = ref(false)
 const editingId = ref(null)
 const form = ref({})
+// 多选：选中行 id 集合；批量操作进行中标记
+const selected = ref(new Set())
+const batching = ref(false)
 
 const api = computed(() => adminApi[props.schema.key])
 const columns = computed(() =>
@@ -110,6 +172,13 @@ const columns = computed(() =>
     return field || { name, label: name === 'id' ? 'ID' : name, type: 'text' }
   })
 )
+// schema 中标记 batch: true 的字段参与批量修改（select/boolean 下拉，其余 prompt 输入）
+const batchFields = computed(() => props.schema.fields.filter(f => f.batch))
+
+// 「批量改状态」这类短标签：去掉 label 括号补充说明
+function shortLabel(field) {
+  return String(field.label || field.name).replace(/[（(].*$/, '')
+}
 
 // 统一错误处理：401 交给外层退出登录
 function handleError(err, fallback) {
@@ -124,10 +193,83 @@ async function load() {
   loading.value = true
   try {
     rows.value = (await api.value.list()) || []
+    selected.value = new Set()
   } catch (err) {
     handleError(err, '加载失败')
   } finally {
     loading.value = false
+  }
+}
+
+// ---- 多选与批量操作 ----
+
+function toggleRow(row) {
+  const next = new Set(selected.value)
+  if (next.has(row.id)) next.delete(row.id)
+  else next.add(row.id)
+  selected.value = next
+}
+
+function toggleAll() {
+  selected.value = selected.value.size === rows.value.length ? new Set() : new Set(rows.value.map(r => r.id))
+}
+
+function clearSelection() {
+  selected.value = new Set()
+}
+
+// 后端 update 是整体替换，必须回传完整行数据再覆盖目标字段
+async function applyBatch(field, value, e) {
+  if (e && e.target) e.target.value = ''
+  const targets = rows.value.filter(r => selected.value.has(r.id))
+  if (!targets.length) return
+  batching.value = true
+  let ok = 0
+  try {
+    for (const row of targets) {
+      await api.value.update(row.id, { ...row, [field.name]: value })
+      ok += 1
+    }
+    toast && toast(`已将 ${ok} 条记录的${shortLabel(field)}改为「${field.type === 'boolean' ? (value ? '是' : '否') : value}」`)
+    await load()
+  } catch (err) {
+    handleError(err, `批量修改失败（已成功 ${ok}/${targets.length} 条）`)
+    await load()
+  } finally {
+    batching.value = false
+  }
+}
+
+// number/text 类批量字段用 prompt 输入目标值
+async function promptBatch(field) {
+  const raw = window.prompt(`把选中的 ${selected.value.size} 条记录的「${shortLabel(field)}」改为：`)
+  if (raw == null) return
+  const value = field.type === 'number' ? (raw.trim() === '' ? null : Number(raw)) : raw.trim()
+  if (field.type === 'number' && value != null && Number.isNaN(value)) {
+    toast && toast('请输入数字', 'error')
+    return
+  }
+  await applyBatch(field, value)
+}
+
+async function batchRemove() {
+  const targets = rows.value.filter(r => selected.value.has(r.id))
+  if (!targets.length) return
+  if (!window.confirm(`确定删除选中的 ${targets.length} 条「${props.schema.label}」记录吗？此操作不可恢复`)) return
+  batching.value = true
+  let ok = 0
+  try {
+    for (const row of targets) {
+      await api.value.remove(row.id)
+      ok += 1
+    }
+    toast && toast(`已删除 ${ok} 条记录`)
+    await load()
+  } catch (err) {
+    handleError(err, `批量删除失败（已成功 ${ok}/${targets.length} 条）`)
+    await load()
+  } finally {
+    batching.value = false
   }
 }
 
@@ -142,7 +284,7 @@ function buildForm(row) {
   const model = {}
   for (const field of props.schema.fields) {
     const raw = row ? row[field.name] : undefined
-    if (field.type === 'boolean') model[field.name] = raw == null ? false : !!raw
+    if (field.type === 'boolean') model[field.name] = raw == null ? field.default === true : !!raw
     else if (field.type === 'tags') model[field.name] = Array.isArray(raw) ? raw.join(', ') : raw || ''
     else model[field.name] = raw == null ? '' : raw
   }

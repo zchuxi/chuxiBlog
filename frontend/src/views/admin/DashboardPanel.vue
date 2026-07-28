@@ -155,7 +155,7 @@ function barWidth(count) {
 
 .dash-stat-num {
   margin: 0;
-  font-size: 26px;
+  font-size: 29px;
   font-weight: bold;
   line-height: 1.2;
   color: var(--adm-text);
@@ -163,13 +163,13 @@ function barWidth(count) {
 
 .dash-stat-label {
   margin: 2px 0 0;
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--adm-text-dim);
 }
 
 .dash-stat-sub {
   margin: 2px 0 0;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--adm-text-faint);
 }
 
@@ -196,7 +196,7 @@ function barWidth(count) {
 
 .dash-card-title {
   margin: 0 0 14px;
-  font-size: 17px;
+  font-size: 18.5px;
   color: var(--adm-text);
 }
 
@@ -216,7 +216,7 @@ function barWidth(count) {
   background-color: var(--adm-card-2);
   color: var(--adm-text-dim);
   font-family: inherit;
-  font-size: 14.5px;
+  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
@@ -230,7 +230,7 @@ function barWidth(count) {
 .dash-empty {
   margin: 0;
   padding: 20px 0;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--adm-text-faint);
 }
 
@@ -252,7 +252,7 @@ function barWidth(count) {
 .dash-cat-name {
   flex-shrink: 0;
   width: 92px;
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--adm-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -279,7 +279,7 @@ function barWidth(count) {
   flex-shrink: 0;
   min-width: 26px;
   text-align: right;
-  font-size: 14px;
+  font-size: 15.5px;
   font-weight: bold;
   color: var(--adm-text);
 }
@@ -327,15 +327,15 @@ function barWidth(count) {
   }
 
   .dash-stat-num {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .dash-stat-label {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .dash-stat-sub {
-    font-size: 11.5px;
+    font-size: 12.5px;
   }
 }
 </style>

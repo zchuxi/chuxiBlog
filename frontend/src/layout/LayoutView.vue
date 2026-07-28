@@ -58,7 +58,7 @@
     <!-- 顶栏 -->
     <header class="app-shell-top">
       <div class="shell-brand">
-        <span>初曦的窝</span>
+        <span title="返回首页" @click="router.push('/index')">初曦的窝</span>
         <nav ref="navRef" class="shell-nav" @mouseleave="hoverPath = ''">
           <span class="nav-indicator" :style="indicatorStyle"></span>
           <span class="nav-underline" :style="underlineStyle"></span>
@@ -163,80 +163,95 @@
           </section>
         </div>
 
-        <!-- 底部音乐条（位于内容列内） -->
-        <div class="music-bottom-bar-shell" :class="{ 'is-hidden': !musicBarOpen }">
-          <footer class="music-bottom-bar">
-            <div class="track-left">
-              <div class="cover-wrap">
+        <!-- 底部音乐条：Teleport 到 body，避免祖先 transform 影响 fixed 定位 -->
+        <Teleport to="body">
+          <div class="music-bottom-bar-shell" :class="{ 'is-hidden': !musicBarOpen }">
+            <footer class="music-bottom-bar">
+            <div class="music-bar-track">
+              <div class="cover-wrap" :class="{ 'is-rotating': playing }">
                 <img v-if="currentTrack" class="cover-image" :src="currentTrack.coverUrl" alt="音乐封面" />
+                <div v-else class="cover-fallback"><SvgIcon name="common-music" size="18px" /></div>
               </div>
               <div class="meta-wrap">
                 <div class="song-name">{{ currentTrack ? currentTrack.title : '暂无歌曲' }}</div>
-                <div class="song-extra">{{ currentTrack ? `${currentTrack.artist} / ${currentTrack.album}` : '' }}</div>
+                <div class="song-extra">{{ currentTrack ? `${currentTrack.artist}&${currentTrack.album}` : '' }}</div>
               </div>
             </div>
-            <div class="track-center">
-              <div class="control-row">
-                <button type="button" class="control-btn" @click="cyclePlayMode">
-                  <SvgIcon :name="playModeIcon" size="16px" />
-                </button>
-                <button type="button" class="control-btn is-seek-back" @click="seekBy(-10)">
-                  <SvgIcon name="music-back" size="16px" />
-                </button>
-                <button type="button" class="control-btn" @click="prevTrack">
-                  <SvgIcon name="music-pre" size="16px" />
-                </button>
-                <button type="button" class="control-btn is-play" @click="togglePlay">
-                  <SvgIcon :name="playing ? 'music-pause' : 'music-play'" size="18px" />
-                </button>
-                <button type="button" class="control-btn" @click="nextTrack">
-                  <SvgIcon name="music-next" size="16px" />
-                </button>
-                <button type="button" class="control-btn is-seek-forward" @click="seekBy(10)">
-                  <SvgIcon name="music-forward" size="16px" />
-                </button>
-                <button type="button" class="control-btn is-repeat-dup" @click="cyclePlayMode">
-                  <SvgIcon name="music-repeat" size="16px" />
-                </button>
-              </div>
-              <div class="progress-row">
-                <span class="time-tag">{{ formatTime(currentTime) }}</span>
-                <input
-                  class="progress-slider"
-                  type="range"
-                  min="0"
-                  :max="duration || 0"
-                  step="0.1"
-                  :value="currentTime"
-                  @input="onSeek"
-                />
-                <span class="time-tag">{{ formatTime(duration) }}</span>
-              </div>
-            </div>
-            <div class="track-right">
-              <div class="lx-popover-wrapper">
-                <div class="lx-popover-trigger">
-                  <button type="button" class="control-btn" @click="playlistOpen = !playlistOpen">
-                    <SvgIcon name="music-list" size="18px" />
-                  </button>
-                </div>
-                <transition name="lx-popover-fade">
-                  <div v-if="playlistOpen" class="lx-popover music-playlist-popover">
-                    <div
-                      v-for="(t, i) in tracks"
-                      :key="t.id"
-                      class="lx-popover-item"
-                      @click="playIndex(i)"
-                    >
-                      <span class="lx-popover-item__content">{{ t.title }} - {{ t.artist }}</span>
-                    </div>
-                  </div>
-                </transition>
-              </div>
-              <button type="button" class="control-btn bottom-bar-close-btn" @click="musicBarOpen = false">
-                <SvgIcon name="common-big-close" size="16px" />
+            <div class="music-bar-controls">
+              <button type="button" class="control-btn" @click="prevTrack">
+                <SvgIcon name="music-pre" size="16px" />
+              </button>
+              <button type="button" class="control-btn is-play" @click="togglePlay">
+                <SvgIcon :name="playing ? 'music-pause' : 'music-play'" size="18px" />
+              </button>
+              <button type="button" class="control-btn" @click="nextTrack">
+                <SvgIcon name="music-next" size="16px" />
+              </button>
+              <button type="button" class="control-btn" title="停止" @click="stopTrack">
+                <span class="music-stop-square"></span>
               </button>
             </div>
+            <span class="music-time-tag">{{ formatTime(currentTime) }}</span>
+            <input
+              class="music-bar-progress"
+              type="range"
+              min="0"
+              :max="duration || 0"
+              step="0.1"
+              :value="currentTime"
+              @input="onSeek"
+            />
+            <span class="music-time-tag">{{ formatTime(duration) }}</span>
+            <div class="music-bar-volume">
+              <button type="button" class="control-btn" :title="muted ? '取消静音' : '静音'" @click="toggleMute">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none" />
+                  <template v-if="!muted">
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                    <path d="M18.2 6a8.6 8.6 0 0 1 0 12" />
+                  </template>
+                  <template v-else>
+                    <line x1="16" y1="9.5" x2="21" y2="14.5" />
+                    <line x1="21" y1="9.5" x2="16" y2="14.5" />
+                  </template>
+                </svg>
+              </button>
+              <input
+                class="music-volume-slider"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                :value="muted ? 0 : volume"
+                @input="onVolumeInput"
+              />
+            </div>
+            <button type="button" class="control-btn" title="播放模式" @click="cyclePlayMode">
+              <SvgIcon :name="playModeIcon" size="16px" />
+            </button>
+            <button type="button" class="control-btn music-rate-btn" title="播放速度" @click="cycleRate">{{ rateLabel }}</button>
+            <div class="lx-popover-wrapper">
+              <div class="lx-popover-trigger">
+                <button type="button" class="control-btn" @click="playlistOpen = !playlistOpen">
+                  <SvgIcon name="music-list" size="18px" />
+                </button>
+              </div>
+              <transition name="lx-popover-fade">
+                <div v-if="playlistOpen" class="lx-popover music-playlist-popover">
+                  <div
+                    v-for="(t, i) in tracks"
+                    :key="t.id"
+                    class="lx-popover-item"
+                    @click="playIndex(i)"
+                  >
+                    <span class="lx-popover-item__content">{{ t.title }} - {{ t.artist }}</span>
+                  </div>
+                </div>
+              </transition>
+            </div>
+            <button type="button" class="control-btn bottom-bar-close-btn" @click="musicBarOpen = false">
+              <SvgIcon name="common-big-close" size="16px" />
+            </button>
             <audio
               ref="audioRef"
               :src="currentTrack ? currentTrack.musicUrl : ''"
@@ -244,71 +259,70 @@
               @loadedmetadata="onLoadedMeta"
               @ended="nextTrack"
             ></audio>
-          </footer>
-        </div>
+            </footer>
+          </div>
+        </Teleport>
       </div>
 
-      <!-- AI 侧栏（body 的第二个 flex 子列） -->
-      <aside class="layout-right-sidebar" :class="{ 'is-expanded': aiExpanded }">
-        <div class="layout-right-sidebar__inner">
-          <div class="ai-chat-toolbar">
-            <div class="ai-chat-toolbar__left">
-              <span class="ai-chat-toolbar__title">AI 助手</span>
-            </div>
-            <div class="ai-chat-toolbar__actions">
-              <div class="lx-popover-wrapper">
-                <div class="lx-popover-trigger">
-                  <span class="ai-chat-toolbar__icon-action">
-                    <SvgIcon name="common-history" size="20px" />
+      <!-- AI 助手弹窗（右上角悬浮面板） -->
+      <Teleport to="body">
+        <transition name="ai-chat-modal-fade">
+          <div v-if="aiExpanded" class="ai-chat-modal-mask" @click.self="aiExpanded = false">
+            <div class="ai-chat-modal" role="dialog" aria-label="AI 助手">
+              <div class="ai-chat-toolbar">
+                <div class="ai-chat-toolbar__left">
+                  <span class="ai-chat-toolbar__spark">✦</span>
+                  <span class="ai-chat-toolbar__title">AI 助手</span>
+                </div>
+                <div class="ai-chat-toolbar__actions">
+                  <span class="ai-chat-toolbar__icon-action" title="重新开始" @click="aiMessages = []">
+                    <SvgIcon name="common-reset" size="18px" />
+                  </span>
+                  <span class="ai-chat-toolbar__icon-action" title="关闭" @click="aiExpanded = false">
+                    <SvgIcon name="common-big-close" size="18px" />
                   </span>
                 </div>
               </div>
-              <span class="ai-chat-toolbar__icon-action" @click="aiMessages = []">
-                <SvgIcon name="common-add" size="20px" />
-              </span>
-            </div>
-          </div>
-          <div class="ai-chat-message-list">
-            <div v-if="!aiMessages.length" class="ai-chat-message-list__empty">
-              <div class="ai-chat-message-list__empty-icon">✦</div>
-              <p class="ai-chat-message-list__empty-text">有什么我可以帮你的？</p>
-            </div>
-            <div
-              v-for="(m, i) in aiMessages"
-              :key="i"
-              class="ai-chat-message"
-              :class="`ai-chat-message--${m.role}`"
-            >
-              <div class="ai-markdown-preview">{{ m.content }}</div>
-            </div>
-          </div>
-          <div class="ai-chat-input-wrapper">
-            <div class="ai-chat-input__top">
-              <div class="ai-chat-input__top-left"><span class="test-tag">公开数据</span></div>
-              <div class="ai-chat-input__top-right"><span class="test-tag">文章链接</span></div>
-            </div>
-            <div class="ai-chat-input">
-              <textarea
-                v-model="aiInput"
-                class="ai-chat-input__textarea"
-                placeholder="输入消息，Enter 发送，Shift+Enter 换行"
-                @keydown.enter.exact.prevent="sendAiMessage"
-              ></textarea>
-              <div class="ai-chat-input__bottom">
-                <div class="ai-chat-input__bottom-left">
-                  <button class="test-icon-btn"><SvgIcon name="common-tool" size="15px" /></button>
-                  <button class="test-icon-btn" @click="aiMessages = []"><SvgIcon name="common-reset" size="15px" /></button>
+              <div class="ai-chat-message-list">
+                <!-- 无对话时展示助手问候气泡 -->
+                <div v-if="!aiMessages.length" class="ai-chat-message ai-chat-message--assistant">
+                  <div class="ai-chat-message__body">
+                    <div class="ai-chat-message__content">
+                      <p class="ai-chat-message__text">你好呀，我是站点助手 ✦ 试着输入一个关键词，我会帮你在文章里找找看。</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="ai-chat-input__bottom-right">
-                  <button class="ai-chat-input__send-btn" @click="sendAiMessage">
-                    <SvgIcon name="common-send" size="16px" />
+                <div
+                  v-for="(m, i) in aiMessages"
+                  :key="i"
+                  class="ai-chat-message"
+                  :class="`ai-chat-message--${m.role}`"
+                >
+                  <div class="ai-chat-message__body">
+                    <div class="ai-chat-message__content">
+                      <p class="ai-chat-message__text">{{ m.content }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="ai-chat-input-wrapper">
+                <div class="ai-chat-input-row">
+                  <input
+                    v-model="aiInput"
+                    class="ai-chat-input-row__field"
+                    type="text"
+                    placeholder="输入消息，Enter 发送"
+                    @keydown.enter.exact.prevent="sendAiMessage"
+                  />
+                  <button type="button" class="ai-chat-input-row__send" @click="sendAiMessage">
+                    <SvgIcon name="common-send" size="17px" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </aside>
+        </transition>
+      </Teleport>
     </div>
 
     <!-- live2d 看板娘 -->
@@ -751,9 +765,14 @@ const currentTime = ref(0)
 const duration = ref(0)
 const playMode = ref('order')
 const audioRef = ref(null)
+const volume = ref(0.8)
+const muted = ref(false)
+const playbackRate = ref(1)
+const RATES = [1, 1.25, 1.5, 2, 0.75]
 
 const currentTrack = computed(() => tracks.value[trackIndex.value] || null)
 const playModeIcon = computed(() => ({ order: 'music-order', shuffle: 'music-shuffle', repeatOne: 'music-repeatOne' }[playMode.value]))
+const rateLabel = computed(() => `${playbackRate.value}x`)
 
 async function toggleMusicBar() {
   musicBarOpen.value = !musicBarOpen.value
@@ -790,29 +809,60 @@ function nextTrack() {
 function cyclePlayMode() {
   playMode.value = { order: 'shuffle', shuffle: 'repeatOne', repeatOne: 'order' }[playMode.value]
 }
-function seekBy(sec) {
+/** 把音量/倍速同步到 audio（换歌重载后倍速会被重置，需重新应用） */
+function applyAudioPrefs() {
   const audio = audioRef.value
-  if (audio) audio.currentTime = Math.min(Math.max(0, audio.currentTime + sec), duration.value || 0)
+  if (!audio) return
+  audio.volume = muted.value ? 0 : volume.value
+  audio.playbackRate = playbackRate.value
+}
+function onVolumeInput(e) {
+  volume.value = Number(e.target.value)
+  muted.value = volume.value === 0
+  applyAudioPrefs()
+}
+function toggleMute() {
+  muted.value = !muted.value
+  applyAudioPrefs()
+}
+function cycleRate() {
+  playbackRate.value = RATES[(RATES.indexOf(playbackRate.value) + 1) % RATES.length]
+  applyAudioPrefs()
+}
+function stopTrack() {
+  const audio = audioRef.value
+  if (!audio) return
+  audio.pause()
+  audio.currentTime = 0
+  playing.value = false
+  currentTime.value = 0
 }
 function onSeek(e) {
   const audio = audioRef.value
   if (audio) audio.currentTime = Number(e.target.value)
 }
 function onTimeUpdate() { currentTime.value = audioRef.value ? audioRef.value.currentTime : 0 }
-function onLoadedMeta() { duration.value = audioRef.value ? audioRef.value.duration : 0 }
+function onLoadedMeta() {
+  duration.value = audioRef.value ? audioRef.value.duration : 0
+  applyAudioPrefs()
+}
 function formatTime(t) {
   if (!Number.isFinite(t)) return '00:00'
   const m = Math.floor(t / 60), s = Math.floor(t % 60)
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-/* ---------- AI 侧栏 ---------- */
+/* ---------- AI 助手弹窗 ---------- */
 const aiExpanded = ref(false)
 const aiInput = ref('')
 const aiMessages = ref([])
 
-// 侧栏展开/收起会改变内容列宽度，布局稳定后重算导航指示条
-watch(aiExpanded, () => nextTick(updateIndicator))
+// 弹窗打开时支持 Esc 关闭
+function onAiKeydown(e) { if (e.key === 'Escape') aiExpanded.value = false }
+watch(aiExpanded, open => {
+  if (open) document.addEventListener('keydown', onAiKeydown)
+  else document.removeEventListener('keydown', onAiKeydown)
+})
 
 function sendAiMessage() {
   const text = aiInput.value.trim()
@@ -1125,14 +1175,14 @@ onBeforeUnmount(() => {
 
 .login-dialog__side-title {
   margin: 0;
-  font-size: 26px;
+  font-size: 29px;
   letter-spacing: 2px;
   text-shadow: 0 2px 8px rgba(58, 100, 150, 0.3);
 }
 
 .login-dialog__side-desc {
   margin: 0;
-  font-size: 14px;
+  font-size: 15.5px;
   line-height: 1.8;
   opacity: 0.92;
 }
@@ -1145,7 +1195,7 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
   font: inherit;
-  font-size: 14px;
+  font-size: 15.5px;
   letter-spacing: 3px;
   cursor: pointer;
   transition: background 0.24s ease, color 0.24s ease, transform 0.24s ease, box-shadow 0.24s ease;
@@ -1202,9 +1252,9 @@ onBeforeUnmount(() => {
   animation: login-dialog-twinkle 2.8s ease-in-out infinite;
 }
 
-.login-dialog__star--1 { top: 14%; right: 22%; font-size: 15px; }
-.login-dialog__star--2 { top: 42%; left: 12%; font-size: 12px; animation-delay: 0.9s; }
-.login-dialog__star--3 { bottom: 16%; right: 16%; font-size: 13px; animation-delay: 1.7s; }
+.login-dialog__star--1 { top: 14%; right: 22%; font-size: 16.5px; }
+.login-dialog__star--2 { top: 42%; left: 12%; font-size: 13px; animation-delay: 0.9s; }
+.login-dialog__star--3 { bottom: 16%; right: 16%; font-size: 14.5px; animation-delay: 1.7s; }
 
 /* ----- 右侧表单区 ----- */
 .login-dialog__main {
@@ -1227,7 +1277,7 @@ onBeforeUnmount(() => {
 .login-dialog__title {
   margin: 0;
   text-align: center;
-  font-size: 26px;
+  font-size: 29px;
   letter-spacing: 3px;
   color: #3d4668;
 }
@@ -1235,7 +1285,7 @@ onBeforeUnmount(() => {
 .login-dialog__subtitle {
   margin: 8px 0 20px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14.5px;
   color: #93a0c4;
 }
 
@@ -1254,7 +1304,7 @@ onBeforeUnmount(() => {
   background: rgba(95, 149, 207, 0.1);
   color: #6b7aa8;
   font: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
   transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease,
     transform 0.22s ease, box-shadow 0.22s ease;
@@ -1275,7 +1325,7 @@ onBeforeUnmount(() => {
 
 .login-dialog__label {
   margin: 12px 0 6px;
-  font-size: 13px;
+  font-size: 14.5px;
   color: #6b7aa8;
 }
 
@@ -1288,7 +1338,7 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.75);
   color: #3d4668;
   font: inherit;
-  font-size: 14px;
+  font-size: 15.5px;
   outline: none;
   transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease,
     background 0.24s ease;
@@ -1328,7 +1378,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: #3f77b5;
   font: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
   transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
 }
@@ -1350,7 +1400,7 @@ onBeforeUnmount(() => {
   background: none;
   color: #6d9bd6;
   font: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
@@ -1368,7 +1418,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #6d9bd6 0%, #67b7cf 100%);
   color: #fff;
   font: inherit;
-  font-size: 15px;
+  font-size: 16.5px;
   letter-spacing: 6px;
   text-indent: 6px;
   cursor: pointer;
@@ -1390,14 +1440,14 @@ onBeforeUnmount(() => {
 .login-dialog__tip {
   margin: 14px 0 0;
   text-align: center;
-  font-size: 12px;
+  font-size: 13px;
   color: #93a0c4;
 }
 
 .login-dialog__switch-hint {
   margin: 8px 0 0;
   text-align: center;
-  font-size: 13px;
+  font-size: 14.5px;
   color: #6b7aa8;
 }
 
@@ -1645,6 +1695,13 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 .shell-brand > span {
   white-space: nowrap;
   flex: none;
+  /* 品牌文字可点击返回首页 */
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.shell-brand > span:hover {
+  color: var(--accent-text);
 }
 
 @media (max-width: 768px) {
@@ -1663,7 +1720,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   }
 
   .app-shell-top .shell-brand > span {
-    font-size: 15px;
+    font-size: 16.5px;
   }
 
   /* menu 按钮（在 .shell-brand 内的 popover 包装器里）推到品牌区右端，
@@ -1760,7 +1817,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
     left: 8px;
     bottom: 8px;
     padding: 3px 8px;
-    font-size: 10px;
+    font-size: 11px;
   }
 
   /* 问题5（登录弹窗）：≤720px 侧板已隐藏，这里收紧外层留白；
@@ -1784,7 +1841,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   }
 
   .app-shell-top .shell-brand > span {
-    font-size: 14px;
+    font-size: 15.5px;
   }
 
   .app-shell-top .shell-actions {
@@ -1810,7 +1867,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   }
 
   .login-dialog__title {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
 

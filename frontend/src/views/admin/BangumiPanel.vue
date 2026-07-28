@@ -14,6 +14,9 @@
         <button class="admin-btn" :disabled="searching" @click="doSearch">
           {{ searching ? '搜索中…' : '搜索' }}
         </button>
+        <button class="admin-btn admin-btn-ghost" :disabled="cleaning" @click="cleanDuplicates">
+          {{ cleaning ? '清理中…' : '清理重复' }}
+        </button>
       </div>
 
       <ul v-if="results.length" class="bgm-result-list">
@@ -63,6 +66,7 @@ const results = ref([])
 const searching = ref(false)
 const searched = ref(false)
 const importingId = ref(null)
+const cleaning = ref(false)
 const panelKey = ref(0)
 
 // 已收录的 bgm 条目 id，用于搜索结果里标注与拦截重复导入
@@ -76,6 +80,39 @@ async function loadExisting() {
 }
 
 onMounted(loadExisting)
+
+/** 清理重复：同一 subjectId 只保留最早收录的一条 */
+async function cleanDuplicates() {
+  cleaning.value = true
+  try {
+    const list = (await adminApi['bangumi-records'].list()) || []
+    const seen = new Map()
+    const extras = []
+    for (const r of list) {
+      const sid = Number(r.subjectId)
+      if (!sid) continue
+      if (seen.has(sid)) extras.push(r)
+      else seen.set(sid, r)
+    }
+    if (!extras.length) {
+      toast && toast('没有发现重复收录的番剧')
+      return
+    }
+    if (!window.confirm(`发现 ${extras.length} 条按 bgm 条目重复的记录，确定删除吗？`)) return
+    for (const r of extras) await adminApi['bangumi-records'].remove(r.id)
+    toast && toast(`已清理 ${extras.length} 条重复记录`)
+    await loadExisting()
+    panelKey.value += 1
+  } catch (err) {
+    if (err && err.unauthorized) {
+      onUnauthorized && onUnauthorized()
+      return
+    }
+    toast && toast((err && err.message) || '清理失败', 'error')
+  } finally {
+    cleaning.value = false
+  }
+}
 
 /** bgm v0 / 旧版搜索结果统一成一个形状 */
 function normalize(item) {
@@ -151,7 +188,8 @@ function buildFallbackRecord(item) {
     score: item.score == null ? null : Number(item.score),
     airDate: item.date || '',
     summary: item.summary || '',
-    tags: item.tags.slice(0, 4)
+    tags: item.tags.slice(0, 4),
+    visible: true
   }
 }
 
@@ -177,7 +215,8 @@ function buildDetailRecord(item, s) {
     tags: (Array.isArray(s.tags) && s.tags.length
       ? s.tags.map(t => t && t.name).filter(Boolean)
       : item.tags
-    ).slice(0, 4)
+    ).slice(0, 4),
+    visible: true
   }
 }
 
@@ -236,7 +275,7 @@ async function importItem(item) {
   flex-wrap: wrap;
 }
 .bgm-import-label {
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -272,7 +311,7 @@ async function importItem(item) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 17.5px;
   color: #fff;
   background: linear-gradient(150deg, #7fb4e8, #7cd6c0);
 }
@@ -281,7 +320,7 @@ async function importItem(item) {
   min-width: 0;
 }
 .bgm-result-name {
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -289,7 +328,7 @@ async function importItem(item) {
 }
 .bgm-result-sub {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.65;
   white-space: nowrap;
   overflow: hidden;
@@ -297,7 +336,7 @@ async function importItem(item) {
 }
 .bgm-result-empty {
   margin-top: 12px;
-  font-size: 13px;
+  font-size: 14.5px;
   opacity: 0.65;
 }
 

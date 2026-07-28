@@ -340,8 +340,11 @@ const gradClass = r => `bangumi-detail-grad-${Number(r?.id || 0) % GRAD_COUNT}`
 const fmtDate = v => (v ? String(v).slice(0, 10) : '—')
 
 function statusClass(status) {
-  if (status === '在看') return 'is-watching'
-  if (status === '看完') return 'is-done'
+  const s = status === '看完' ? '看过' : status
+  if (s === '在看') return 'is-watching'
+  if (s === '看过') return 'is-done'
+  if (s === '搁置') return 'is-hold'
+  if (s === '弃番') return 'is-drop'
   return 'is-wish'
 }
 
@@ -432,7 +435,7 @@ watch(
   background: var(--card-bg);
   color: var(--accent-text);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -445,7 +448,7 @@ watch(
 .bangumi-detail-state {
   padding: 56px 20px;
   text-align: center;
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--text-color);
   opacity: 0.66;
   border: 1px dashed var(--accent-border);
@@ -488,7 +491,7 @@ watch(
   justify-content: center;
 }
 .bangumi-detail-cover-fallback span {
-  font-size: 56px;
+  font-size: 62px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 4px 14px rgba(15, 23, 42, 0.28);
@@ -515,20 +518,22 @@ html.dark .bangumi-detail-grad-4 { background: linear-gradient(150deg, #44684f, 
   align-self: flex-start;
   padding: 3px 12px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   color: #fff;
 }
 .bangumi-detail-status.is-watching { background: rgba(63, 119, 181, 0.88); }
 .bangumi-detail-status.is-done { background: rgba(16, 145, 118, 0.85); }
 .bangumi-detail-status.is-wish { background: rgba(233, 138, 88, 0.88); }
+.bangumi-detail-status.is-hold { background: rgba(148, 128, 92, 0.85); }
+.bangumi-detail-status.is-drop { background: rgba(140, 92, 108, 0.85); }
 .bangumi-detail-title {
-  font-size: clamp(24px, 4.2vw, 32px);
+  font-size: clamp(26px, 4.2vw, 35px);
   font-weight: 700;
   line-height: 1.3;
   color: var(--text-color);
 }
 .bangumi-detail-origin {
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--text-color);
   opacity: 0.6;
 }
@@ -539,7 +544,7 @@ html.dark .bangumi-detail-grad-4 { background: linear-gradient(150deg, #44684f, 
   gap: 8px 14px;
 }
 .bangumi-detail-fact {
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--text-color);
   opacity: 0.72;
 }
@@ -547,7 +552,7 @@ html.dark .bangumi-detail-grad-4 { background: linear-gradient(150deg, #44684f, 
   padding: 2px 10px;
   border: 1px solid var(--accent-border);
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent-text);
   background: var(--nested-inner-card-bg);
 }
@@ -565,13 +570,13 @@ html.dark .bangumi-detail-grad-4 { background: linear-gradient(150deg, #44684f, 
   gap: 10px;
 }
 .bangumi-detail-score-big strong {
-  font-size: 40px;
+  font-size: 44px;
   font-weight: 700;
   color: var(--accent-text);
   line-height: 1;
 }
 .bangumi-detail-score-big span {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   opacity: 0.62;
 }
@@ -581,7 +586,7 @@ html.dark .bangumi-detail-grad-4 { background: linear-gradient(150deg, #44684f, 
   gap: 8px;
 }
 .bangumi-detail-stars {
-  font-size: 14px;
+  font-size: 15.5px;
   letter-spacing: 1px;
   color: #f0a742;
   white-space: nowrap;
@@ -612,7 +617,7 @@ html.dark .bangumi-detail-bar {
 }
 .bangumi-detail-progress-text {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   opacity: 0.68;
 }
@@ -625,7 +630,7 @@ html.dark .bangumi-detail-bar {
   border-radius: 999px;
   background: var(--accent-solid);
   color: #fff;
-  font-size: 13px;
+  font-size: 14.5px;
   box-shadow: 0 10px 24px var(--accent-glow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -646,7 +651,7 @@ html.dark .bangumi-detail-bar {
 }
 .bangumi-detail-island-title {
   margin-bottom: 16px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-color);
   display: flex;
@@ -662,7 +667,7 @@ html.dark .bangumi-detail-bar {
 }
 .bangumi-detail-note {
   margin: -8px 0 12px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   opacity: 0.58;
 }
@@ -684,23 +689,23 @@ html.dark .bangumi-detail-bar {
   gap: 6px;
 }
 .bangumi-detail-record-grid span {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   opacity: 0.62;
 }
 .bangumi-detail-record-grid strong {
-  font-size: 18px;
+  font-size: 20px;
   color: var(--accent-text);
 }
 .bangumi-detail-record-grid strong.is-small {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   font-weight: 600;
 }
 
 /* 简介 */
 .bangumi-detail-summary {
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1.9;
   color: var(--text-color);
   opacity: 0.82;
@@ -716,7 +721,7 @@ html.dark .bangumi-detail-bar {
   padding: 3px 10px;
   border: 1px solid var(--accent-border);
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent-text);
   background: var(--nested-inner-card-bg);
 }
@@ -743,7 +748,7 @@ html.dark .bangumi-detail-bar {
   width: 22px;
   flex-shrink: 0;
   text-align: right;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   opacity: 0.66;
 }
@@ -774,7 +779,7 @@ html.dark .bangumi-detail-dist-bar {
 .bangumi-detail-dist-count {
   width: 74px;
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-color);
   opacity: 0.62;
   display: flex;
@@ -785,7 +790,7 @@ html.dark .bangumi-detail-dist-bar {
   font-style: normal;
   padding: 1px 7px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 11px;
   color: #fff;
   background: var(--accent-solid);
 }
@@ -808,12 +813,12 @@ html.dark .bangumi-detail-dist-bar {
   gap: 4px;
 }
 .bangumi-detail-collect span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-color);
   opacity: 0.62;
 }
 .bangumi-detail-collect strong {
-  font-size: 16px;
+  font-size: 17.5px;
   color: var(--accent-text);
 }
 
@@ -850,7 +855,7 @@ html.dark .bangumi-detail-dist-bar {
   object-fit: cover;
 }
 .bangumi-detail-char-avatar span {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--accent-text);
 }
@@ -858,7 +863,7 @@ html.dark .bangumi-detail-dist-bar {
   min-width: 0;
 }
 .bangumi-detail-char-name {
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--text-color);
   white-space: nowrap;
@@ -871,13 +876,13 @@ html.dark .bangumi-detail-dist-bar {
   padding: 1px 7px;
   border: 1px solid var(--accent-border);
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--accent-text);
 }
 .bangumi-detail-char-cv {
   margin-top: 3px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-color);
   opacity: 0.6;
   white-space: nowrap;
@@ -898,7 +903,7 @@ html.dark .bangumi-detail-dist-bar {
   justify-content: center;
   border: 1px solid var(--accent-border);
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent-text);
   background: var(--card-bg);
   cursor: default;
@@ -925,7 +930,7 @@ html.dark .bangumi-detail-dist-bar {
   gap: 12px;
   padding: 8px 4px;
   border-bottom: 1px dashed var(--nested-inner-card-border);
-  font-size: 13px;
+  font-size: 14.5px;
 }
 .bangumi-detail-staff-row dt {
   flex-shrink: 0;
@@ -964,11 +969,11 @@ html.dark .bangumi-detail-dist-bar {
   box-shadow: var(--nested-middle-card-shadow);
 }
 .bangumi-detail-more-cover .bangumi-detail-cover-fallback span {
-  font-size: 32px;
+  font-size: 35px;
 }
 .bangumi-detail-more-name {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
@@ -1078,7 +1083,7 @@ html.dark .bangumi-detail-dist-bar {
 }
 @media (max-width: 480px) {
   .bangumi-detail-score-big strong {
-    font-size: 32px;
+    font-size: 35px;
   }
   .bangumi-detail-dist-count {
     width: 60px;
@@ -1087,10 +1092,10 @@ html.dark .bangumi-detail-dist-bar {
     gap: 6px;
   }
   .bangumi-detail-collect strong {
-    font-size: 14px;
+    font-size: 15.5px;
   }
   .bangumi-detail-record-grid strong {
-    font-size: 16px;
+    font-size: 17.5px;
   }
   .bangumi-detail-char-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

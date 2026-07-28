@@ -442,13 +442,13 @@ onMounted(load)
 
 .scene-head-title {
   margin: 0 0 4px;
-  font-size: 18px;
+  font-size: 20px;
   color: #3f77b5;
 }
 
 .scene-head-sub {
   margin: 0;
-  font-size: 13px;
+  font-size: 14.5px;
   color: rgba(31, 49, 72, 0.55);
 }
 
@@ -460,7 +460,7 @@ onMounted(load)
   background-color: rgba(192, 86, 79, 0.08);
   border: 1px dashed rgba(192, 86, 79, 0.4);
   border-radius: 14px;
-  font-size: 13px;
+  font-size: 14.5px;
 }
 
 .scene-batch-text {
@@ -489,7 +489,7 @@ onMounted(load)
   justify-content: space-between;
   padding: 6px 6px 12px;
   border-bottom: 1px dashed rgba(63, 119, 181, 0.2);
-  font-size: 13px;
+  font-size: 14.5px;
   color: rgba(31, 49, 72, 0.6);
 }
 
@@ -553,7 +553,7 @@ onMounted(load)
 }
 
 .scene-thumb-empty {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(31, 49, 72, 0.4);
 }
 
@@ -564,7 +564,7 @@ onMounted(load)
 
 .scene-eyebrow {
   margin: 0 0 2px;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #8aa5c4;
@@ -572,7 +572,7 @@ onMounted(load)
 
 .scene-title {
   margin: 0 0 2px;
-  font-size: 15px;
+  font-size: 16.5px;
   color: #1f3148;
   white-space: nowrap;
   overflow: hidden;
@@ -581,7 +581,7 @@ onMounted(load)
 
 .scene-desc {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(31, 49, 72, 0.55);
   white-space: nowrap;
   overflow: hidden;
@@ -592,7 +592,7 @@ onMounted(load)
   flex: none;
   padding: 2px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   background-color: rgba(63, 119, 181, 0.12);
   color: #3f77b5;
 }
@@ -605,7 +605,7 @@ onMounted(load)
   background-color: rgba(63, 119, 181, 0.08);
   color: #3f77b5;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -661,7 +661,7 @@ onMounted(load)
 
 .scene-modal-head h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17.5px;
   color: #3f77b5;
 }
 
@@ -707,7 +707,7 @@ onMounted(load)
   align-items: center;
   gap: 8px;
   margin: 4px 0 6px;
-  font-size: 14px;
+  font-size: 15.5px;
   cursor: pointer;
 }
 

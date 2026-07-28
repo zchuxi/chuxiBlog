@@ -26,10 +26,10 @@
     <!-- 已登录：分组侧栏 + 顶部条 + 面板区 -->
     <div v-else class="admin-shell">
       <aside class="admin-sidebar" :class="{ open: sidebarOpen }">
-        <div class="admin-brand">
+        <RouterLink class="admin-brand" to="/index" title="返回网站首页">
           <span class="admin-brand-dot"></span>
           初曦后台
-        </div>
+        </RouterLink>
         <nav class="admin-nav">
           <div v-for="group in menuGroups" :key="group.title || 'main'" class="admin-nav-group">
             <p v-if="group.title" class="admin-nav-group-title">{{ group.title }}</p>
@@ -113,6 +113,7 @@
 
 <script setup>
 import { computed, onMounted, provide, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { clearToken, getToken, login, setToken } from '../../api/admin'
 import { useSettingsStore } from '../../stores/settings'
 import resourceSchemas from './resourceSchemas'

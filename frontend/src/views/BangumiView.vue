@@ -8,7 +8,7 @@
         <p class="bangumi-hero-sub">追番进度、个人打分与一句话观后感，都摊在这张小桌上慢慢看。</p>
         <div class="bangumi-hero-stats">
           <article class="bangumi-stat-card"><span>在看</span><strong>{{ countBy('在看') }}</strong></article>
-          <article class="bangumi-stat-card"><span>看完</span><strong>{{ countBy('看完') }}</strong></article>
+          <article class="bangumi-stat-card"><span>看过</span><strong>{{ countBy('看过') }}</strong></article>
           <article class="bangumi-stat-card"><span>想看</span><strong>{{ countBy('想看') }}</strong></article>
           <article class="bangumi-stat-card bangumi-stat-wide">
             <span>总集进度 · {{ watchedTotal }} / {{ epsTotal }} 话</span>
@@ -17,7 +17,7 @@
         </div>
       </section>
 
-      <!-- 状态筛选 chips -->
+      <!-- 状态筛选 chips + 每日放送入口 -->
       <div class="bangumi-filter">
         <button
           v-for="s in FILTERS"
@@ -29,7 +29,13 @@
         >
           {{ s }}
         </button>
+        <RouterLink class="bangumi-chip bangumi-calendar-link" to="/calendar">每日放送 →</RouterLink>
       </div>
+
+      <!-- 去重提示：与参考站一致，同一 bgm 条目只展示一条 -->
+      <p v-if="hiddenCount > 0" class="bangumi-dedup-note">
+        已隐藏 {{ hiddenCount }} 条按 Bangumi subject 重复的番剧，仅在管理后台可见。
+      </p>
 
       <!-- 列表 -->
       <div v-if="loading" class="bangumi-state">追番小本本翻页中…</div>
@@ -56,7 +62,7 @@
             <div v-else class="bangumi-cover-fallback" :class="gradClass(r)">
               <span>{{ initialOf(r) }}</span>
             </div>
-            <span class="bangumi-status-badge" :class="statusClass(r.status)">{{ r.status }}</span>
+            <span class="bangumi-status-badge" :class="statusClass(r.status)">{{ normStatus(r.status) }}</span>
           </div>
           <div class="bangumi-card-body">
             <h3 class="bangumi-card-title">{{ r.nameCn || r.name }}</h3>
@@ -67,11 +73,12 @@
             </div>
             <div class="bangumi-meta-row">
               <span v-if="r.rating != null" class="bangumi-stars" :title="`个人评分 ${r.rating}/10`">
-                {{ '★'.repeat(r.rating) }}
+                {{ starsOf(r.rating) }} <b>{{ r.rating }}</b>
               </span>
               <span v-else class="bangumi-stars is-empty">未评分</span>
               <span v-if="r.score != null" class="bangumi-score-badge">bgm {{ fmtScore(r.score) }}</span>
             </div>
+            <p v-if="r.summary" class="bangumi-card-summary">{{ r.summary }}</p>
           </div>
         </article>
       </div>
@@ -81,10 +88,10 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { api } from '../api'
 
-const FILTERS = ['全部', '在看', '看完', '想看']
+const FILTERS = ['全部', '在看', '想看', '看过', '搁置', '弃番']
 const GRAD_COUNT = 5
 
 const router = useRouter()
@@ -94,24 +101,49 @@ const activeFilter = ref('全部')
 // 加载失败的封面 id 集合，回退到渐变占位
 const broken = ref(new Set())
 
+// 旧数据的“看完”归一到“看过”
+const normStatus = s => (s === '看完' ? '看过' : s || '想看')
+
+// 同一 bgm 条目只展示最早收录的一条（无 subjectId 的不参与去重），与参考站行为对齐
+const deduped = computed(() => {
+  const seen = new Set()
+  return records.value.filter(r => {
+    const sid = Number(r.subjectId)
+    if (!sid) return true
+    if (seen.has(sid)) return false
+    seen.add(sid)
+    return true
+  })
+})
+const hiddenCount = computed(() => records.value.length - deduped.value.length)
+
 const filtered = computed(() =>
-  activeFilter.value === '全部' ? records.value : records.value.filter(r => r.status === activeFilter.value)
+  activeFilter.value === '全部' ? deduped.value : deduped.value.filter(r => normStatus(r.status) === activeFilter.value)
 )
 
-const watchedTotal = computed(() => records.value.reduce((s, r) => s + (r.watchedEps || 0), 0))
-const epsTotal = computed(() => records.value.reduce((s, r) => s + (r.totalEps || 0), 0))
+const watchedTotal = computed(() => deduped.value.reduce((s, r) => s + (r.watchedEps || 0), 0))
+const epsTotal = computed(() => deduped.value.reduce((s, r) => s + (r.totalEps || 0), 0))
 const totalPercent = computed(() => (epsTotal.value > 0 ? Math.min(100, Math.round((watchedTotal.value / epsTotal.value) * 100)) : 0))
 
-const countBy = s => records.value.filter(r => r.status === s).length
+const countBy = s => deduped.value.filter(r => normStatus(r.status) === s).length
 const hasCover = r => !!r.coverUrl && !broken.value.has(r.id)
 const initialOf = r => (r.nameCn || r.name || '?').trim().charAt(0)
 const gradClass = r => `bangumi-grad-${Number(r.id || 0) % GRAD_COUNT}`
 const percentOf = r => (r.totalEps > 0 ? Math.min(100, Math.round(((r.watchedEps || 0) / r.totalEps) * 100)) : 0)
 const fmtScore = v => Number(v).toFixed(1)
 
+// 10 分制 → 5 星展示（实心+空心），与参考站星级样式对齐
+const starsOf = rating => {
+  const full = Math.max(0, Math.min(5, Math.round(Number(rating) / 2)))
+  return '★'.repeat(full) + '☆'.repeat(5 - full)
+}
+
 function statusClass(status) {
-  if (status === '在看') return 'is-watching'
-  if (status === '看完') return 'is-done'
+  const s = normStatus(status)
+  if (s === '在看') return 'is-watching'
+  if (s === '看过') return 'is-done'
+  if (s === '搁置') return 'is-hold'
+  if (s === '弃番') return 'is-drop'
   return 'is-wish'
 }
 
@@ -141,7 +173,7 @@ onMounted(async () => {
   padding: 96px 20px 72px;
 }
 .bangumi-shell {
-  max-width: 1080px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -159,7 +191,7 @@ onMounted(async () => {
   -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-hero-eyebrow {
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--accent-text);
@@ -167,13 +199,13 @@ onMounted(async () => {
 }
 .bangumi-hero-title {
   margin-top: 6px;
-  font-size: clamp(26px, 4.6vw, 34px);
+  font-size: clamp(29px, 4.6vw, 37px);
   font-weight: 700;
   color: var(--text-color);
 }
 .bangumi-hero-sub {
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 15.5px;
   line-height: 1.7;
   color: var(--text-color);
   opacity: 0.72;
@@ -195,12 +227,12 @@ onMounted(async () => {
   gap: 6px;
 }
 .bangumi-stat-card span {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-color);
   opacity: 0.62;
 }
 .bangumi-stat-card strong {
-  font-size: 22px;
+  font-size: 24px;
   color: var(--accent-text);
 }
 .bangumi-stat-wide {
@@ -226,11 +258,19 @@ html.dark .bangumi-bar {
   background: rgba(148, 163, 184, 0.18);
 }
 
-/* 筛选 chips */
+/* 筛选 chips：收进一条半透明岛屿条，与参考站的胶囊筛选栏对齐 */
 .bangumi-filter {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--nested-outer-card-bg);
+  box-shadow: var(--nested-outer-card-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-chip {
   padding: 7px 18px;
@@ -239,7 +279,7 @@ html.dark .bangumi-bar {
   background: var(--card-bg);
   color: var(--accent-text);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 .bangumi-chip:hover {
@@ -252,12 +292,31 @@ html.dark .bangumi-bar {
   color: #fff;
   box-shadow: 0 10px 22px var(--accent-glow);
 }
+.bangumi-calendar-link {
+  margin-left: auto;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 去重提示（与参考站一致的半透明胶囊注释行） */
+.bangumi-dedup-note {
+  align-self: flex-start;
+  margin: -8px 0 0;
+  padding: 6px 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--nested-middle-card-bg);
+  font-size: 13.5px;
+  color: var(--text-color);
+  opacity: 0.72;
+}
 
 /* 状态区 */
 .bangumi-state {
   padding: 56px 20px;
   text-align: center;
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--text-color);
   opacity: 0.66;
   border: 1px dashed var(--accent-border);
@@ -265,11 +324,11 @@ html.dark .bangumi-bar {
   background: var(--nested-middle-card-bg);
 }
 
-/* 封面卡网格 */
+/* 封面卡网格：大海报优先，对齐参考站的五列大图布局 */
 .bangumi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 20px;
 }
 .bangumi-card {
   border: 1px solid var(--card-border);
@@ -304,7 +363,7 @@ html.dark .bangumi-bar {
   justify-content: center;
 }
 .bangumi-cover-fallback span {
-  font-size: 52px;
+  font-size: 57px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 4px 14px rgba(15, 23, 42, 0.28);
@@ -320,14 +379,14 @@ html.dark .bangumi-grad-2 { background: linear-gradient(150deg, #7f6a48, #7a5252
 html.dark .bangumi-grad-3 { background: linear-gradient(150deg, #52538a, #3d6580); }
 html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40); }
 
-/* 状态角标 */
+/* 状态角标：左上角，与参考站一致 */
 .bangumi-status-badge {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   color: #fff;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -336,6 +395,8 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
 .bangumi-status-badge.is-watching { background: rgba(63, 119, 181, 0.88); }
 .bangumi-status-badge.is-done { background: rgba(16, 145, 118, 0.85); }
 .bangumi-status-badge.is-wish { background: rgba(233, 138, 88, 0.88); }
+.bangumi-status-badge.is-hold { background: rgba(148, 128, 92, 0.85); }
+.bangumi-status-badge.is-drop { background: rgba(140, 92, 108, 0.85); }
 
 /* 卡片信息区 */
 .bangumi-card-body {
@@ -345,7 +406,7 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   gap: 7px;
 }
 .bangumi-card-title {
-  font-size: 14px;
+  font-size: 15.5px;
   font-weight: 700;
   color: var(--text-color);
   white-space: nowrap;
@@ -353,7 +414,7 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   text-overflow: ellipsis;
 }
 .bangumi-card-origin {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-color);
   opacity: 0.55;
   white-space: nowrap;
@@ -366,7 +427,7 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   gap: 8px;
 }
 .bangumi-progress-text {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-color);
   opacity: 0.65;
   flex-shrink: 0;
@@ -379,17 +440,24 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   min-height: 18px;
 }
 .bangumi-stars {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1px;
   color: #f0a742;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.bangumi-stars b {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-color);
+  opacity: 0.72;
+}
 .bangumi-stars.is-empty {
   color: var(--text-color);
   opacity: 0.4;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0;
 }
 .bangumi-score-badge {
@@ -397,9 +465,22 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   padding: 2px 8px;
   border: 1px solid var(--accent-border);
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--accent-text);
   background: var(--nested-inner-card-bg);
+}
+
+/* 简介摘要：两行截断，对齐参考站卡片底部描述 */
+.bangumi-card-summary {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-color);
+  opacity: 0.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 响应式 */
@@ -436,6 +517,10 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   .bangumi-stat-wide {
     grid-column: 1 / -1;
   }
+  .bangumi-filter {
+    border-radius: 24px;
+    padding: 10px 12px;
+  }
   .bangumi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
@@ -443,6 +528,9 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
   .bangumi-chip {
     min-height: 40px;
     padding: 8px 16px;
+  }
+  .bangumi-card-summary {
+    display: none;
   }
 }
 @media (max-width: 480px) {
@@ -456,7 +544,7 @@ html.dark .bangumi-grad-4 { background: linear-gradient(150deg, #44684f, #5c6d40
     padding: 10px 12px;
   }
   .bangumi-stat-card strong {
-    font-size: 18px;
+    font-size: 20px;
   }
   .bangumi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -155,14 +155,14 @@ onMounted(async () => {
 
 .about-page .about-site-name {
   margin: 4px 0 0;
-  font-size: 26px;
+  font-size: 29px;
   letter-spacing: 2px;
   color: var(--text-color);
 }
 
 .about-page .about-site-tagline {
   margin: 0;
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1.8;
   color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
@@ -180,7 +180,7 @@ onMounted(async () => {
 
 .about-page .about-body-title {
   margin: 0;
-  font-size: 21px;
+  font-size: 23px;
   letter-spacing: 1px;
   color: var(--text-color);
 }
@@ -202,14 +202,14 @@ onMounted(async () => {
 
 .about-page .about-placeholder-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 17.5px;
   font-weight: 600;
   color: var(--text-color);
 }
 
 .about-page .about-placeholder-text {
   margin: 0;
-  font-size: 13px;
+  font-size: 14.5px;
   color: color-mix(in srgb, var(--text-color) 58%, transparent);
 }
 
@@ -270,12 +270,12 @@ onMounted(async () => {
 }
 
 .about-page .about-quick-label {
-  font-size: 15px;
+  font-size: 16.5px;
   font-weight: 600;
 }
 
 .about-page .about-quick-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: color-mix(in srgb, var(--text-color) 55%, transparent);
 }
 
@@ -355,7 +355,7 @@ html.dark .about-page .about-quick-icon {
   }
 
   .about-page .about-site-name {
-    font-size: 23px;
+    font-size: 25px;
   }
 }
 
@@ -371,11 +371,11 @@ html.dark .about-page .about-quick-icon {
   }
 
   .about-page .about-site-name {
-    font-size: 21px;
+    font-size: 23px;
   }
 
   .about-page .about-body-title {
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .about-page .about-placeholder {
