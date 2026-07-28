@@ -25,8 +25,10 @@
 
 - **后端改动后必须在 `backend/` 目录运行 `mvn test`**：冒烟测试 `BlogApplicationTests` 会完整加载 Spring 上下文（H2 内存库替代 MySQL，测试配置见 `src/test/resources/application.yml`，无需本地 MySQL/OSS），Bean 装配、实体映射、种子数据导入出错都会直接失败
 - **前端改动后在 `frontend/` 目录运行 `npm run lint` 和 `npm run build`**，以 lint 与构建双通过作为机械检查（lint 为最小 eslint 配置，见 `frontend/eslint.config.js`，已纳入 pre-commit 钩子；build 耗时较长仍为手动约定；type 检查暂未引入，按需另行评估）
+- **前端改动后在 `frontend/` 目录运行 `npm test`**：Node 内置测试器（`node --test`，Node ≥ 21，零额外依赖）跑 `src/**/*.test.js` 下的纯数据行为检查（当前覆盖 `resourceSchemas.js` 的 schema 结构约束：字段类型合法性、select 必填 options、batch/ratio/default 规则、columns 与字段的对应关系）；新增可被 Node 直接加载的纯逻辑模块时按同一约定补测试
 - `start-backend.bat` 打包时保留 `-DskipTests`（启动提速），因此**跳过测试仅限启动脚本，提交前仍须手动跑 `mvn test`**
 - **机械检查点（对应上面前两条）**：新克隆/新环境必须先运行一次 `scripts\install-git-hooks.bat` 安装仓库内版本化的 pre-commit 钩子（`scripts/git-hooks/pre-commit`，钩子不随 clone 自动生效），此后暂存区含 `backend/` 改动的提交自动执行 `mvn test`、含 `frontend/` 改动的提交自动执行 `npm run lint`，失败即阻断提交（紧急绕过 `git commit --no-verify`）；其余约定暂维持流程文档形式
+- **CI 兜底执行点（不依赖本机安装）**：推送到 GitHub 或发起 PR 时，`.github/workflows/backend-ci.yml` 在 `backend/` 改动时自动运行 `mvn test`，`.github/workflows/frontend-ci.yml` 在 `frontend/` 改动时自动运行 `npm run lint` 与 `npm run build`，命令与 pre-commit 钩子保持一致；本机钩子未安装或被 `--no-verify` 绕过时，CI 仍会拦截失败的改动（Gitee 远端不触发此工作流）
 
 ## 页面清单
 

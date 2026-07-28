@@ -34,6 +34,10 @@
             <ImageSelect v-model="form.faviconUrl" placeholder="/favicon.png" />
           </div>
         </div>
+        <div class="admin-field">
+          <label class="admin-field-label">关于页头像</label>
+          <ImageSelect v-model="form.avatarUrl" placeholder="请输入或选择关于页头像图片地址" />
+        </div>
       </div>
 
       <!-- SEO -->
@@ -102,6 +106,7 @@ const DEFAULT_FORM = {
   subtitle: '收集工具、追番与灵感碎片的小小基地。',
   logoUrl: '/favicon.png',
   faviconUrl: '/favicon.png',
+  avatarUrl: '',
   seoDescription: '',
   seoKeywords: '',
   githubUrl: '',
@@ -135,6 +140,7 @@ function fillForm(obj) {
     subtitle: obj.subtitle || DEFAULT_FORM.subtitle,
     logoUrl: obj.logoUrl || DEFAULT_FORM.logoUrl,
     faviconUrl: obj.faviconUrl || DEFAULT_FORM.faviconUrl,
+    avatarUrl: obj.avatarUrl || '',
     seoDescription: obj.seoDescription || '',
     seoKeywords: obj.seoKeywords || '',
     githubUrl: obj.githubUrl || '',

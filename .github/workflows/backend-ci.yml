@@ -1,0 +1,30 @@
+# 兜底机械检查点（命令与 scripts/git-hooks/pre-commit 保持一致，约定见 README「改动后验证」）：
+# backend/ 改动推送或 PR 时强制运行 mvn test，不依赖本机手动安装钩子
+name: backend-ci
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  mvn-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: mvn test
+        run: mvn -B test

@@ -7,7 +7,7 @@
           <span class="about-card__orb about-card__orb--2"></span>
           <aside class="about-profile">
             <div class="about-avatar-ring">
-              <img class="about-avatar" :src="siteSettings.logoUrl || '/favicon.png'" alt="站点头像" />
+              <img class="about-avatar" :src="siteSettings.avatarUrl || siteSettings.logoUrl || '/favicon.png'" alt="站点头像" />
             </div>
             <h2 class="about-site-name">{{ siteSettings.siteName || '初曦的窝' }}</h2>
             <i class="about-profile-divider"></i>
@@ -95,6 +95,7 @@ const hasContent = computed(() => !!(content.value && (content.value.title || co
 const siteSettings = reactive({
   siteName: '初曦的窝',
   logoUrl: '/favicon.png',
+  avatarUrl: '',
   subtitle: '收集工具、追番与灵感碎片的小小基地。'
 })
 
@@ -117,6 +118,7 @@ onMounted(async () => {
     if (settingsObj && typeof settingsObj === 'object') {
       siteSettings.siteName = settingsObj.siteName || '初曦的窝'
       siteSettings.logoUrl = settingsObj.logoUrl || '/favicon.png'
+      siteSettings.avatarUrl = settingsObj.avatarUrl || ''
       siteSettings.subtitle = settingsObj.subtitle || '收集工具、追番与灵感碎片的小小基地。'
     }
   } catch { /* 无数据时使用默认值 */ }
