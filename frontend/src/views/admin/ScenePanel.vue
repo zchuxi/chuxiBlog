@@ -27,7 +27,7 @@
       <template v-else>
         <div class="scene-list-head">
           <label class="scene-check-label">
-            <input type="checkbox" class="scene-check" :checked="allSelected" @change="toggleAll" />
+            <input type="checkbox" class="admin-check admin-check-sm" :checked="allSelected" @change="toggleAll" />
             <span>全选</span>
           </label>
           <span class="scene-count">共 {{ rows.length }} 个场景</span>
@@ -36,7 +36,7 @@
           <li v-for="(row, idx) in rows" :key="row.id" class="scene-row" :class="{ off: !isVisible(row) }">
             <input
               type="checkbox"
-              class="scene-check"
+              class="admin-check admin-check-sm"
               :checked="selectedIds.includes(row.id)"
               @change="toggleSelect(row.id)"
             />
@@ -124,7 +124,7 @@
                 </div>
               </div>
               <label class="scene-visible-check">
-                <input v-model="form.visible" type="checkbox" class="scene-check" />
+                <input v-model="form.visible" type="checkbox" class="admin-check admin-check-sm" />
                 <span>在首页显示该场景</span>
               </label>
             </div>
@@ -500,13 +500,7 @@ onMounted(load)
   cursor: pointer;
 }
 
-.scene-check {
-  width: 16px;
-  height: 16px;
-  accent-color: #3f77b5;
-  cursor: pointer;
-  flex: none;
-}
+/* scene-check 已统一使用 admin-check 全局样式 */
 
 .scene-list {
   list-style: none;
@@ -825,7 +819,7 @@ html.dark .scene-img-preview {
     align-items: center;
   }
 
-  .scene-row > .scene-check {
+  .scene-row > .admin-check {
     grid-area: check;
   }
 

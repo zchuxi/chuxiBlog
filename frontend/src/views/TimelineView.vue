@@ -6,9 +6,9 @@
         <template #pill>快速了解当前页面的结构信息与内容分布。</template>
         <div v-reveal="40" class="timeline-summary-panel">
           <div class="timeline-summary-panel__head">
-            <p class="timeline-summary-panel__eyebrow">Chronicle</p>
-            <h1 class="timeline-summary-panel__title">把时间节点排成一条可以浏览的故事轨道。</h1>
-            <p class="timeline-summary-panel__description">页面样式延续首页的柔和层次，顶部卡片轮播保留参考项目的点击切换方式，正文时间线则按阶段展开，让每个节点都可以慢慢阅读。</p>
+            <p class="timeline-summary-panel__eyebrow">{{ heroConfig?.eyebrow || DEFAULT_HERO.eyebrow }}</p>
+            <h1 class="timeline-summary-panel__title">{{ heroConfig?.title || DEFAULT_HERO.title }}</h1>
+            <p class="timeline-summary-panel__description">{{ heroConfig?.description || DEFAULT_HERO.description }}</p>
           </div>
           <div class="timeline-summary-panel__stats">
             <div class="timeline-summary-panel__stat-item">
@@ -115,6 +115,9 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import LxSection from '../components/LxSection.vue'
 import { api } from '../api'
 
+const DEFAULT_HERO = { eyebrow: 'Timeline', title: '把时间节点排成一条可以浏览的故事轨道。', description: '每一个标记都是一段被留住的时间。' }
+const heroConfig = ref(null)
+
 const carousels = ref([])
 const timelines = ref([])
 const carouselIndex = ref(0)
@@ -158,6 +161,9 @@ onMounted(async () => {
     carousels.value = data.carousels || []
     timelines.value = data.timelines || []
   } catch { /* 后端未启动 */ }
+  try {
+    heroConfig.value = await api.siteContent('timeline-hero')
+  } catch { /* 使用默认值 */ }
   requestAnimationFrame(() => {
     if (!storyListRef.value) return
     storyObserver = new IntersectionObserver(entries => {

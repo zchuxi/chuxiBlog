@@ -4,6 +4,7 @@ import com.chuxi.common.PageData;
 import com.chuxi.common.R;
 import com.chuxi.entity.Article;
 import com.chuxi.entity.Barrage;
+import com.chuxi.entity.FriendLink;
 import com.chuxi.repo.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -27,12 +28,13 @@ public class SectionController {
     private final ParallaxStoryRepo parallaxStoryRepo;
     private final ToolSiteRepo toolSiteRepo;
     private final MusicRepo musicRepo;
+    private final FriendLinkRepository friendLinkRepo;
 
     public SectionController(TimelineCarouselRepo timelineCarouselRepo, TimelineEventRepo timelineEventRepo,
                              ArticleRepo articleRepo, ArchiveCategoryRepo archiveCategoryRepo,
                              BarrageRepo barrageRepo, CalledTextRepo calledTextRepo,
                              ParallaxStoryRepo parallaxStoryRepo, ToolSiteRepo toolSiteRepo,
-                             MusicRepo musicRepo) {
+                             MusicRepo musicRepo, FriendLinkRepository friendLinkRepo) {
         this.timelineCarouselRepo = timelineCarouselRepo;
         this.timelineEventRepo = timelineEventRepo;
         this.articleRepo = articleRepo;
@@ -42,6 +44,7 @@ public class SectionController {
         this.parallaxStoryRepo = parallaxStoryRepo;
         this.toolSiteRepo = toolSiteRepo;
         this.musicRepo = musicRepo;
+        this.friendLinkRepo = friendLinkRepo;
     }
 
     @GetMapping("/api/front/timeline/landing")
@@ -142,5 +145,11 @@ public class SectionController {
         var all = musicRepo.findAll();
         var page = all.stream().skip((long) (pageNo - 1) * pageSize).limit(pageSize).toList();
         return R.ok(new PageData<>(page, all.size(), pageNo, pageSize));
+    }
+
+    @GetMapping("/api/front/friend-links")
+    @Transactional(readOnly = true)
+    public List<FriendLink> friendLinks() {
+        return friendLinkRepo.findByVisibleTrueOrderBySortIndexAsc();
     }
 }

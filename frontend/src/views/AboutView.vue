@@ -7,11 +7,11 @@
           <span class="about-card__orb about-card__orb--2"></span>
           <aside class="about-profile">
             <div class="about-avatar-ring">
-              <img class="about-avatar" src="/favicon.png" alt="站点头像" />
+              <img class="about-avatar" :src="siteSettings.logoUrl || '/favicon.png'" alt="站点头像" />
             </div>
-            <h2 class="about-site-name">初曦的窝</h2>
+            <h2 class="about-site-name">{{ siteSettings.siteName || '初曦的窝' }}</h2>
             <i class="about-profile-divider"></i>
-            <p class="about-site-tagline">收集工具、追番与灵感碎片的小小基地。</p>
+            <p class="about-site-tagline">{{ siteSettings.subtitle || '收集工具、追番与灵感碎片的小小基地。' }}</p>
             <div class="about-profile-tags">
               <span>前端</span><span>AI</span><span>追番</span><span>碎碎念</span>
             </div>
@@ -24,6 +24,36 @@
               <p class="about-placeholder-title">这里还没有写下自我介绍</p>
               <p class="about-placeholder-text">站长还在酝酿一段合适的开场白，先四处逛逛，稍后再来看看吧。</p>
             </div>
+          </div>
+        </section>
+        <!-- 友情链接区块 -->
+        <section v-reveal="50" class="friend-links-section">
+          <div class="friend-links-header">
+            <h3 class="friend-links-title">友情链接</h3>
+            <p class="friend-links-desc">志同道合的小伙伴们</p>
+          </div>
+          <div v-if="friendLinksLoading" class="friend-links-state">加载中…</div>
+          <div v-else-if="friendLinks.length === 0" class="friend-links-state friend-links-empty">
+            <p>暂无友情链接，稍后再来看看吧 ✨</p>
+          </div>
+          <div v-else class="friend-links-grid">
+            <a
+              v-for="link in friendLinks"
+              :key="link.id"
+              class="friend-link-card"
+              :href="link.siteUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="friend-link-logo">
+                <img v-if="link.logoUrl" :src="link.logoUrl" :alt="link.siteName" />
+                <span v-else class="friend-link-logo-fallback">{{ (link.siteName || '?').charAt(0) }}</span>
+              </div>
+              <div class="friend-link-info">
+                <span class="friend-link-name">{{ link.siteName }}</span>
+                <span v-if="link.description" class="friend-link-desc">{{ link.description }}</span>
+              </div>
+            </a>
           </div>
         </section>
         <section class="about-quick-row">
@@ -49,7 +79,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import LxSection from '../components/LxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
@@ -62,6 +92,15 @@ const content = ref(null)
 const renderedHtml = ref('')
 const hasContent = computed(() => !!(content.value && (content.value.title || content.value.markdown)))
 
+const siteSettings = reactive({
+  siteName: '初曦的窝',
+  logoUrl: '/favicon.png',
+  subtitle: '收集工具、追番与灵感碎片的小小基地。'
+})
+
+const friendLinks = ref([])
+const friendLinksLoading = ref(true)
+
 const quickEntries = [
   { path: '/index', label: '去看文章', desc: '最新的记录都在首页', icon: 'common-archive' },
   { path: '/tool', label: '工具集合', desc: '收藏的好用站点与工具', icon: 'common-tool' },
@@ -69,6 +108,20 @@ const quickEntries = [
 ]
 
 onMounted(async () => {
+  // 加载站点设置
+  try {
+    const settingsData = await api.siteContent('site-settings')
+    let settingsObj = settingsData
+    if (settingsData && typeof settingsData.contentJson === 'string') settingsObj = JSON.parse(settingsData.contentJson)
+    if (typeof settingsObj === 'string') settingsObj = JSON.parse(settingsObj)
+    if (settingsObj && typeof settingsObj === 'object') {
+      siteSettings.siteName = settingsObj.siteName || '初曦的窝'
+      siteSettings.logoUrl = settingsObj.logoUrl || '/favicon.png'
+      siteSettings.subtitle = settingsObj.subtitle || '收集工具、追番与灵感碎片的小小基地。'
+    }
+  } catch { /* 无数据时使用默认值 */ }
+
+  // 加载关于页内容
   try {
     const record = await api.siteContent('about')
     const parsed = JSON.parse((record && record.contentJson) || '')
@@ -76,6 +129,20 @@ onMounted(async () => {
     content.value = { title: parsed.title || '', markdown: parsed.markdown || '' }
     renderedHtml.value = renderMarkdown(content.value.markdown).html
   } catch { /* 无数据或解析失败时展示占位文案 */ }
+
+  // 读取站点设置（头像、站名、标语）
+  try {
+    const record = await api.siteContent('site-settings')
+    const parsed = JSON.parse((record && record.contentJson) || '{}')
+    if (parsed && typeof parsed === 'object') siteSettings.value = parsed
+  } catch { /* 无数据时保留默认值 */ }
+
+  // 读取友情链接
+  try {
+    const list = await api.friendLinks()
+    friendLinks.value = (list || []).filter(l => l.visible !== false)
+  } catch { /* 加载失败时展示空状态 */ }
+  friendLinksLoading.value = false
 })
 </script>
 
@@ -343,6 +410,121 @@ onMounted(async () => {
   transition: transform 0.24s ease, opacity 0.24s ease;
 }
 
+/* ========== 友情链接区块 ========== */
+.about-page .friend-links-section {
+  margin-top: 26px;
+}
+
+.about-page .friend-links-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.about-page .friend-links-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-color);
+  letter-spacing: 1px;
+}
+
+.about-page .friend-links-desc {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: color-mix(in srgb, var(--text-color) 55%, transparent);
+}
+
+.about-page .friend-links-state {
+  text-align: center;
+  padding: 32px 20px;
+  border-radius: 22px;
+  border: 1.5px dashed rgba(126, 160, 198, 0.4);
+  background: var(--nested-inner-card-bg);
+  color: color-mix(in srgb, var(--text-color) 58%, transparent);
+  font-size: 14.5px;
+}
+
+.about-page .friend-links-state p {
+  margin: 0;
+}
+
+.about-page .friend-links-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.about-page .friend-link-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(8px) saturate(1.15);
+  -webkit-backdrop-filter: blur(8px) saturate(1.15);
+  box-shadow: var(--nested-outer-card-shadow);
+  text-decoration: none;
+  color: var(--text-color);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.about-page .friend-link-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
+  box-shadow: 0 16px 34px var(--accent-glow);
+}
+
+.about-page .friend-link-logo {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--nested-inner-card-border);
+  background: var(--nested-inner-card-bg);
+  box-shadow: var(--nested-inner-card-shadow);
+}
+
+.about-page .friend-link-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-page .friend-link-logo-fallback {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+.about-page .friend-link-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.about-page .friend-link-name {
+  font-size: 15.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.about-page .friend-link-desc {
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--text-color) 55%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ========== 暗色模式：低色浆半透 + 细白描边，与设置弹窗等组件的透明语言对齐 ========== */
 html.dark .about-page .about-card {
   border-color: rgba(255, 255, 255, 0.09);
@@ -366,6 +548,11 @@ html.dark .about-page .about-avatar {
   background: rgba(24, 30, 52, 0.85);
 }
 
+html.dark .about-page .friend-link-card {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(26, 29, 37, 0.38);
+}
+
 /* ========== 小屏适配 ========== */
 @media (max-width: 860px) {
   .about-page .about-card {
@@ -380,6 +567,10 @@ html.dark .about-page .about-avatar {
 
   .about-page .about-quick-row {
     grid-template-columns: 1fr;
+  }
+
+  .about-page .friend-links-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -407,6 +598,10 @@ html.dark .about-page .about-avatar {
   .about-page .about-card {
     gap: 12px;
     padding: 12px;
+  }
+
+  .about-page .friend-links-grid {
+    grid-template-columns: 1fr;
   }
 
   .about-page .about-avatar-ring {

@@ -163,10 +163,18 @@ html.dark {
 }
 
 /* 日期/日期时间输入：日历弹层是浏览器控件无法自绘，
-   用 color-scheme 让弹层跟随明暗主题，避免暗色下弹出刺眼白底 */
+   用 color-scheme 让弹层跟随明暗主题，避免暗色下弹出刺眼白底；
+   输入框本身叠加主题色边框、日历图标等视觉增强，与 admin 卡片风格统一 */
 .admin-input[type='date'],
 .admin-input[type='datetime-local'] {
   color-scheme: light;
+  background-color: var(--adm-input-bg);
+  border: 1px solid var(--adm-input-border);
+  border-radius: 12px;
+  padding: 9px 36px 9px 13px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 html.dark .admin-input[type='date'],
@@ -174,16 +182,113 @@ html.dark .admin-input[type='datetime-local'] {
   color-scheme: dark;
 }
 
+/* 聚焦：主题色边框 + 光晕，与其他 admin-input:focus 一致 */
+.admin-input[type='date']:focus,
+.admin-input[type='datetime-local']:focus {
+  border-color: var(--adm-accent);
+  box-shadow: 0 0 0 3px var(--adm-accent-soft);
+}
+
+/* 悬停：边框变亮，提示可交互 */
+.admin-input[type='date']:hover:not(:focus):not(:disabled),
+.admin-input[type='datetime-local']:hover:not(:focus):not(:disabled) {
+  border-color: var(--adm-accent);
+}
+
+/* 日历图标：默认半透明，悬停/聚焦时高亮 */
 .admin-input[type='date']::-webkit-calendar-picker-indicator,
 .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 0.2s ease;
+  opacity: 0.45;
+  scale: 1.1;
+  border-radius: 6px;
+  padding: 2px;
+  margin-right: -4px;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+  /* 让图标在暗色下不会太白 */
+  filter: var(--adm-date-icon-filter, none);
+}
+
+html.dark .admin-input[type='date']::-webkit-calendar-picker-indicator,
+html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) brightness(1.1);
 }
 
 .admin-input[type='date']::-webkit-calendar-picker-indicator:hover,
 .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
+  opacity: 0.9;
+  filter: var(--adm-date-icon-filter, none);
+}
+
+html.dark .admin-input[type='date']::-webkit-calendar-picker-indicator:hover,
+html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.85) brightness(1.2) drop-shadow(0 0 4px var(--adm-accent-soft));
+}
+
+/* 禁用态 */
+.admin-input[type='date']:disabled,
+.admin-input[type='datetime-local']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 日期/时间文字显示区域：与 admin-input 字体一致 */
+.admin-input[type='date']::-webkit-datetime-edit,
+.admin-input[type='datetime-local']::-webkit-datetime-edit {
+  font-family: inherit;
+  font-size: 15.5px;
+  color: var(--adm-text);
+  letter-spacing: 0.03em;
+}
+
+/* 年/月/日/时/分/秒 各段统一间距 */
+.admin-input[type='datetime-local']::-webkit-datetime-edit-year-field,
+.admin-input[type='datetime-local']::-webkit-datetime-edit-month-field,
+.admin-input[type='datetime-local']::-webkit-datetime-edit-day-field,
+.admin-input[type='datetime-local']::-webkit-datetime-edit-hour-field,
+.admin-input[type='datetime-local']::-webkit-datetime-edit-minute-field,
+.admin-input[type='datetime-local']::-webkit-datetime-edit-second-field {
+  padding: 2px 3px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+/* 悬停时各字段轻微高亮 */
+.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-year-field,
+.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-month-field,
+.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-day-field,
+.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-hour-field,
+.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-minute-field,
+.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-second-field {
+  background-color: var(--adm-accent-soft);
+}
+
+/* 分隔符（/、:、空格）淡化 */
+.admin-input[type='datetime-local']::-webkit-datetime-edit-text,
+.admin-input[type='datetime-local']::-webkit-datetime-edit-literal-field {
+  color: var(--adm-text-faint);
+}
+
+/* 清除按钮（部分浏览器在值非空时显示） */
+.admin-input[type='date']::-webkit-clear-button,
+.admin-input[type='datetime-local']::-webkit-clear-button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent-ink);
+  border-radius: 6px;
+  padding: 0 6px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.admin-input[type='date']::-webkit-clear-button:hover,
+.admin-input[type='datetime-local']::-webkit-clear-button:hover {
+  background: var(--adm-danger-soft);
+  color: var(--adm-danger);
 }
 
 .admin-textarea {
@@ -1399,6 +1504,87 @@ html.dark .admin-input[type='datetime-local'] {
 .adm-select-fade-enter-active, .adm-select-fade-leave-active { transition: opacity 0.16s ease, transform 0.16s ease; }
 .adm-select-fade-enter-from, .adm-select-fade-leave-to { opacity: 0; transform: translateY(-5px); }
 
+/* ---------- 图片下拉选择（ImageSelect 组件） ---------- */
+.adm-img-select { position: relative; width: 100%; }
+.adm-img-select-row { display: flex; gap: 8px; align-items: center; }
+.adm-img-select-input { flex: 1; min-width: 0; }
+.adm-img-select-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+}
+.adm-img-select-btn svg { display: block; }
+.adm-img-select-spin { animation: adm-img-spin 0.8s linear infinite; }
+@keyframes adm-img-spin { to { transform: rotate(360deg); } }
+
+.adm-img-select-panel {
+  padding: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.adm-img-select-loading {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--adm-text-faint);
+}
+.adm-img-select-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.adm-img-select-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid var(--adm-border-soft);
+  border-radius: 10px;
+  background: var(--adm-card-2);
+  font-family: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.adm-img-select-item:hover {
+  border-color: var(--adm-accent);
+  box-shadow: 0 4px 12px rgba(63, 119, 181, 0.18);
+}
+.adm-img-select-item.is-active {
+  border-color: var(--adm-accent);
+  box-shadow: 0 0 0 2px var(--adm-accent-soft);
+}
+.adm-img-select-item img {
+  width: 100%;
+  height: 40px;
+  object-fit: cover;
+  background-color: var(--adm-border-soft);
+  display: block;
+}
+.adm-img-select-name {
+  display: block;
+  padding: 3px 6px;
+  font-size: 11px;
+  color: var(--adm-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  line-height: 1.3;
+}
+
+@media (max-width: 900px) {
+  .adm-img-select-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .adm-img-select-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* 旧原生 select 箭头规则保留给残余用途 */
 .admin-select { appearance: none; cursor: pointer; padding-right: 34px;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
@@ -1622,6 +1808,21 @@ html.dark .admin-input[type='datetime-local'] {
   border-radius: 999px;
   background: #fff;
   transform: translate(-50%, -50%);
+}
+
+/* 小尺寸复选框：表单内联用途，16px */
+.admin-check-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-check-sm:checked::after {
+  width: 4px;
+  height: 8px;
+}
+
+.admin-check-sm:indeterminate::after {
+  width: 7px;
 }
 
 .admin-table tbody tr.is-checked {

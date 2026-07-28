@@ -459,14 +459,15 @@ function updateFirstScreen() {
   if (!page) return
   const scroller = page.closest('.app-shell-main')
   if (!scroller) return
+  const cs = getComputedStyle(scroller)
+  const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
   // 窄屏（单列布局）不强制一屏
   if (window.innerWidth < 960) {
     page.style.removeProperty('--home-screen-h')
     return
   }
-  const cs = getComputedStyle(scroller)
-  const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
-  page.style.setProperty('--home-screen-h', `${Math.max(420, scroller.clientHeight - pad)}px`)
+  const screenH = Math.max(420, scroller.clientHeight - pad)
+  page.style.setProperty('--home-screen-h', `${screenH}px`)
 }
 
 onMounted(async () => {

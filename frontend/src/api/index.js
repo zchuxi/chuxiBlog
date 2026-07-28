@@ -27,6 +27,7 @@ export const api = {
   toolsLanding: () => http.get('/front/tools/landing'),
   bangumiRecords: () => http.get('/front/bangumi'),
   bangumiDetail: id => http.get(`/front/bangumi/${id}`),
+  friendLinks: () => http.get('/front/friend-links'),
   siteContent: key => http.get(`/front/site-content/${key}`),
   bumpViews: () => http.post('/front/views/bump'),
   views: () => http.get('/front/views'),

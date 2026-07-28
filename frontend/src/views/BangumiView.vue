@@ -4,8 +4,8 @@
       <!-- 顶部 hero 岛 -->
       <section v-reveal="0" class="bangumi-hero">
         <p class="bangumi-hero-eyebrow">Bangumi Tracker</p>
-        <h1 class="bangumi-hero-title">番剧记录</h1>
-        <p class="bangumi-hero-sub">追番进度、个人打分与一句话观后感，都摊在这张小桌上慢慢看。</p>
+        <h1 class="bangumi-hero-title">{{ bangumiConfig?.title || DEFAULT_BANGUMI.title }}</h1>
+        <p class="bangumi-hero-sub">{{ bangumiConfig?.subtitle || DEFAULT_BANGUMI.subtitle }}</p>
         <div class="bangumi-hero-stats">
           <article class="bangumi-stat-card"><span>在看</span><strong>{{ countBy('在看') }}</strong></article>
           <article class="bangumi-stat-card"><span>看过</span><strong>{{ countBy('看过') }}</strong></article>
@@ -40,7 +40,7 @@
       <!-- 列表 -->
       <div v-if="loading" class="bangumi-state">追番小本本翻页中…</div>
       <div v-else-if="filtered.length === 0" class="bangumi-state">
-        这里还空空的，等一部让人心动的番剧住进来吧 ✧
+        {{ bangumiConfig?.emptyText || DEFAULT_BANGUMI.emptyText }}
       </div>
       <div v-else class="bangumi-grid">
         <article
@@ -113,6 +113,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { api } from '../api'
+
+const DEFAULT_BANGUMI = { title: '番剧记录', subtitle: '追番进度与收藏一览，记录每一段屏幕里的故事。', emptyText: '这里还空空的，快去收录第一部番剧吧。' }
+const bangumiConfig = ref(null)
 
 const FILTERS = ['全部', '在看', '想看', '看过', '搁置', '弃番']
 const GRAD_COUNT = 5
@@ -218,6 +221,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  try {
+    bangumiConfig.value = await api.siteContent('bangumi-hero')
+  } catch { /* 使用默认值 */ }
 })
 </script>
 

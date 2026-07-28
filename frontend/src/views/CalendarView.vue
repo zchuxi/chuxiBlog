@@ -4,8 +4,8 @@
       <!-- 页头岛 -->
       <section v-reveal="0" class="calendar-hero">
         <p class="calendar-hero-eyebrow">Broadcast Calendar</p>
-        <h1 class="calendar-hero-title">每日放送</h1>
-        <p class="calendar-hero-sub">来自 Bangumi 的一周放送时间表，已收录进追番小本本的会亮起标记。</p>
+        <h1 class="calendar-hero-title">{{ calendarConfig?.title || DEFAULT_CALENDAR.title }}</h1>
+        <p class="calendar-hero-sub">{{ calendarConfig?.subtitle || DEFAULT_CALENDAR.subtitle }}</p>
         <button class="calendar-back" type="button" @click="router.push('/bangumi')">← 返回番剧记录</button>
       </section>
 
@@ -79,6 +79,9 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
 import { adminApi, getToken, clearToken } from '../api/admin'
+
+const DEFAULT_CALENDAR = { title: '每日放送', subtitle: '查看今日播出的番剧时间表，不再错过任何一集。' }
+const calendarConfig = ref(null)
 
 const router = useRouter()
 
@@ -203,6 +206,9 @@ onMounted(async () => {
   } catch {
     mine.value = new Map()
   }
+  try {
+    calendarConfig.value = await api.siteContent('calendar-hero')
+  } catch { /* 使用默认值 */ }
   try {
     const res = await fetch('https://api.bgm.tv/calendar')
     if (!res.ok) throw new Error(String(res.status))

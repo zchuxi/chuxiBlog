@@ -26,7 +26,7 @@ public class SiteContent {
     @Column(name = "content_key", nullable = false, unique = true, length = 128)
     private String contentKey;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(name = "content_json", columnDefinition = "LONGTEXT")
     private String contentJson;
 
     private LocalDateTime updatedAt;

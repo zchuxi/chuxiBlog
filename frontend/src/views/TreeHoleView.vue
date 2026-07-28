@@ -57,7 +57,7 @@
                         class="lx-input__inner tree-hole-danmaku-input"
                         type="text"
                         maxlength="80"
-                        placeholder="写下一句此刻想被接住的话..."
+                        :placeholder="thConfig?.placeholder || DEFAULT_PLACEHOLDER"
                       />
                     </div>
                     <button class="lx-button lx-button--primary is-circle" type="submit">
@@ -119,18 +119,21 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import LxSection from '../components/LxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 
 const VARIANTS = ['featured', 'portrait', 'note', 'wide', 'compact', 'balanced']
-const moods = [
-  { label: '轻声', type: 'primary' },
-  { label: '鼓劲', type: 'success' },
-  { label: '拥抱', type: 'warning' },
-  { label: '放空', type: 'neutral' }
-]
+const MOOD_TYPE_MAP = { '轻声': 'primary', '鼓劲': 'success', '拥抱': 'warning', '放空': 'neutral' }
+const DEFAULT_MOOD_OPTIONS = ['轻声', '鼓劲', '拥抱', '放空']
+const DEFAULT_PLACEHOLDER = '写下一句此刻想被接住的话...'
+
+const thConfig = ref(null)
+const moods = computed(() => {
+  const labels = thConfig.value?.moodOptions || DEFAULT_MOOD_OPTIONS
+  return labels.map(label => ({ label, type: MOOD_TYPE_MAP[label] || 'neutral' }))
+})
 
 const stageRef = ref(null)
 const danmus = ref([])
@@ -203,6 +206,9 @@ onMounted(async () => {
     calledTexts.value = texts.records || []
     for (const b of barrages.records || []) addDanmu(b, true)
   } catch { /* 后端未启动 */ }
+  try {
+    thConfig.value = await api.siteContent('treehole-config')
+  } catch { /* 使用默认值 */ }
 })
 </script>
 

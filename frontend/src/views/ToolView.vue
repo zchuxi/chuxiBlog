@@ -6,8 +6,8 @@
         <template #pill>搜索、摘要与跳转入口合并成一张浏览地图</template>
         <section class="tool-hero-section">
           <div class="tool-hero-copy-panel">
-            <h1 class="tool-hero-title">把常用工具、AI 站点和效率入口排成一张可浏览的在线地图。</h1>
-            <p class="tool-hero-description">整合热门目录、搜索入口与站点摘要，方便先按场景筛选，再直接跳转到目标网站。</p>
+            <h1 class="tool-hero-title">{{ toolConfig?.title || DEFAULT_TOOL.title }}</h1>
+            <p class="tool-hero-description">{{ toolConfig?.description || DEFAULT_TOOL.description }}</p>
             <div class="tool-hero-stat-grid">
               <article class="tool-hero-stat-card"><span>收录站点</span><strong>{{ tools.length }}</strong></article>
               <article class="tool-hero-stat-card"><span>分类数量</span><strong>{{ categories.length }}</strong></article>
@@ -17,7 +17,7 @@
             <div class="tool-hero-search-panel">
               <p class="tool-hero-panel-title">快速检索</p>
               <div class="lx-input">
-                <input v-model="keyword" class="lx-input__inner" type="text" placeholder="搜索网站名、用途、域名或标签" />
+                <input v-model="keyword" class="lx-input__inner" type="text" :placeholder="toolConfig?.searchPlaceholder || DEFAULT_TOOL.searchPlaceholder" />
               </div>
             </div>
           </div>
@@ -159,6 +159,9 @@ import LxSection from '../components/LxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 
+const DEFAULT_TOOL = { title: '工具地图', description: '把常用工具、网站和灵感碎片排成一张可浏览的在线地图。', searchPlaceholder: '搜索网站名、用途、域名或标签' }
+const toolConfig = ref(null)
+
 const SPOTLIGHT_VARIANTS = ['primary', 'secondary', 'tertiary', 'tertiary']
 
 const tools = ref([])
@@ -194,6 +197,9 @@ onMounted(async () => {
   try {
     tools.value = await api.toolsLanding() || []
   } catch { /* 后端未启动 */ }
+  try {
+    toolConfig.value = await api.siteContent('tool-hero')
+  } catch { /* 使用默认值 */ }
 })
 </script>
 

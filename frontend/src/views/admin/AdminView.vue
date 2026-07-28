@@ -98,6 +98,10 @@
           />
           <MediaPanel v-else-if="currentKey === 'media'" />
           <BackgroundPanel v-else-if="currentKey === 'background-gallery'" />
+          <SiteSettingsPanel v-else-if="currentKey === 'site-settings'" />
+          <AppearancePanel v-else-if="currentKey === 'appearance-settings'" />
+          <NavMenuPanel v-else-if="currentKey === 'nav-menu'" />
+          <PageContentPanel v-else-if="currentKey === 'page-content'" />
           <BangumiPanel v-else-if="currentKey === 'bangumi-records'" />
           <ResourcePanel v-else-if="currentSchema" :key="currentKey" :schema="currentSchema" />
         </main>
@@ -132,6 +136,10 @@ import PasswordDialog from './PasswordDialog.vue'
 import ArticlesPanel from './ArticlesPanel.vue'
 import ScenePanel from './ScenePanel.vue'
 import SiteContentPanel from './SiteContentPanel.vue'
+import SiteSettingsPanel from './SiteSettingsPanel.vue'
+import AppearancePanel from './AppearancePanel.vue'
+import NavMenuPanel from './NavMenuPanel.vue'
+import PageContentPanel from './PageContentPanel.vue'
 import '../../assets/css/admin.css'
 
 // 菜单 key → SiteContentPanel 的 contentKey
@@ -165,7 +173,8 @@ const menuGroups = [
       { key: 'collapse-cards', label: '内容卡片', icon: 'common-menu' },
       { key: 'team-members', label: '个人介绍', icon: 'common-person' },
       { key: 'site-archive-hero', label: '归档页', icon: 'common-tree' },
-      { key: 'site-about', label: '关于页', icon: 'common-cat' }
+      { key: 'site-about', label: '关于页', icon: 'common-cat' },
+      { key: 'friend-links', label: '友情链接', icon: 'common-web' }
     ]
   },
   {
@@ -176,6 +185,15 @@ const menuGroups = [
       { key: 'musics', label: '音乐管理', icon: 'common-music' },
       { key: 'tool-sites', label: '工具站点', icon: 'common-tool' },
       { key: 'bangumi-records', label: '番剧管理', icon: 'common-open' }
+    ]
+  },
+  {
+    title: '系统设置',
+    items: [
+      { key: 'site-settings', label: '站点设置', icon: 'common-setting' },
+      { key: 'appearance-settings', label: '外观设置', icon: 'common-component' },
+      { key: 'nav-menu', label: '导航菜单', icon: 'common-menu' },
+      { key: 'page-content', label: '页面文案', icon: 'common-articlePages' }
     ]
   }
 ]

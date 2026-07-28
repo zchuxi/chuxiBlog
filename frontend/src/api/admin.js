@@ -65,7 +65,8 @@ const RESOURCE_KEYS = [
   'called-texts',
   'musics',
   'comments',
-  'bangumi-records'
+  'bangumi-records',
+  'friend-links'
 ]
 
 // 媒体库（图片/音频）：音频文件体积大，上传单独放宽超时并支持进度回调

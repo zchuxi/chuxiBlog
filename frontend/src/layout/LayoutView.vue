@@ -16,7 +16,7 @@
     <!-- 顶栏 -->
     <header class="app-shell-top" :class="{ 'is-solid': topbarSolid }">
       <div class="shell-brand">
-        <span title="返回首页" @click="router.push('/index')">初曦的窝</span>
+        <span title="返回首页" @click="router.push('/index')">{{ siteName }}</span>
         <nav ref="navRef" class="shell-nav" @mouseleave="hoverPath = ''">
           <span class="nav-indicator" :style="indicatorStyle"></span>
           <span class="nav-underline" :style="underlineStyle"></span>
@@ -120,6 +120,7 @@
             </RouterView>
           </section>
         </div>
+
 
         <!-- 底部音乐条：Teleport 到 body，避免祖先 transform 影响 fixed 定位 -->
         <Teleport to="body">
@@ -656,7 +657,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import SvgIcon from '../components/SvgIcon.vue'
 import { useSettingsStore } from '../stores/settings'
@@ -666,6 +667,91 @@ import sakuraImg from '../assets/sakura.png'
 const settings = useSettingsStore()
 const route = useRoute()
 const router = useRouter()
+
+/* ---------- 站点全局设置 ---------- */
+const siteSettings = reactive({
+  siteName: '初曦的窝',
+  subtitle: '',
+  logoUrl: '/favicon.png',
+  faviconUrl: '/favicon.png',
+  seoDescription: '',
+  seoKeywords: '',
+  githubUrl: '',
+  weiboUrl: '',
+  qqUrl: '',
+  footerText: '',
+  footerIcp: ''
+})
+
+const siteName = computed(() => siteSettings.siteName || '初曦的窝')
+
+async function loadSiteSettings() {
+  try {
+    const data = await api.siteContent('site-settings')
+    let obj = data
+    if (data && typeof data.contentJson === 'string') obj = JSON.parse(data.contentJson)
+    if (typeof obj === 'string') obj = JSON.parse(obj)
+    if (obj && typeof obj === 'object') {
+      Object.assign(siteSettings, {
+        siteName: obj.siteName || '初曦的窝',
+        subtitle: obj.subtitle || '',
+        logoUrl: obj.logoUrl || '/favicon.png',
+        faviconUrl: obj.faviconUrl || '/favicon.png',
+        seoDescription: obj.seoDescription || '',
+        seoKeywords: obj.seoKeywords || '',
+        githubUrl: obj.githubUrl || '',
+        weiboUrl: obj.weiboUrl || '',
+        qqUrl: obj.qqUrl || '',
+        footerText: obj.footerText || '',
+        footerIcp: obj.footerIcp || ''
+      })
+      // 动态设置页面标题
+      if (siteSettings.siteName) {
+        document.title = siteSettings.siteName
+      }
+    }
+  } catch { /* 无数据时使用默认值 */ }
+}
+
+/* ---------- 外观设置（作为默认值，localStorage 优先级更高） ---------- */
+async function loadAppearanceSettings() {
+  try {
+    const data = await api.siteContent('appearance-settings')
+    let obj = data
+    if (data && typeof data.contentJson === 'string') obj = JSON.parse(data.contentJson)
+    if (typeof obj === 'string') obj = JSON.parse(obj)
+    if (!obj || typeof obj !== 'object') return
+
+    // 主题色注入（始终生效）
+    if (obj.primaryColor) {
+      document.documentElement.style.setProperty('--lx-primary', obj.primaryColor)
+    }
+
+    // 以下设置仅当用户未在 localStorage 中手动设置过时生效
+    const saved = JSON.parse(localStorage.getItem('chuxi-nest-settings') || '{}')
+    const patch = {}
+    // 默认主题：仅当用户未手动切换过主题时应用
+    if (obj.defaultTheme && !saved.theme) {
+      if (obj.defaultTheme === 'dark') {
+        patch.theme = 'dark'
+      } else if (obj.defaultTheme === 'light') {
+        patch.theme = 'light'
+      } else if (obj.defaultTheme === 'system') {
+        patch.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      }
+    }
+    // 特效开关：仅当用户未在 localStorage 中设置过时应用
+    if (obj.sakuraEnabled !== undefined && saved.sakuraEnabled === undefined) {
+      patch.sakuraEnabled = !!obj.sakuraEnabled
+    }
+    if (obj.live2dEnabled !== undefined && saved.live2dEnabled === undefined) {
+      patch.live2dEnabled = !!obj.live2dEnabled
+    }
+    if (Object.keys(patch).length > 0) {
+      settings.update(patch)
+    }
+  } catch { /* 无数据时使用现有默认 */ }
+}
 
 /* ---------- 主题 ---------- */
 function toggleTheme() {
@@ -1086,6 +1172,9 @@ function onResize() {
 onMounted(() => {
   document.documentElement.classList.toggle('dark', settings.isDark)
   api.bumpViews().catch(() => {})
+  // 加载站点设置和外观设置
+  loadSiteSettings()
+  loadAppearanceSettings()
   nextTick(updateIndicator)
   nextTick(bindPawScroll)
   window.addEventListener('resize', onResize)
@@ -2216,4 +2305,5 @@ html.dark .setting-dialog .theme-pick-card {
     flex-wrap: wrap;
   }
 }
+
 </style>

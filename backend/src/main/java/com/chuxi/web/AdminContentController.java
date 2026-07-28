@@ -43,7 +43,8 @@ public class AdminContentController {
                                   CalledTextRepo calledTextRepo,
                                   MusicRepo musicRepo,
                                   CommentRepo commentRepo,
-                                  BangumiRecordRepo bangumiRecordRepo) {
+                                  BangumiRecordRepo bangumiRecordRepo,
+                                  FriendLinkRepository friendLinkRepo) {
         // 复制一份 Spring 的 ObjectMapper，容忍未知字段
         this.mapper = springMapper.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.commentRepo = commentRepo;
@@ -62,6 +63,7 @@ public class AdminContentController {
         handlers.put("musics", new ResourceHandler<>(musicRepo, Music.class, false, false, false));
         handlers.put("comments", new ResourceHandler<>(commentRepo, Comment.class, true, false, true));
         handlers.put("bangumi-records", new ResourceHandler<>(bangumiRecordRepo, BangumiRecord.class, true, true, true));
+        handlers.put("friend-links", new ResourceHandler<>(friendLinkRepo, FriendLink.class, false, false, false));
     }
 
     @GetMapping("/{res}")

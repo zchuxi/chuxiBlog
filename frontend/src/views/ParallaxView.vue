@@ -15,7 +15,7 @@
             <!-- 开场屏 -->
             <section class="parallax-viewport parallax-viewport-hero" :style="viewportStyle(0)">
               <div class="parallax-viewport-background">
-                <img class="parallax-viewport-image" src="/image/bg/Landscape/01.webp" alt="" />
+                <img class="parallax-viewport-image" :src="parallaxConfig?.introBg || DEFAULT_PARALLAX.introBg" alt="" />
               </div>
               <div v-if="!isMobile" class="parallax-viewport-curtain">
                 <span class="parallax-viewport-curtain-top"></span>
@@ -38,11 +38,10 @@
                   <span class="parallax-hero-section-glow parallax-hero-section-glow-primary"></span>
                   <span class="parallax-hero-section-glow parallax-hero-section-glow-secondary"></span>
                   <div class="parallax-hero-section-panel">
-                    <p class="parallax-hero-section-intro">A Quiet Opening</p>
+                    <p class="parallax-hero-section-intro">{{ parallaxConfig?.introTitle || DEFAULT_PARALLAX.introTitle }}</p>
                     <div class="parallax-hero-section-main">
                       <span class="parallax-hero-section-badge">Parallax Story</span>
-                      <h1 class="parallax-hero-section-title">给认真生活的你，一段缓慢展开的风景。</h1>
-                      <p class="parallax-hero-section-welcome">欢迎来到这组视差页面。每次滚动都会翻过一层山色，也把一句轻一点的话留在你身边。</p>
+                      <h1 class="parallax-hero-section-title">{{ parallaxConfig?.introSubtitle || DEFAULT_PARALLAX.introSubtitle }}</h1>
                     </div>
                     <div class="parallax-hero-section-footer">
                       <span class="parallax-hero-section-line"></span>
@@ -100,7 +99,7 @@
             <!-- 告别屏 -->
             <section class="parallax-viewport parallax-viewport-farewell" :style="viewportStyle(viewportCount - 1)">
               <div class="parallax-viewport-background">
-                <img class="parallax-viewport-image" src="/image/bg/Landscape/12.webp" alt="" />
+                <img class="parallax-viewport-image" :src="parallaxConfig?.outroBg || DEFAULT_PARALLAX.outroBg" alt="" />
               </div>
               <div v-if="!isMobile" class="parallax-viewport-curtain">
                 <span class="parallax-viewport-curtain-top"></span>
@@ -121,10 +120,8 @@
               <div class="parallax-viewport-content">
                 <div class="parallax-farewell-section">
                   <div class="parallax-farewell-section-panel">
-                    <span class="parallax-farewell-section-tag">Until Next Time</span>
-                    <h2 class="parallax-farewell-section-title">愿你接下来的路，仍有风景，也总有人回应。</h2>
-                    <p class="parallax-farewell-section-blessing">谢谢你把这一程看完。愿接下来的日常里，既有被理解的瞬间，也有自己照亮自己的勇气。</p>
-                    <p class="parallax-farewell-section-contact">如果还想继续聊聊、继续联系、继续分享新的故事，我们就在下一次相遇里见。</p>
+                    <span class="parallax-farewell-section-tag">{{ parallaxConfig?.outroTitle || DEFAULT_PARALLAX.outroTitle }}</span>
+                    <h2 class="parallax-farewell-section-title">{{ parallaxConfig?.outroSubtitle || DEFAULT_PARALLAX.outroSubtitle }}</h2>
                   </div>
                 </div>
               </div>
@@ -139,6 +136,16 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '../api'
+
+const DEFAULT_PARALLAX = {
+  introTitle: 'A Quiet Opening',
+  introSubtitle: '在光与影的缝隙间，慢慢展开一段无声的故事。',
+  introBg: '/image/bg/Landscape/01.webp',
+  outroTitle: 'Until Next Time',
+  outroSubtitle: '愿你带着温柔的光，继续前行。',
+  outroBg: '/image/bg/Landscape/12.webp'
+}
+const parallaxConfig = ref(null)
 
 const pageRef = ref(null)
 const viewportsWindowRef = ref(null)
@@ -341,6 +348,9 @@ function schedule() {
 
 onMounted(async () => {
   await loadStories()
+  try {
+    parallaxConfig.value = await api.siteContent('parallax-config')
+  } catch { /* 使用默认值 */ }
   await nextTick()
   scroller = findScrollParent(pageRef.value)
   if (scroller instanceof HTMLElement) {

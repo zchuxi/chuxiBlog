@@ -19,7 +19,10 @@ public class SiteContentController {
 
     /** 公开可读的文案 key 白名单：其余（如 admin-password）一律不对外暴露 */
     private static final java.util.Set<String> PUBLIC_KEYS =
-            java.util.Set.of("home-landing", "about", "archive-hero", "background-gallery", VIEWS_KEY);
+            java.util.Set.of("home-landing", "about", "archive-hero", "background-gallery", VIEWS_KEY,
+                    "site-settings", "nav-menu", "appearance-settings",
+                    "timeline-hero", "treehole-config", "parallax-config",
+                    "bangumi-hero", "calendar-hero", "tool-hero");
 
     private final SiteContentRepo repo;
     private final ObjectMapper mapper;

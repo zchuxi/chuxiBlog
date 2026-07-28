@@ -40,7 +40,7 @@
             <label class="ap-select-all">
               <input
                 type="checkbox"
-                class="admin-check"
+                class="admin-check admin-check-sm"
                 :checked="filteredRows.length > 0 && selected.size === filteredRows.length"
                 :indeterminate.prop="selected.size > 0 && selected.size < filteredRows.length"
                 @change="toggleAll"
@@ -53,7 +53,7 @@
             <li v-for="row in filteredRows" :key="row.id" class="ap-row" :class="{ 'is-checked': selected.has(row.id) }">
               <input
                 type="checkbox"
-                class="admin-check ap-row-check"
+                class="admin-check admin-check-sm ap-row-check"
                 :checked="selected.has(row.id)"
                 @change="toggleRow(row)"
               />
@@ -124,7 +124,7 @@
               <label class="admin-field-label">状态</label>
               <AdminSelect v-model="form.status" class="ap-select" :options="['已发布', '草稿']" />
               <label class="ap-pin-check">
-                <input v-model="form.pinned" type="checkbox" class="ap-check" />
+                <input v-model="form.pinned" type="checkbox" class="admin-check admin-check-sm" />
                 <span>置顶到首页文章列表</span>
               </label>
             </div>
@@ -745,12 +745,7 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.ap-check {
-  width: 15px;
-  height: 15px;
-  accent-color: #3f77b5;
-  cursor: pointer;
-}
+/* ap-check 已统一使用 admin-check + admin-check-sm 全局样式 */
 
 .ap-cover-preview {
   display: block;

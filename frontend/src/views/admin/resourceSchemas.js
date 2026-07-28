@@ -214,6 +214,22 @@ export const resourceSchemas = [
     ]
   },
   {
+    key: 'friend-links',
+    label: '友情链接',
+    columns: ['id', 'siteName', 'siteUrl', 'sortIndex', 'visible'],
+    fields: [
+      { name: 'id', label: 'ID', type: 'number' },
+      { name: 'siteName', label: '站点名称', type: 'text' },
+      { name: 'siteUrl', label: '站点地址', type: 'text' },
+      { name: 'logoUrl', label: 'Logo 地址', type: 'text' },
+      { name: 'description', label: '站点描述', type: 'text' },
+      { name: 'sortIndex', label: '排序', type: 'number' },
+      { name: 'visible', label: '可见', type: 'boolean', default: true, batch: true },
+      { name: 'createdAt', label: '创建时间', type: 'datetime' },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+    ]
+  },
+  {
     key: 'bangumi-records',
     label: '番剧记录',
     columns: ['id', 'coverUrl', 'nameCn', 'category', 'status', 'watchedEps', 'rating', 'visible'],
