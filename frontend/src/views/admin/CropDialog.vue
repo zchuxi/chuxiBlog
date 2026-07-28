@@ -34,7 +34,7 @@
 
         <footer class="crop-foot">
           <button
-            v-for="r in RATIOS"
+            v-for="r in ratioOptions"
             :key="r.label"
             type="button"
             class="crop-ratio-btn"
@@ -59,7 +59,9 @@ import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({
-  item: { type: Object, required: true } // { name, url }
+  item: { type: Object, required: true }, // { name, url }
+  // 预设裁切比例（宽/高），如封面 2/3；0 表示自由裁切
+  ratio: { type: Number, default: 0 }
 })
 const emit = defineEmits(['close', 'saved'])
 
@@ -73,13 +75,18 @@ const RATIOS = [
   { label: '16:9', value: 16 / 9 },
   { label: '3:4', value: 3 / 4 }
 ]
+// 常见比例标签表：传入的预设比例不在内置列表时（如番剧封面 2:3、HERO 16:10），补一个对应按钮
+const RATIO_LABELS = [
+  [1, '1:1'], [4 / 3, '4:3'], [3 / 2, '3:2'], [16 / 9, '16:9'], [16 / 10, '16:10'],
+  [2 / 3, '2:3'], [3 / 4, '3:4'], [9 / 16, '9:16'], [10 / 16, '10:16']
+]
 const MIN = 24 // 裁切框最小边长（显示像素）
 
 const imgEl = ref(null)
 const ready = ref(false)
 const loadError = ref(false)
 const saving = ref(false)
-const ratioVal = ref(0)
+const ratioVal = ref(props.ratio || 0)
 const disp = reactive({ w: 0, h: 0 }) // 图片显示尺寸
 const box = reactive({ x: 0, y: 0, w: 0, h: 0 }) // 裁切框（显示坐标系）
 
@@ -89,6 +96,14 @@ const boxStyle = computed(() => ({
   width: box.w + 'px',
   height: box.h + 'px'
 }))
+
+// 预设比例不在内置列表时，在「自由」后插入对应按钮，保证可见可切换
+const ratioOptions = computed(() => {
+  const r = props.ratio
+  if (!r || RATIOS.some(o => Math.abs(o.value - r) < 1e-6)) return RATIOS
+  const hit = RATIO_LABELS.find(([v]) => Math.abs(v - r) < 1e-6)
+  return [RATIOS[0], { label: hit ? hit[1] : '预设', value: r }, ...RATIOS.slice(1)]
+})
 
 // 输出格式跟随原图：png/webp 保留，其余统一 jpeg
 const outType = computed(() => {
@@ -269,8 +284,9 @@ async function save() {
     const dot = name.lastIndexOf('.')
     const base = dot > 0 ? name.slice(0, dot) : name
     const extMap = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg' }
-    await mediaApi.upload(blob, 'crop-' + base + extMap[outType.value])
-    emit('saved')
+    const data = await mediaApi.upload(blob, 'crop-' + base + extMap[outType.value])
+    // 带出新图信息，调用方可直接回填表单字段
+    emit('saved', data)
     emit('close')
   } catch (err) {
     toast((err && err.message) || '保存失败', 'error')

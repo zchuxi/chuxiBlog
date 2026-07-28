@@ -1,6 +1,7 @@
 // 资源 schema 配置：驱动侧边栏菜单、表格列与编辑表单
 // type 取值: text / textarea / markdown / number / boolean / tags / datetime / image
 // columns 为表格展示列（3-5 个代表字段）；wide 表示编辑用宽抽屉
+// image 字段可配 ratio（宽/高）：站内图裁切时按该比例锁定，与前台显示比例对齐
 
 export const resourceSchemas = [
   {
@@ -36,7 +37,7 @@ export const resourceSchemas = [
       { name: 'title', label: '标题', type: 'text' },
       { name: 'description', label: '描述', type: 'textarea' },
       { name: 'content', label: '内容', type: 'textarea' },
-      { name: 'imageUrl', label: '图片', type: 'image' },
+      { name: 'imageUrl', label: '图片', type: 'image', ratio: 16 / 10 },
       { name: 'sortIndex', label: '排序值', type: 'number' },
       { name: 'sceneLabel', label: '编号标签（如 SCENE 01）', type: 'text' },
       { name: 'kicker', label: '眉标 Kicker（如 PERSPECTIVE）', type: 'text' },
@@ -69,7 +70,7 @@ export const resourceSchemas = [
       { name: 'id', label: 'ID', type: 'number' },
       { name: 'displayName', label: '昵称', type: 'text' },
       { name: 'email', label: '邮箱', type: 'text' },
-      { name: 'avatarUrl', label: '头像', type: 'image' },
+      { name: 'avatarUrl', label: '头像', type: 'image', ratio: 1 },
       { name: 'roleCode', label: '角色编码', type: 'text' },
       { name: 'roleLabel', label: '角色名', type: 'text' },
       { name: 'position', label: '职位', type: 'text' },
@@ -141,7 +142,7 @@ export const resourceSchemas = [
       { name: 'websiteUrl', label: '站点地址', type: 'text' },
       { name: 'categoryId', label: '分类 ID', type: 'number' },
       { name: 'category', label: '分类名', type: 'text' },
-      { name: 'iconUrl', label: '图标', type: 'image' },
+      { name: 'iconUrl', label: '图标', type: 'image', ratio: 1 },
       { name: 'imageUrl', label: '展示图（详情页）', type: 'image' },
       { name: 'tags', label: '标签', type: 'tags' },
       { name: 'highlight', label: '亮点', type: 'text' },
@@ -175,7 +176,7 @@ export const resourceSchemas = [
       { name: 'tag', label: '标签', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'summary', label: '摘要', type: 'textarea' },
-      { name: 'imageUrl', label: '配图', type: 'image' },
+      { name: 'imageUrl', label: '配图', type: 'image', ratio: 16 / 10 },
       { name: 'readTime', label: '阅读时长', type: 'text' },
       { name: 'sortIndex', label: '排序值', type: 'number' },
       { name: 'audioUrl', label: '音频地址', type: 'text' },
@@ -192,7 +193,7 @@ export const resourceSchemas = [
       { name: 'title', label: '歌名', type: 'text' },
       { name: 'artist', label: '歌手', type: 'text' },
       { name: 'album', label: '专辑', type: 'text' },
-      { name: 'coverUrl', label: '封面', type: 'image' },
+      { name: 'coverUrl', label: '封面', type: 'image', ratio: 1 },
       { name: 'musicUrl', label: '音频地址', type: 'text' },
       { name: 'lyric', label: '歌词', type: 'textarea' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
@@ -219,7 +220,7 @@ export const resourceSchemas = [
       { name: 'subjectId', label: 'bgm 条目 ID', type: 'number' },
       { name: 'name', label: '原名', type: 'text' },
       { name: 'nameCn', label: '中文名', type: 'text' },
-      { name: 'coverUrl', label: '封面', type: 'image' },
+      { name: 'coverUrl', label: '封面', type: 'image', ratio: 2 / 3 },
       { name: 'status', label: '状态（想看 / 在看 / 看完）', type: 'text' },
       { name: 'watchedEps', label: '已看集数', type: 'number' },
       { name: 'totalEps', label: '总集数', type: 'number' },

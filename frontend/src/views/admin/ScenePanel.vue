@@ -140,7 +140,13 @@
     </teleport>
 
     <MediaPicker v-model="pickerOpen" @select="onPickImage" />
-    <CropDialog v-if="cropOpen && cropItem" :item="cropItem" @close="cropOpen = false" @saved="onCropSaved" />
+    <CropDialog
+      v-if="cropOpen && cropItem"
+      :item="cropItem"
+      :ratio="16 / 10"
+      @close="cropOpen = false"
+      @saved="onCropSaved"
+    />
     <input ref="fileEl" type="file" accept="image/*" style="display: none" @change="onUploadFile" />
   </section>
 </template>
@@ -400,18 +406,13 @@ function onPickImage(url) {
   form.value.imageUrl = url
 }
 
-// CropDialog 保存后不回传新地址：图库按时间倒序，取最新的 crop- 开头文件
-async function onCropSaved() {
+// CropDialog 的 saved 事件带回新图 { name, url }，直接回填表单
+function onCropSaved(data) {
   cropOpen.value = false
-  try {
-    const items = (await mediaApi.list()) || []
-    if (items.length && String(items[0].name).startsWith('crop-')) {
-      form.value.imageUrl = items[0].url
-      toast('裁切完成，已替换为新图')
-      return
-    }
-    toast('裁切结果已存入图库，请从图库选择')
-  } catch {
+  if (data && data.url) {
+    form.value.imageUrl = data.url
+    toast('裁切完成，已替换为新图')
+  } else {
     toast('裁切结果已存入图库，请从图库选择')
   }
 }

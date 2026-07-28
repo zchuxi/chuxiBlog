@@ -62,10 +62,18 @@
             {{ uploading ? '上传中…' : '上传图片' }}
           </button>
           <button type="button" class="admin-btn admin-btn-ghost" @click="pickerOpen = true">从图库选择</button>
+          <button v-if="canCrop" type="button" class="admin-btn admin-btn-ghost" @click="openCrop">裁切</button>
         </div>
         <input ref="fileRef" type="file" accept="image/*" hidden @change="onUpload" />
       </div>
       <MediaPicker v-model="pickerOpen" @select="url => emit('update:modelValue', url)" />
+      <CropDialog
+        v-if="cropTarget"
+        :item="cropTarget"
+        :ratio="field.ratio || 0"
+        @close="cropTarget = null"
+        @saved="onCropped"
+      />
     </div>
 
     <!-- 其余类型统一为文本输入（tags/datetime 带提示） -->
@@ -85,6 +93,7 @@
 <script setup>
 import { computed, inject, ref } from 'vue'
 import MediaPicker from './MediaPicker.vue'
+import CropDialog from './CropDialog.vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({
@@ -99,7 +108,27 @@ const pickerOpen = ref(false)
 const fileRef = ref(null)
 const uploading = ref(false)
 const thumbBroken = ref(false)
+const cropTarget = ref(null)
 const toast = inject('adminToast', () => {})
+
+// 仅站内图库图片可裁切：外链图画布会被 CORS 污染，无法导出
+const canCrop = computed(
+  () => typeof props.modelValue === 'string' && props.modelValue.startsWith('/api/uploads/')
+)
+
+function openCrop() {
+  const name = decodeURIComponent(props.modelValue.split('/').pop() || '')
+  if (name) cropTarget.value = { name, url: props.modelValue }
+}
+
+// 裁切保存为新图后直接回填字段
+function onCropped(data) {
+  if (data && data.url) {
+    emit('update:modelValue', data.url)
+    thumbBroken.value = false
+    toast('裁切完成，已回填新图')
+  }
+}
 
 // 直接上传并回填 URL，省去先去图片库再回来的往返
 async function onUpload(e) {
