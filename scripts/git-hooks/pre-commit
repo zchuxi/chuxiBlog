@@ -1,0 +1,13 @@
+#!/bin/sh
+# 提交前机械检查点（约定见 README「改动后验证」）：
+# 暂存区包含 backend/ 改动时强制运行 mvn test，失败则阻断提交。
+# 安装：双击 scripts\install-git-hooks.bat（复制本文件到 .git/hooks/）
+# 紧急绕过：git commit --no-verify（仅限确知无风险时）
+if git diff --cached --name-only | grep -q '^backend/'; then
+  echo "[pre-commit] 检测到 backend/ 改动，运行 mvn test ..."
+  ( cd "$(git rev-parse --show-toplevel)/backend" && mvn test ) || {
+    echo "[pre-commit] mvn test 失败，提交已阻断（绕过：git commit --no-verify）"
+    exit 1
+  }
+  echo "[pre-commit] mvn test 通过"
+fi
