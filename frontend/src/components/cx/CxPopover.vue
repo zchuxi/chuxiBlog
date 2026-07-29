@@ -1,23 +1,23 @@
 <template>
-  <div class="lx-popover-wrapper" ref="wrapperRef">
+  <div class="cx-popover-wrapper" ref="wrapperRef">
     <div
-      class="lx-popover-trigger"
+      class="cx-popover-trigger"
       @click="handleTriggerClick"
       @mouseenter="handleMouseEnter"
       @mouseleave="handleMouseLeave"
     >
       <slot />
     </div>
-    <transition name="lx-popover-fade">
+    <transition name="cx-popover-fade">
       <div
         v-if="visible"
         ref="popoverRef"
-        class="lx-popover"
+        class="cx-popover"
         :style="popoverStyle"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave"
       >
-        <div class="lx-popover__content">
+        <div class="cx-popover__content">
           <slot name="content" :close="close" />
         </div>
       </div>

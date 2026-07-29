@@ -77,7 +77,7 @@
       <section class="dashboard-highlight">
         <div class="dashboard-highlight__hero">
           <div class="dashboard-section-content dashboard-highlight__hero-content">
-            <LxSection eyebrow="Hero - 首屏焦点">
+            <CxSection eyebrow="Hero - 首屏焦点">
               <div v-reveal="0" class="hero-bento-frame">
                 <div class="hero-visual">
                   <div class="hero-visual__nav">
@@ -128,7 +128,7 @@
                   </div>
                 </div>
               </div>
-            </LxSection>
+            </CxSection>
           </div>
         </div>
       </section>
@@ -136,7 +136,7 @@
       <!-- 折叠卡片 -->
       <div class="dashboard-featured">
         <div class="dashboard-section-content dashboard-featured__content">
-          <LxSection eyebrow="Feature Cards - 折叠卡片">
+          <CxSection eyebrow="Feature Cards - 折叠卡片">
             <div class="collapse-bento-section">
               <section v-reveal="120" class="collapse-main">
                 <div class="fold-shell is-mobile-list">
@@ -167,14 +167,14 @@
                 </div>
               </section>
             </div>
-          </LxSection>
+          </CxSection>
         </div>
       </div>
 
       <!-- 文章列表 -->
       <div class="dashboard-feed-anchor">
         <div class="dashboard-section-content dashboard-feed dashboard-feed__content">
-          <LxSection eyebrow="Articles - 文章列表">
+          <CxSection eyebrow="Articles - 文章列表">
             <div class="article-gallery-shell">
               <section class="article-gallery-main">
                 <div class="article-gallery-rows">
@@ -201,19 +201,19 @@
                           <span class="article-gallery-card-media-index">{{ String(a.__index + 1).padStart(2, '0') }}</span>
                           <span class="article-gallery-card-media-date">{{ mmdd(a.updatedAt) }}</span>
                           <span
-                            class="lx-tag lx-tag--primary lx-tag--small is-round article-gallery-card-media-category"
+                            class="cx-tag cx-tag--primary cx-tag--small is-round article-gallery-card-media-category"
                             :style="tagPaletteStyle(a.categoryName)"
                           >
-                            <span class="lx-tag__content"><span class="lx-tag__label">分类 {{ a.categoryName }}</span></span>
+                            <span class="cx-tag__content"><span class="cx-tag__label">分类 {{ a.categoryName }}</span></span>
                           </span>
                           <div class="article-gallery-card-media-badge-list">
                             <span
                               v-for="t in a.tags"
                               :key="t"
-                              class="lx-tag lx-tag--primary lx-tag--small is-round article-gallery-card-media-badge"
+                              class="cx-tag cx-tag--primary cx-tag--small is-round article-gallery-card-media-badge"
                               :style="tagPaletteStyle(t)"
                             >
-                              <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ t }}</span></span>
+                              <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ t }}</span></span>
                             </span>
                           </div>
                         </div>
@@ -240,15 +240,15 @@
                   <button
                     v-else
                     type="button"
-                    class="lx-button lx-button--primary is-round is-plain"
+                    class="cx-button cx-button--primary is-round is-plain"
                     @click="loadMore"
                   >
-                    <span class="lx-button__content">加载更多</span>
+                    <span class="cx-button__content">加载更多</span>
                   </button>
                 </div>
               </section>
             </div>
-          </LxSection>
+          </CxSection>
         </div>
       </div>
     </div>
@@ -259,7 +259,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { NCarousel } from 'naive-ui'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { HERO_GRADIENTS, FOLD_TEXT_COLORS, FALLBACK_COVERS, tagPaletteStyle, coverOf, mmdd } from '../utils/display'

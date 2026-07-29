@@ -8,8 +8,8 @@ spring:
       max-file-size: 100MB
       max-request-size: 110MB
   datasource:
-    # 读取服务器 unit 注入的 DB_URL（指向线上 chuxi 库），本地缺省回退 blog_db
-    url: ${DB_URL:jdbc:mysql://localhost:3306/blog_db?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    # 读取服务器 unit 注入的 DB_URL（指向线上 chuxi 库），本地缺省回退 chuxi_db
+    url: ${DB_URL:jdbc:mysql://localhost:3306/chuxi_db?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
   jpa:

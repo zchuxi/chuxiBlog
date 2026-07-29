@@ -11,16 +11,16 @@
                 <span
                   v-for="t in article?.tags || []"
                   :key="t"
-                  class="lx-tag lx-tag--section lx-tag--small is-round is-plain article-hero-section-header-tag"
+                  class="cx-tag cx-tag--section cx-tag--small is-round is-plain article-hero-section-header-tag"
                 >
-                  <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ t }}</span></span>
+                  <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ t }}</span></span>
                 </span>
               </div>
             </div>
           </div>
           <div class="timeline-section-container-header-right-action">
-            <button class="lx-button lx-button--section is-round is-circle" type="button">
-              <span class="lx-button__content"><SvgIcon name="common-ai" size="18px" /></span>
+            <button class="cx-button cx-button--section is-round is-circle" type="button">
+              <span class="cx-button__content"><SvgIcon name="common-ai" size="18px" /></span>
             </button>
           </div>
         </div>
@@ -90,8 +90,8 @@
                         :style="{ '--article-catalog-card-indent': `${(h.level - 1) * 14}px` }"
                         @click="scrollToHeading(h.id)"
                       >
-                        <div class="lx-popover-wrapper">
-                          <div class="lx-popover-trigger">
+                        <div class="cx-popover-wrapper">
+                          <div class="cx-popover-trigger">
                             <span class="article-catalog-card-link-text">{{ h.text }}</span>
                           </div>
                         </div>
@@ -138,10 +138,10 @@
                 </div>
               </div>
               <div class="article-comments-composer-textarea">
-                <div class="lx-input is-textarea">
+                <div class="cx-input is-textarea">
                   <textarea
                     v-model="commentDraft"
-                    class="lx-input__inner lx-input__textarea"
+                    class="cx-input__inner cx-input__textarea"
                     maxlength="500"
                     placeholder="登录后才能参与评论与点赞"
                   ></textarea>
@@ -149,8 +149,8 @@
               </div>
               <div class="article-comments-composer-toolbar">
                 <div class="article-comments-composer-toolbar-left">
-                  <div class="lx-popover-wrapper">
-                    <div class="lx-popover-trigger">
+                  <div class="cx-popover-wrapper">
+                    <div class="cx-popover-trigger">
                       <button class="article-comments-toolbar-button" type="button">
                         <SvgIcon name="common-chat" size="14px" />
                         <span>表情</span>
@@ -161,9 +161,9 @@
                 </div>
                 <div class="article-comments-composer-toolbar-right">
                   <span class="article-comments-composer-count">{{ commentDraft.length }}/500</span>
-                  <button class="lx-button lx-button--primary" type="submit">
-                    <span class="lx-button__content"><SvgIcon name="common-send" size="18px" /></span>
-                    <span class="lx-button__label">发表评论</span>
+                  <button class="cx-button cx-button--primary" type="submit">
+                    <span class="cx-button__content"><SvgIcon name="common-send" size="18px" /></span>
+                    <span class="cx-button__label">发表评论</span>
                   </button>
                 </div>
               </div>

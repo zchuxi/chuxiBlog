@@ -84,7 +84,7 @@ const cleaning = ref(false)
 const panelKey = ref(0)
 
 // Bangumi 访问令牌：仅存当前浏览器 localStorage
-const TOKEN_KEY = 'lx-bgm-token'
+const TOKEN_KEY = 'cx-bgm-token'
 const bgmToken = ref(localStorage.getItem(TOKEN_KEY) || '')
 const syncing = ref(false)
 const syncTip = ref('')

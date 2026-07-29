@@ -1,12 +1,12 @@
 <template>
   <button
-    class="lx-switch"
+    class="cx-switch"
     :class="{ 'is-checked': modelValue, 'is-disabled': disabled }"
     type="button"
     :disabled="disabled"
     @click="handleClick"
   >
-    <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
+    <span class="cx-switch__core"><span class="cx-switch__action"></span></span>
   </button>
 </template>
 

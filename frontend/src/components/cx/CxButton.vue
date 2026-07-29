@@ -1,13 +1,13 @@
 <template>
   <button
-    class="lx-button"
+    class="cx-button"
     :class="buttonClasses"
     :type="nativeType"
     :disabled="isDisabled"
     :style="customStyle"
     @click="handleClick"
   >
-    <span class="lx-button__content">
+    <span class="cx-button__content">
       <slot />
     </span>
   </button>
@@ -44,7 +44,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
 const buttonClasses = computed(() => {
   const classes = {}
   if (props.type && props.type !== 'primary') {
-    classes[`lx-button--${props.type}`] = true
+    classes[`cx-button--${props.type}`] = true
   }
   if (props.round) classes['is-round'] = true
   if (props.circle) classes['is-circle'] = true

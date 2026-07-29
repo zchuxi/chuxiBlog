@@ -5,7 +5,7 @@ agent 最小约定入口。仅收录三条硬约束，完整表述以 README 对
 ## 1. 改动后验证
 
 - 后端改动后必须在 `backend/` 目录运行 `mvn test`
-- 前端改动后必须在 `frontend/` 目录运行 `npm run lint` 和 `npm run build`
+- 前端改动后必须在 `frontend/` 目录运行 `npm run lint`、`npm test` 和 `npm run build`
 
 详见 [README · 改动后验证（约定）](README.md#改动后验证约定)。
 

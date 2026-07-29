@@ -14,14 +14,14 @@
         <div class="tool-detail-empty-icon"><SvgIcon name="common-web" size="40px" /></div>
         <h2>没有找到这个站点</h2>
         <p>它可能已被移除，或者链接有误。回到工具列表继续浏览吧。</p>
-        <button type="button" class="lx-button lx-button--primary" @click="goBack">
-          <span class="lx-button__content"><span class="lx-button__label">返回工具列表</span></span>
+        <button type="button" class="cx-button cx-button--primary" @click="goBack">
+          <span class="cx-button__content"><span class="cx-button__label">返回工具列表</span></span>
         </button>
       </section>
 
       <template v-else-if="site">
         <!-- 顶部 hero 岛 -->
-        <LxSection v-reveal="0" eyebrow="Tool Atlas - 站点档案">
+        <CxSection v-reveal="0" eyebrow="Tool Atlas - 站点档案">
           <template #pill>{{ site.websiteName }} 的收录详情</template>
           <section class="tool-detail-hero">
             <div class="tool-detail-hero-main">
@@ -29,8 +29,8 @@
               <div class="tool-detail-hero-copy">
                 <div class="tool-detail-hero-title-row">
                   <h1 class="tool-detail-hero-title">{{ site.websiteName }}</h1>
-                  <span class="lx-tag lx-tag--primary lx-tag--small is-round is-plain">
-                    <span class="lx-tag__content"><span class="lx-tag__label">{{ site.category }}</span></span>
+                  <span class="cx-tag cx-tag--primary cx-tag--small is-round is-plain">
+                    <span class="cx-tag__content"><span class="cx-tag__label">{{ site.category }}</span></span>
                   </span>
                   <span v-if="site.featured" class="tool-detail-featured-badge">精选</span>
                 </div>
@@ -39,21 +39,21 @@
               </div>
             </div>
             <div class="tool-detail-hero-actions">
-              <a class="lx-button lx-button--primary tool-detail-visit-btn" :href="site.websiteUrl" target="_blank" rel="noopener">
-                <span class="lx-button__content">
+              <a class="cx-button cx-button--primary tool-detail-visit-btn" :href="site.websiteUrl" target="_blank" rel="noopener">
+                <span class="cx-button__content">
                   <SvgIcon name="common-open" size="15px" />
-                  <span class="lx-button__label">访问站点</span>
+                  <span class="cx-button__label">访问站点</span>
                 </span>
               </a>
-              <button type="button" class="lx-button lx-button--primary is-plain" @click="copyLink">
-                <span class="lx-button__content"><span class="lx-button__label">{{ copied ? '已复制' : '复制链接' }}</span></span>
+              <button type="button" class="cx-button cx-button--primary is-plain" @click="copyLink">
+                <span class="cx-button__content"><span class="cx-button__label">{{ copied ? '已复制' : '复制链接' }}</span></span>
               </button>
             </div>
           </section>
-        </LxSection>
+        </CxSection>
 
         <!-- 简介 + 速览两栏 -->
-        <LxSection eyebrow="Overview - 站点资料">
+        <CxSection eyebrow="Overview - 站点资料">
           <template #pill>简介与速览信息</template>
           <div class="tool-detail-columns">
             <article class="tool-detail-card" v-reveal="40">
@@ -79,8 +79,8 @@
                 <div class="tool-detail-glance-item">
                   <dt>分类</dt>
                   <dd>
-                    <span class="lx-tag lx-tag--primary lx-tag--small is-round is-plain">
-                      <span class="lx-tag__content"><span class="lx-tag__label">{{ site.category }}</span></span>
+                    <span class="cx-tag cx-tag--primary cx-tag--small is-round is-plain">
+                      <span class="cx-tag__content"><span class="cx-tag__label">{{ site.category }}</span></span>
                     </span>
                   </dd>
                 </div>
@@ -88,8 +88,8 @@
                   <dt>标签</dt>
                   <dd>
                     <div class="tool-detail-glance-tags">
-                      <span v-for="tag in site.tags" :key="tag" class="lx-tag lx-tag--primary lx-tag--small is-round is-plain">
-                        <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ tag }}</span></span>
+                      <span v-for="tag in site.tags" :key="tag" class="cx-tag cx-tag--primary cx-tag--small is-round is-plain">
+                        <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ tag }}</span></span>
                       </span>
                       <span v-if="!site.tags || !site.tags.length" class="tool-detail-glance-plain">暂无标签</span>
                     </div>
@@ -106,10 +106,10 @@
               </dl>
             </aside>
           </div>
-        </LxSection>
+        </CxSection>
 
         <!-- 同类站点 -->
-        <LxSection v-if="related.length" eyebrow="Related - 同类站点">
+        <CxSection v-if="related.length" eyebrow="Related - 同类站点">
           <template #pill>「{{ site.category }}」分类下的其他站点</template>
           <div class="tool-detail-related-row">
             <button
@@ -128,7 +128,7 @@
               <span class="tool-detail-related-category">{{ r.category }}</span>
             </button>
           </div>
-        </LxSection>
+        </CxSection>
       </template>
     </div>
 
@@ -144,7 +144,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 
@@ -306,7 +306,7 @@ html.dark .tool-detail-empty-icon{color:#9db4cd}
   .tool-detail-hero-icon{width:56px;height:56px;border-radius:16px}
   .tool-detail-hero-title{font-size:24px}
   .tool-detail-hero-actions{flex-direction:column;align-items:stretch}
-  .tool-detail-hero-actions .lx-button{width:100%}
+  .tool-detail-hero-actions .cx-button{width:100%}
   .tool-detail-visit-btn{width:100%;min-width:0}
   .tool-detail-card{padding:16px 14px}
   .tool-detail-related-card{flex-basis:180px}

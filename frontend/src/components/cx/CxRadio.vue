@@ -1,7 +1,7 @@
 <template>
-  <label class="lx-radio" :class="{ 'is-checked': isChecked, 'is-disabled': isDisabled }">
+  <label class="cx-radio" :class="{ 'is-checked': isChecked, 'is-disabled': isDisabled }">
     <input
-      class="lx-radio__input"
+      class="cx-radio__input"
       type="radio"
       :value="value"
       :name="radioName"
@@ -9,8 +9,8 @@
       :disabled="isDisabled"
       @change="handleChange"
     />
-    <span class="lx-radio__icon"><span class="lx-radio__inner"></span></span>
-    <span class="lx-radio__label"><slot /></span>
+    <span class="cx-radio__icon"><span class="cx-radio__inner"></span></span>
+    <span class="cx-radio__label"><slot /></span>
   </label>
 </template>
 

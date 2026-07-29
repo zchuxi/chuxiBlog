@@ -11,9 +11,9 @@ export function tagPaletteStyle(name) {
   for (const ch of String(name || '')) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
   const p = TAG_PALETTES[hash % TAG_PALETTES.length]
   return {
-    '--lx-tag-text': p.textColor,
-    '--lx-tag-border': p.borderColor,
-    '--lx-tag-background': p.backgroundColor
+    '--cx-tag-text': p.textColor,
+    '--cx-tag-border': p.borderColor,
+    '--cx-tag-background': p.backgroundColor
   }
 }
 

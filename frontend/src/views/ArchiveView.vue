@@ -38,7 +38,7 @@
       </section>
 
       <!-- 归档概览 -->
-      <LxSection eyebrow="Highlights - 归档概览">
+      <CxSection eyebrow="Highlights - 归档概览">
         <section class="archive-highlight-section">
           <article
             v-for="(h, i) in highlights"
@@ -52,10 +52,10 @@
             <p class="archive-highlight-detail">{{ h.detail }}</p>
           </article>
         </section>
-      </LxSection>
+      </CxSection>
 
       <!-- 归档总览 -->
-      <LxSection eyebrow="Archive - 归档总览">
+      <CxSection eyebrow="Archive - 归档总览">
         <section class="archive-directory-section">
           <div class="archive-main-column">
             <section
@@ -120,10 +120,10 @@
                               <span
                                 v-for="t in e.tags"
                                 :key="t"
-                                class="lx-tag lx-tag--primary lx-tag--small is-round is-plain archive-entry-card-tag"
-                                style="--lx-tag-text: var(--archive-tag-text); --lx-tag-border: var(--archive-tag-border); --lx-tag-background: var(--archive-tag-background);"
+                                class="cx-tag cx-tag--primary cx-tag--small is-round is-plain archive-entry-card-tag"
+                                style="--cx-tag-text: var(--archive-tag-text); --cx-tag-border: var(--archive-tag-border); --cx-tag-background: var(--archive-tag-background);"
                               >
-                                <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ t }}</span></span>
+                                <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ t }}</span></span>
                               </span>
                             </div>
                             <RouterLink class="archive-entry-card-link" :to="`/article/${e.id}`">
@@ -184,7 +184,7 @@
             </section>
           </aside>
         </section>
-      </LxSection>
+      </CxSection>
     </div>
   </main>
 </template>
@@ -192,7 +192,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { mmdd } from '../utils/display'

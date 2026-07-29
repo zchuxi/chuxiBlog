@@ -2,7 +2,7 @@
   <main class="tool-page">
     <div class="tool-page-shell">
       <!-- 工具轨道 -->
-      <LxSection v-reveal="0" eyebrow="Tool Atlas - 工具轨道">
+      <CxSection v-reveal="0" eyebrow="Tool Atlas - 工具轨道">
         <template #pill>搜索、摘要与跳转入口合并成一张浏览地图</template>
         <section class="tool-hero-section">
           <div class="tool-hero-copy-panel">
@@ -16,42 +16,42 @@
             </div>
             <div class="tool-hero-search-panel">
               <p class="tool-hero-panel-title">快速检索</p>
-              <div class="lx-input">
-                <input v-model="keyword" class="lx-input__inner" type="text" :placeholder="toolConfig?.searchPlaceholder || DEFAULT_TOOL.searchPlaceholder" />
+              <div class="cx-input">
+                <input v-model="keyword" class="cx-input__inner" type="text" :placeholder="toolConfig?.searchPlaceholder || DEFAULT_TOOL.searchPlaceholder" />
               </div>
             </div>
           </div>
         </section>
-      </LxSection>
+      </CxSection>
 
       <!-- 按场景筛选 -->
-      <LxSection eyebrow="Atlas - 按场景筛选">
+      <CxSection eyebrow="Atlas - 按场景筛选">
         <template #pill>按场景筛选</template>
         <section class="tool-atlas-section">
           <div class="tool-filter-panel">
             <div class="tool-filter-row">
               <button
                 type="button"
-                class="lx-button lx-button--primary"
+                class="cx-button cx-button--primary"
                 :class="{ 'is-plain': activeCategory !== '' }"
                 @click="activeCategory = ''"
               >
-                <span class="lx-button__content"><span class="lx-button__label">全部</span></span>
+                <span class="cx-button__content"><span class="cx-button__label">全部</span></span>
               </button>
               <button
                 v-for="c in categories"
                 :key="c"
                 type="button"
-                class="lx-button lx-button--primary"
+                class="cx-button cx-button--primary"
                 :class="{ 'is-plain': activeCategory !== c }"
                 @click="activeCategory = c"
               >
-                <span class="lx-button__content"><span class="lx-button__label">{{ c }}</span></span>
+                <span class="cx-button__content"><span class="cx-button__label">{{ c }}</span></span>
               </button>
             </div>
           </div>
 
-          <LxSection eyebrow="Spotlight - 优先浏览">
+          <CxSection eyebrow="Spotlight - 优先浏览">
             <template #pill>优先浏览的站点</template>
             <section class="tool-spotlight-section">
               <div class="tool-spotlight-grid">
@@ -82,10 +82,10 @@
                       <span
                         v-for="tag in t.tags"
                         :key="tag"
-                        class="lx-tag lx-tag--primary lx-tag--small is-round is-plain tool-spotlight-card-tag"
-                        style="--lx-tag-text: var(--archive-tag-text); --lx-tag-border: var(--archive-tag-border); --lx-tag-background: var(--archive-tag-background);"
+                        class="cx-tag cx-tag--primary cx-tag--small is-round is-plain tool-spotlight-card-tag"
+                        style="--cx-tag-text: var(--archive-tag-text); --cx-tag-border: var(--archive-tag-border); --cx-tag-background: var(--archive-tag-background);"
                       >
-                        <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ tag }}</span></span>
+                        <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ tag }}</span></span>
                       </span>
                       <button type="button" class="tool-card-open-btn" title="访问站点" @click.stop.prevent="openSite(t.websiteUrl)">
                         <SvgIcon name="common-open" size="14px" />
@@ -95,9 +95,9 @@
                 </RouterLink>
               </div>
             </section>
-          </LxSection>
+          </CxSection>
 
-          <LxSection eyebrow="Directory - 工具列表">
+          <CxSection eyebrow="Directory - 工具列表">
             <template #pill>共 {{ filtered.length }} 个站点</template>
             <div class="tool-atlas-grid">
               <!-- 点击卡片进入详情，外链按钮单独跳转 -->
@@ -132,10 +132,10 @@
                       <span
                         v-for="tag in t.tags"
                         :key="tag"
-                        class="lx-tag lx-tag--primary lx-tag--small is-round is-plain tool-site-card-tag"
-                        style="--lx-tag-text: var(--archive-tag-text); --lx-tag-border: var(--archive-tag-border); --lx-tag-background: var(--archive-tag-background);"
+                        class="cx-tag cx-tag--primary cx-tag--small is-round is-plain tool-site-card-tag"
+                        style="--cx-tag-text: var(--archive-tag-text); --cx-tag-border: var(--archive-tag-border); --cx-tag-background: var(--archive-tag-background);"
                       >
-                        <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ tag }}</span></span>
+                        <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ tag }}</span></span>
                       </span>
                     </div>
                     <button type="button" class="tool-card-open-btn" title="访问站点" @click.stop.prevent="openSite(t.websiteUrl)">
@@ -145,9 +145,9 @@
                 </a>
               </RouterLink>
             </div>
-          </LxSection>
+          </CxSection>
         </section>
-      </LxSection>
+      </CxSection>
     </div>
   </main>
 </template>
@@ -155,7 +155,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 

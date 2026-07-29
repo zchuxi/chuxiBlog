@@ -1,14 +1,14 @@
 <template>
   <span
-    class="lx-tag"
+    class="cx-tag"
     :class="tagClasses"
     @click="handleClick"
   >
-    <span class="lx-tag__content">
-      <span v-if="prefix" class="lx-tag__prefix">{{ prefix }}</span>
-      <span class="lx-tag__label"><slot /></span>
+    <span class="cx-tag__content">
+      <span v-if="prefix" class="cx-tag__prefix">{{ prefix }}</span>
+      <span class="cx-tag__label"><slot /></span>
     </span>
-    <span v-if="closable" class="lx-tag__close" @click.stop="handleClose">×</span>
+    <span v-if="closable" class="cx-tag__close" @click.stop="handleClose">×</span>
   </span>
 </template>
 
@@ -40,8 +40,8 @@ const emit = defineEmits(['close', 'click'])
 
 const tagClasses = computed(() => {
   const classes = {}
-  if (props.type) classes[`lx-tag--${props.type}`] = true
-  if (props.size) classes[`lx-tag--${props.size}`] = true
+  if (props.type) classes[`cx-tag--${props.type}`] = true
+  if (props.size) classes[`cx-tag--${props.size}`] = true
   if (props.plain) classes['is-plain'] = true
   if (props.round) classes['is-round'] = true
   if (props.closable) classes['is-closable'] = true

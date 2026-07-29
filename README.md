@@ -28,7 +28,7 @@
 - **前端改动后在 `frontend/` 目录运行 `npm test`**：Node 内置测试器（`node --test`，Node ≥ 21，零额外依赖）跑 `src/**/*.test.js` 下的纯数据行为检查（当前覆盖 `resourceSchemas.js` 的 schema 结构约束：字段类型合法性、select 必填 options、batch/ratio/default 规则、columns 与字段的对应关系）；新增可被 Node 直接加载的纯逻辑模块时按同一约定补测试
 - `start-backend.bat` 打包时保留 `-DskipTests`（启动提速），因此**跳过测试仅限启动脚本，提交前仍须手动跑 `mvn test`**
 - **机械检查点（对应上面前两条）**：新克隆/新环境必须先运行一次 `scripts\install-git-hooks.bat` 安装仓库内版本化的 pre-commit 钩子（`scripts/git-hooks/pre-commit`，钩子不随 clone 自动生效），此后暂存区含 `backend/` 改动的提交自动执行 `mvn test`、含 `frontend/` 改动的提交自动执行 `npm run lint`，失败即阻断提交（紧急绕过 `git commit --no-verify`）；其余约定暂维持流程文档形式
-- **CI 兜底执行点（不依赖本机安装）**：推送到 GitHub 或发起 PR 时，`.github/workflows/backend-ci.yml` 在 `backend/` 改动时自动运行 `mvn test`，`.github/workflows/frontend-ci.yml` 在 `frontend/` 改动时自动运行 `npm run lint` 与 `npm run build`，命令与 pre-commit 钩子保持一致；本机钩子未安装或被 `--no-verify` 绕过时，CI 仍会拦截失败的改动（Gitee 远端不触发此工作流）
+- **CI 兜底执行点（不依赖本机安装）**：推送到 GitHub 或发起 PR 时，`.github/workflows/backend-ci.yml` 在 `backend/` 改动时自动运行 `mvn test`，`.github/workflows/frontend-ci.yml` 在 `frontend/` 改动时自动依次运行 `npm run lint`、`npm test` 与 `npm run build`（lint 命令与 pre-commit 钩子保持一致，test/build 为 CI 额外兜底）；本机钩子未安装或被 `--no-verify` 绕过时，CI 仍会拦截失败的改动（Gitee 远端不触发此工作流）
 
 ## 页面清单
 
@@ -89,6 +89,7 @@
 - **数据库**：MySQL 8，库名 `chuxi`（`chuxi` / `chuxi123`）
 - **对象存储**：阿里云 OSS 桶 `chuxisleep`（`oss-cn-beijing`），`/api/admin/media/fetch` 提供白名单 SSRF 安全代理供外链图传回站内
 - **架构**：`nginx(:80/:443) → /api/* → 127.0.0.1:8080`
-- **部署脚本**：`D:/workspace/Claw/2026-07-19-17-59-15/deploy/website/deploy_upload.py`（全量 jar+dist，重启服务）、`deploy_frontend_only.py`（仅前端，跳过重启）
+- **部署脚本**：`scripts/deploy/deploy_upload.py`（全量 jar+dist，重启服务）、`scripts/deploy/deploy_frontend_only.py`（仅前端，跳过重启）；依赖 `paramiko`，运行前设置环境变量 `SSH_PWD`
+- **前端产物**：`vite.config.js` 已固定 `build.outDir=dist`，在 `frontend/` 运行 `npm run build` 后产物只落在 `frontend/dist/`；打包命令 `cd frontend && tar czf <DIST_TGZ> dist`（tar 顶层必须是 `dist/`）
 - **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，新表必须在重启前先在库内执行（参 `scripts/ddl-friend-link.sql` 风格），顺序不可颠倒
-- **构建路径坑**：Maven 必须在**纯英文路径**（`D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；前端 `vite build --outDir` 绝对路径会被拼成 `/d/d/tmp/...`，构建后用 `find` 定位真实目录再 `tar`
+- **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本

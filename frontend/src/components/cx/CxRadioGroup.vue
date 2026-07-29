@@ -1,5 +1,5 @@
 <template>
-  <div class="lx-radio-group">
+  <div class="cx-radio-group">
     <slot />
   </div>
 </template>

@@ -1,5 +1,5 @@
-# 兜底机械检查点（命令与 scripts/git-hooks/pre-commit 保持一致，约定见 README「改动后验证」）：
-# frontend/ 改动推送或 PR 时强制运行 npm run lint 与 npm run build，不依赖本机手动安装钩子
+# 兜底机械检查点（lint 命令与 scripts/git-hooks/pre-commit 保持一致，test/build 为 CI 额外兜底，约定见 README「改动后验证」）：
+# frontend/ 改动推送或 PR 时强制运行 npm run lint、npm test 与 npm run build，不依赖本机手动安装钩子
 name: frontend-ci
 
 on:
@@ -23,12 +23,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22' # npm test 依赖 node --test 的 glob 支持（Node ≥ 21，见 README）
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: npm ci
         run: npm ci
       - name: npm run lint
         run: npm run lint
+      - name: npm test
+        run: npm test
       - name: npm run build
         run: npm run build

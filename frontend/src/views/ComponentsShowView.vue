@@ -64,7 +64,7 @@
               <CxButton type="primary">Primary</CxButton>
               <CxButton type="info" :color="infoBtnStyle">
                 <SvgIcon name="common-icons" size="18px" />
-                <span class="lx-button__label">Info Icon</span>
+                <span class="cx-button__label">Info Icon</span>
               </CxButton>
               <CxButton type="warning" plain>Warning Plain</CxButton>
               <CxButton type="danger" round>Danger Round</CxButton>
@@ -104,8 +104,8 @@
               <CxPopover v-for="p in popovers" :key="p.label" :trigger="p.trigger">
                 <CxButton :type="p.btnType" :plain="p.plain">{{ p.label }}</CxButton>
                 <template #content="{ close }">
-                  <div v-for="item in p.items" :key="item" class="lx-popover-item" @click="close">
-                    <span class="lx-popover-item__content">{{ item }}</span>
+                  <div v-for="item in p.items" :key="item" class="cx-popover-item" @click="close">
+                    <span class="cx-popover-item__content">{{ item }}</span>
                   </div>
                 </template>
               </CxPopover>

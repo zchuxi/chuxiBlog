@@ -2,7 +2,7 @@
   <main class="timeline-page">
     <div class="timeline-shell">
       <!-- 页面概览 -->
-      <LxSection eyebrow="Summary - 页面概览">
+      <CxSection eyebrow="Summary - 页面概览">
         <template #pill>快速了解当前页面的结构信息与内容分布。</template>
         <div v-reveal="40" class="timeline-summary-panel">
           <div class="timeline-summary-panel__head">
@@ -28,10 +28,10 @@
             <span v-for="t in timelines.slice(0, 4)" :key="t.id" class="timeline-summary-panel__tag-item">{{ t.title }}</span>
           </div>
         </div>
-      </LxSection>
+      </CxSection>
 
       <!-- 顶部轮播 -->
-      <LxSection eyebrow="Timeline - 顶部轮播" class="timeline-carousel-deck">
+      <CxSection eyebrow="Timeline - 顶部轮播" class="timeline-carousel-deck">
         <template #pill>点击两侧卡片后，可以切换查看当前时间节点的重点内容。</template>
         <div v-reveal="100" class="timeline-carousel-stage">
           <button
@@ -63,10 +63,10 @@
             @click="go(nextIndex)"
           ></button>
         </div>
-      </LxSection>
+      </CxSection>
 
       <!-- 内容时间线 -->
-      <LxSection eyebrow="Story Rail - 内容时间线">
+      <CxSection eyebrow="Story Rail - 内容时间线">
         <template #pill>沿着时间顺序继续向下阅读，查看每个阶段的完整叙事。</template>
         <section class="timeline-story-shell">
           <div class="timeline-story-content">
@@ -105,14 +105,14 @@
             </div>
           </div>
         </section>
-      </LxSection>
+      </CxSection>
     </div>
   </main>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import { api } from '../api'
 
 const DEFAULT_HERO = { eyebrow: 'Timeline', title: '把时间节点排成一条可以浏览的故事轨道。', description: '每一个标记都是一段被留住的时间。' }

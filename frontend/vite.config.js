@@ -13,6 +13,9 @@ export default defineConfig({
     }
   },
   build: {
+    // 固定产物目录，禁止 --outDir 等方式产生 dist_fresh* 多副本
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks: {

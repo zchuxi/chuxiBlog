@@ -34,22 +34,22 @@
             <span class="nav-link__label">{{ item.label }}</span>
           </RouterLink>
         </nav>
-        <div class="lx-popover-wrapper">
-          <div class="lx-popover-trigger">
+        <div class="cx-popover-wrapper">
+          <div class="cx-popover-trigger">
             <button type="button" class="shell-action-btn shell-nav-menu" @click="mobileNavOpen = !mobileNavOpen">
               <SvgIcon name="common-menu" class="action-icon" />
             </button>
           </div>
-          <transition name="lx-popover-fade">
-            <div v-if="mobileNavOpen" class="lx-popover top-nav-mobile-popover">
+          <transition name="cx-popover-fade">
+            <div v-if="mobileNavOpen" class="cx-popover top-nav-mobile-popover">
               <div
                 v-for="item in navItems"
                 :key="item.path"
-                class="lx-popover-item"
+                class="cx-popover-item"
                 @click="goNav(item.path)"
               >
-                <span class="lx-popover-item__icon"><SvgIcon :name="item.icon" size="16px" /></span>
-                <span class="lx-popover-item__content">{{ item.label }}</span>
+                <span class="cx-popover-item__icon"><SvgIcon :name="item.icon" size="16px" /></span>
+                <span class="cx-popover-item__content">{{ item.label }}</span>
               </div>
             </div>
           </transition>
@@ -86,21 +86,21 @@
         <button type="button" class="shell-action-btn is-setting" @click="settingOpen = true">
           <SvgIcon name="common-setting" class="action-icon" />
         </button>
-        <div class="lx-popover-wrapper">
-          <div class="lx-popover-trigger">
+        <div class="cx-popover-wrapper">
+          <div class="cx-popover-trigger">
             <button type="button" class="shell-action-btn is-person" @click="personMenuOpen = !personMenuOpen">
               <SvgIcon name="common-person" class="action-icon" />
             </button>
           </div>
-          <transition name="lx-popover-fade">
-            <div v-if="personMenuOpen" class="lx-popover login-person-popover">
-              <div class="lx-popover-item" @click="openAuthDialog">
-                <span class="lx-popover-item__icon"><SvgIcon name="common-person" size="16px" /></span>
-                <span class="lx-popover-item__content">登录 / 注册</span>
+          <transition name="cx-popover-fade">
+            <div v-if="personMenuOpen" class="cx-popover login-person-popover">
+              <div class="cx-popover-item" @click="openAuthDialog">
+                <span class="cx-popover-item__icon"><SvgIcon name="common-person" size="16px" /></span>
+                <span class="cx-popover-item__content">登录 / 注册</span>
               </div>
-              <div class="lx-popover-item" @click="goAdmin">
-                <span class="lx-popover-item__icon"><SvgIcon name="common-setting" size="16px" /></span>
-                <span class="lx-popover-item__content">后台管理</span>
+              <div class="cx-popover-item" @click="goAdmin">
+                <span class="cx-popover-item__icon"><SvgIcon name="common-setting" size="16px" /></span>
+                <span class="cx-popover-item__content">后台管理</span>
               </div>
             </div>
           </transition>
@@ -189,21 +189,21 @@
               <SvgIcon :name="playModeIcon" size="16px" />
             </button>
             <button type="button" class="control-btn music-rate-btn" title="播放速度" @click="cycleRate">{{ rateLabel }}</button>
-            <div class="lx-popover-wrapper">
-              <div class="lx-popover-trigger">
+            <div class="cx-popover-wrapper">
+              <div class="cx-popover-trigger">
                 <button type="button" class="control-btn" @click="playlistOpen = !playlistOpen">
                   <SvgIcon name="music-list" size="18px" />
                 </button>
               </div>
-              <transition name="lx-popover-fade">
-                <div v-if="playlistOpen" class="lx-popover music-playlist-popover">
+              <transition name="cx-popover-fade">
+                <div v-if="playlistOpen" class="cx-popover music-playlist-popover">
                   <div
                     v-for="(t, i) in tracks"
                     :key="t.id"
-                    class="lx-popover-item"
+                    class="cx-popover-item"
                     @click="playIndex(i)"
                   >
-                    <span class="lx-popover-item__content">{{ t.title }} - {{ t.artist }}</span>
+                    <span class="cx-popover-item__content">{{ t.title }} - {{ t.artist }}</span>
                   </div>
                 </div>
               </transition>
@@ -295,17 +295,17 @@
       </div>
       <!-- AI 入口仅保留顶栏按钮，看板娘不再挂聊天胶囊 -->
       <div class="live2d-widget__actions">
-        <button type="button" class="lx-button lx-button--primary is-round is-circle is-plain" @click="aiExpanded = true">
-          <span class="lx-button__content"><SvgIcon name="common-chat" size="18px" /></span>
+        <button type="button" class="cx-button cx-button--primary is-round is-circle is-plain" @click="aiExpanded = true">
+          <span class="cx-button__content"><SvgIcon name="common-chat" size="18px" /></span>
         </button>
-        <button type="button" class="lx-button lx-button--info is-round is-circle is-plain is-disabled" disabled>
-          <span class="lx-button__content"><SvgIcon name="common-hanger" size="18px" /></span>
+        <button type="button" class="cx-button cx-button--info is-round is-circle is-plain is-disabled" disabled>
+          <span class="cx-button__content"><SvgIcon name="common-hanger" size="18px" /></span>
         </button>
-        <button type="button" class="lx-button lx-button--warning is-round is-circle is-plain" @click="reloadLive2d">
-          <span class="lx-button__content"><SvgIcon name="common-reset" size="18px" /></span>
+        <button type="button" class="cx-button cx-button--warning is-round is-circle is-plain" @click="reloadLive2d">
+          <span class="cx-button__content"><SvgIcon name="common-reset" size="18px" /></span>
         </button>
-        <button type="button" class="lx-button lx-button--danger is-round is-circle is-plain" @click="settings.update({ live2dEnabled: false })">
-          <span class="lx-button__content"><SvgIcon name="common-big-close" size="18px" /></span>
+        <button type="button" class="cx-button cx-button--danger is-round is-circle is-plain" @click="settings.update({ live2dEnabled: false })">
+          <span class="cx-button__content"><SvgIcon name="common-big-close" size="18px" /></span>
         </button>
       </div>
     </div>
@@ -369,8 +369,8 @@
                     <div class="layout-article-search-card-content">
                       <div class="layout-article-search-card-copy">
                         <div class="layout-article-search-card-meta">
-                          <span class="lx-tag lx-tag--primary lx-tag--small is-round">
-                            <span class="lx-tag__content"><span class="lx-tag__label">{{ a.categoryName }}</span></span>
+                          <span class="cx-tag cx-tag--primary cx-tag--small is-round">
+                            <span class="cx-tag__content"><span class="cx-tag__label">{{ a.categoryName }}</span></span>
                           </span>
                           <span class="layout-article-search-card-date">{{ (a.updatedAt || '').slice(0, 10) }}</span>
                         </div>
@@ -379,8 +379,8 @@
                       </div>
                       <div class="layout-article-search-card-footer">
                         <div class="layout-article-search-card-tag-list">
-                          <span v-for="t in a.tags" :key="t" class="lx-tag lx-tag--primary lx-tag--small is-round">
-                            <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ t }}</span></span>
+                          <span v-for="t in a.tags" :key="t" class="cx-tag cx-tag--primary cx-tag--small is-round">
+                            <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ t }}</span></span>
                           </span>
                         </div>
                         <button class="layout-article-search-card-action" type="button">打开全文</button>
@@ -493,12 +493,12 @@
                   <p>开启后，背景会在图库中逐渐平滑切换图片；关闭时仅显示选中的单张背景。</p>
                 </div>
                 <button
-                  class="lx-switch"
+                  class="cx-switch"
                   :class="{ 'is-checked': settings.backgroundCarouselEnabled }"
                   :disabled="!settings.backgroundImageEnabled"
                   @click="settings.update({ backgroundCarouselEnabled: !settings.backgroundCarouselEnabled })"
                 >
-                  <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
+                  <span class="cx-switch__core"><span class="cx-switch__action"></span></span>
                 </button>
               </div>
               <div class="gallery-card" :class="{ 'is-disabled': !settings.backgroundImageEnabled }">
@@ -535,21 +535,21 @@
                 <div class="effect-card__content">
                   <span>樱花飘落</span>
                   <button
-                    class="lx-switch"
+                    class="cx-switch"
                     :class="{ 'is-checked': settings.sakuraEnabled }"
                     @click="settings.update({ sakuraEnabled: !settings.sakuraEnabled })"
                   >
-                    <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
+                    <span class="cx-switch__core"><span class="cx-switch__action"></span></span>
                   </button>
                 </div>
                 <div class="effect-card__content">
                   <span>看板娘</span>
                   <button
-                    class="lx-switch"
+                    class="cx-switch"
                     :class="{ 'is-checked': settings.live2dEnabled }"
                     @click="settings.update({ live2dEnabled: !settings.live2dEnabled })"
                   >
-                    <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
+                    <span class="cx-switch__core"><span class="cx-switch__action"></span></span>
                   </button>
                 </div>
               </div>
@@ -724,7 +724,7 @@ async function loadAppearanceSettings() {
 
     // 主题色注入（始终生效）
     if (obj.primaryColor) {
-      document.documentElement.style.setProperty('--lx-primary', obj.primaryColor)
+      document.documentElement.style.setProperty('--cx-primary', obj.primaryColor)
     }
 
     // 以下设置仅当用户未在 localStorage 中手动设置过时生效
@@ -1202,7 +1202,7 @@ onBeforeUnmount(() => {
 
 <style>
 /* ========== 顶栏账号菜单 ========== */
-.lx-popover.login-person-popover {
+.cx-popover.login-person-popover {
   min-width: 168px;
   margin-top: 46px;
   margin-left: -168px;
@@ -1902,7 +1902,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 
   /* menu 按钮（在 .shell-brand 内的 popover 包装器里）推到品牌区右端，
      形成品牌与 menu 之间的弹性空隙 */
-  .app-shell-top .shell-brand > .lx-popover-wrapper {
+  .app-shell-top .shell-brand > .cx-popover-wrapper {
     margin-left: auto;
     flex: none;
   }
@@ -2003,8 +2003,8 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
     padding: 12px;
   }
 
-  .lx-popover.login-person-popover,
-  .lx-popover.top-nav-mobile-popover {
+  .cx-popover.login-person-popover,
+  .cx-popover.top-nav-mobile-popover {
     max-width: calc(100vw - 24px);
   }
 }

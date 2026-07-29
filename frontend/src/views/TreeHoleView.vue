@@ -4,11 +4,11 @@
       <!-- 弹幕流 -->
       <section class="tree-hole-dashboard-main">
         <div class="tree-hole-section-content tree-hole-dashboard-main-content">
-          <LxSection eyebrow="Tree Hole - 弹幕流">
+          <CxSection eyebrow="Tree Hole - 弹幕流">
             <template #pill>让安慰以漂浮的方式互相看见</template>
             <template #action>
-              <button class="lx-button lx-button--section is-round is-circle" type="button" @click="danmakuPaused = !danmakuPaused">
-                <span class="lx-button__content"><SvgIcon :name="danmakuPaused ? 'music-play' : 'music-pause'" size="18px" /></span>
+              <button class="cx-button cx-button--section is-round is-circle" type="button" @click="danmakuPaused = !danmakuPaused">
+                <span class="cx-button__content"><SvgIcon :name="danmakuPaused ? 'music-play' : 'music-pause'" size="18px" /></span>
               </button>
             </template>
             <section class="tree-hole-danmaku-panel">
@@ -41,27 +41,27 @@
                   <span
                     v-for="m in moods"
                     :key="m.label"
-                    class="lx-tag lx-tag--small is-round tree-hole-danmaku-mood-item"
-                    :class="[`lx-tag--${m.type}`, mood === m.label ? 'is-active' : 'is-plain']"
+                    class="cx-tag cx-tag--small is-round tree-hole-danmaku-mood-item"
+                    :class="[`cx-tag--${m.type}`, mood === m.label ? 'is-active' : 'is-plain']"
                     @click="mood = m.label"
                   >
-                    <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ m.label }}</span></span>
+                    <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ m.label }}</span></span>
                   </span>
                 </div>
                 <div class="tree-hole-danmaku-composer-row">
                   <div class="tree-hole-danmaku-input-shell">
                     <div class="tree-hole-danmaku-input-icon"><SvgIcon name="common-tree" size="18px" /></div>
-                    <div class="lx-input">
+                    <div class="cx-input">
                       <input
                         v-model="draft"
-                        class="lx-input__inner tree-hole-danmaku-input"
+                        class="cx-input__inner tree-hole-danmaku-input"
                         type="text"
                         maxlength="80"
                         :placeholder="thConfig?.placeholder || DEFAULT_PLACEHOLDER"
                       />
                     </div>
-                    <button class="lx-button lx-button--primary is-circle" type="submit">
-                      <span class="lx-button__content"><SvgIcon name="common-send" size="18px" /></span>
+                    <button class="cx-button cx-button--primary is-circle" type="submit">
+                      <span class="cx-button__content"><SvgIcon name="common-send" size="18px" /></span>
                     </button>
                   </div>
                 </div>
@@ -71,14 +71,14 @@
                 </div>
               </form>
             </section>
-          </LxSection>
+          </CxSection>
         </div>
       </section>
 
       <!-- 疗愈书架 -->
       <section class="tree-hole-dashboard-secondary">
         <div class="tree-hole-section-content tree-hole-dashboard-secondary-content">
-          <LxSection eyebrow="Comfort Shelf - 疗愈书架">
+          <CxSection eyebrow="Comfort Shelf - 疗愈书架">
             <template #pill>把情绪落进更安静、更具体的日常片段里</template>
             <section class="tree-hole-healing-panel">
               <div class="tree-hole-healing-grid">
@@ -92,11 +92,11 @@
                   <div class="tree-hole-healing-card-image-wrap">
                     <img class="tree-hole-healing-card-image" :src="c.imageUrl || landscape(i)" :alt="c.title" loading="lazy" />
                     <div class="tree-hole-healing-card-tag-row">
-                      <span class="lx-tag lx-tag--primary lx-tag--small is-round tree-hole-healing-card-tag">
-                        <span class="lx-tag__content"><span class="lx-tag__label">{{ c.tag }}</span></span>
+                      <span class="cx-tag cx-tag--primary cx-tag--small is-round tree-hole-healing-card-tag">
+                        <span class="cx-tag__content"><span class="cx-tag__label">{{ c.tag }}</span></span>
                       </span>
-                      <span class="lx-tag lx-tag--neutral lx-tag--small is-round is-plain tree-hole-healing-card-read-time">
-                        <span class="lx-tag__content"><span class="lx-tag__label">{{ c.readTime }}</span></span>
+                      <span class="cx-tag cx-tag--neutral cx-tag--small is-round is-plain tree-hole-healing-card-read-time">
+                        <span class="cx-tag__content"><span class="cx-tag__label">{{ c.readTime }}</span></span>
                       </span>
                     </div>
                   </div>
@@ -111,7 +111,7 @@
                 </article>
               </div>
             </section>
-          </LxSection>
+          </CxSection>
         </div>
       </section>
     </div>
@@ -120,7 +120,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 

@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * 使用 src/test/resources/application.yml 的 H2 内存库，mvn test 无需 MySQL/OSS。
  */
 @SpringBootTest
-class BlogApplicationTests {
+class ChuxiApplicationTests {
 
     @Test
     void contextLoads() {

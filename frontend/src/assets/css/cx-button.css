@@ -1,5 +1,5 @@
 /* ============================================================
-   lx-button —— 全站通用按钮组件
+   cx-button —— 全站通用按钮组件
    设计语言：与全站玻璃拟态主题统一
    - 浅色：磨砂玻璃底 + 主题色描边 + 顶部内高光 + 柔和外阴影
    - 深色：半透明色染玻璃 + 微弱内高光 + 深色投影
@@ -7,7 +7,7 @@
    状态：is-round / is-circle / is-plain / is-loading / is-disabled
    ============================================================ */
 
-.lx-button {
+.cx-button {
   /* 默认（primary）主题色变量，可通过行内 style 覆盖 */
   --btn-bg: color-mix(in srgb, var(--accent-solid) 18%, var(--card-bg));
   --btn-bg-hover: color-mix(in srgb, var(--accent-solid) 26%, var(--card-bg));
@@ -48,7 +48,7 @@
 }
 
 /* 扫光层：悬停时掠过一道高光 */
-.lx-button::before {
+.cx-button::before {
   content: "";
   position: absolute;
   top: -120%;
@@ -62,7 +62,7 @@
   pointer-events: none;
 }
 
-.lx-button__content {
+.cx-button__content {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -72,12 +72,12 @@
   transition: transform 0.22s ease;
 }
 
-.lx-button__label {
+.cx-button__label {
   white-space: nowrap;
 }
 
 /* ---------- 变体：浅色 ---------- */
-.lx-button--primary {
+.cx-button--primary {
   --btn-bg: color-mix(in srgb, var(--accent-solid) 18%, var(--card-bg));
   --btn-bg-hover: color-mix(in srgb, var(--accent-solid) 26%, var(--card-bg));
   --btn-bg-active: color-mix(in srgb, var(--accent-solid) 32%, var(--card-bg));
@@ -86,7 +86,7 @@
   --btn-plain-text: var(--accent-strong);
 }
 
-.lx-button--info {
+.cx-button--info {
   --btn-bg: color-mix(in srgb, #14b8a6 14%, var(--card-bg));
   --btn-bg-hover: color-mix(in srgb, #14b8a6 22%, var(--card-bg));
   --btn-bg-active: color-mix(in srgb, #14b8a6 28%, var(--card-bg));
@@ -95,7 +95,7 @@
   --btn-plain-text: #0f766e;
 }
 
-.lx-button--warning {
+.cx-button--warning {
   --btn-bg: color-mix(in srgb, #f59e0b 16%, var(--card-bg));
   --btn-bg-hover: color-mix(in srgb, #f59e0b 24%, var(--card-bg));
   --btn-bg-active: color-mix(in srgb, #f59e0b 30%, var(--card-bg));
@@ -104,7 +104,7 @@
   --btn-plain-text: #b45309;
 }
 
-.lx-button--danger {
+.cx-button--danger {
   --btn-bg: color-mix(in srgb, #ef4444 13%, var(--card-bg));
   --btn-bg-hover: color-mix(in srgb, #ef4444 20%, var(--card-bg));
   --btn-bg-active: color-mix(in srgb, #ef4444 26%, var(--card-bg));
@@ -113,7 +113,7 @@
   --btn-plain-text: #b91c1c;
 }
 
-.lx-button--success {
+.cx-button--success {
   --btn-bg: color-mix(in srgb, #10b981 14%, var(--card-bg));
   --btn-bg-hover: color-mix(in srgb, #10b981 22%, var(--card-bg));
   --btn-bg-active: color-mix(in srgb, #10b981 28%, var(--card-bg));
@@ -122,7 +122,7 @@
   --btn-plain-text: #047857;
 }
 
-.lx-button--section {
+.cx-button--section {
   --btn-bg: var(--nested-outer-card-bg);
   --btn-bg-hover: var(--nested-outer-card-bg);
   --btn-bg-active: var(--nested-outer-card-bg);
@@ -135,33 +135,33 @@
 }
 
 /* ---------- 交互状态 ---------- */
-.lx-button:hover {
+.cx-button:hover {
   transform: translateY(-2px);
   background: var(--btn-bg-hover);
   border-color: color-mix(in srgb, var(--btn-border) 80%, currentColor);
   box-shadow: var(--btn-shadow-hover), inset 0 1px 0 var(--btn-highlight);
 }
 
-.lx-button:hover .lx-button__content {
+.cx-button:hover .cx-button__content {
   transform: scale(1.02);
 }
 
-.lx-button:hover::before {
+.cx-button:hover::before {
   opacity: 0.55;
-  animation: lx-button-sheen-fb930535 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: cx-button-sheen-fb930535 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.lx-button:active {
+.cx-button:active {
   transform: translateY(0) scale(0.985);
   background: var(--btn-bg-active);
   box-shadow: var(--btn-shadow-active), inset 0 2px 6px rgba(31, 68, 110, 0.1);
 }
 
-.lx-button:active .lx-button__content {
+.cx-button:active .cx-button__content {
   transform: scale(0.98);
 }
 
-.lx-button:focus-visible {
+.cx-button:focus-visible {
   outline: none;
   border-color: var(--accent-solid);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-solid) 16%, transparent),
@@ -169,11 +169,11 @@
 }
 
 /* ---------- 形状 ---------- */
-.lx-button.is-round {
+.cx-button.is-round {
   border-radius: 999px;
 }
 
-.lx-button.is-circle {
+.cx-button.is-circle {
   width: 36px;
   min-width: 36px;
   padding: 0;
@@ -181,51 +181,51 @@
 }
 
 /* ---------- 朴素（未选中）状态 ---------- */
-.lx-button.is-plain {
+.cx-button.is-plain {
   background: color-mix(in srgb, var(--card-bg) 86%, transparent);
   color: var(--btn-plain-text);
   border-color: var(--btn-border);
   box-shadow: inset 0 1px 0 var(--btn-highlight);
 }
 
-.lx-button.is-plain:hover {
+.cx-button.is-plain:hover {
   background: var(--btn-bg);
   color: var(--btn-text);
   box-shadow: var(--btn-shadow-hover), inset 0 1px 0 var(--btn-highlight);
 }
 
 /* ---------- 加载 / 禁用 ---------- */
-.lx-button.is-loading,
-.lx-button.is-disabled {
+.cx-button.is-loading,
+.cx-button.is-disabled {
   transform: none;
   box-shadow: none;
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.lx-button.is-loading::before,
-.lx-button.is-disabled::before {
+.cx-button.is-loading::before,
+.cx-button.is-disabled::before {
   opacity: 0;
   animation: none;
 }
 
-.lx-button__loading {
-  animation: lx-button-rotate-fb930535 0.9s linear infinite;
+.cx-button__loading {
+  animation: cx-button-rotate-fb930535 0.9s linear infinite;
 }
 
 /* ---------- 深色模式 ---------- */
-html.dark .lx-button {
+html.dark .cx-button {
   --btn-highlight: rgba(255, 255, 255, 0.07);
   --btn-shadow: 0 6px 16px rgba(3, 8, 17, 0.3);
   --btn-shadow-hover: 0 10px 24px rgba(3, 8, 17, 0.42);
   --btn-shadow-active: 0 3px 8px rgba(3, 8, 17, 0.26);
 }
 
-html.dark .lx-button::before {
+html.dark .cx-button::before {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
 }
 
-html.dark .lx-button--primary {
+html.dark .cx-button--primary {
   --btn-bg: rgba(77, 102, 130, 0.34);
   --btn-bg-hover: rgba(77, 102, 130, 0.46);
   --btn-bg-active: rgba(77, 102, 130, 0.56);
@@ -234,7 +234,7 @@ html.dark .lx-button--primary {
   --btn-plain-text: #bdd0e4;
 }
 
-html.dark .lx-button--info {
+html.dark .cx-button--info {
   --btn-bg: rgba(13, 148, 136, 0.34);
   --btn-bg-hover: rgba(13, 148, 136, 0.46);
   --btn-bg-active: rgba(13, 148, 136, 0.56);
@@ -243,7 +243,7 @@ html.dark .lx-button--info {
   --btn-plain-text: #2dd4bf;
 }
 
-html.dark .lx-button--warning {
+html.dark .cx-button--warning {
   --btn-bg: rgba(180, 83, 9, 0.34);
   --btn-bg-hover: rgba(180, 83, 9, 0.46);
   --btn-bg-active: rgba(180, 83, 9, 0.56);
@@ -252,7 +252,7 @@ html.dark .lx-button--warning {
   --btn-plain-text: #fbbf24;
 }
 
-html.dark .lx-button--danger {
+html.dark .cx-button--danger {
   --btn-bg: rgba(153, 27, 27, 0.34);
   --btn-bg-hover: rgba(153, 27, 27, 0.46);
   --btn-bg-active: rgba(153, 27, 27, 0.56);
@@ -261,7 +261,7 @@ html.dark .lx-button--danger {
   --btn-plain-text: #f87171;
 }
 
-html.dark .lx-button--success {
+html.dark .cx-button--success {
   --btn-bg: rgba(6, 95, 70, 0.36);
   --btn-bg-hover: rgba(6, 95, 70, 0.48);
   --btn-bg-active: rgba(6, 95, 70, 0.58);
@@ -270,7 +270,7 @@ html.dark .lx-button--success {
   --btn-plain-text: #34d399;
 }
 
-html.dark .lx-button--section {
+html.dark .cx-button--section {
   --btn-bg: var(--nested-outer-card-bg);
   --btn-bg-hover: var(--nested-outer-card-bg);
   --btn-bg-active: var(--nested-outer-card-bg);
@@ -282,16 +282,16 @@ html.dark .lx-button--section {
   --btn-shadow-active: var(--nested-outer-card-shadow);
 }
 
-html.dark .lx-button.is-plain {
+html.dark .cx-button.is-plain {
   background: color-mix(in srgb, var(--card-bg) 80%, transparent);
 }
 
-html.dark .lx-button:active {
+html.dark .cx-button:active {
   box-shadow: var(--btn-shadow-active), inset 0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 /* ---------- 动画 ---------- */
-@keyframes lx-button-rotate-fb930535 {
+@keyframes cx-button-rotate-fb930535 {
   0% {
     transform: rotate(0);
   }
@@ -300,7 +300,7 @@ html.dark .lx-button:active {
   }
 }
 
-@keyframes lx-button-sheen-fb930535 {
+@keyframes cx-button-sheen-fb930535 {
   0% {
     transform: rotate(18deg) translate(-220%);
   }

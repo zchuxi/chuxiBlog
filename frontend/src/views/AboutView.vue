@@ -1,7 +1,7 @@
 <template>
   <main class="about-page">
     <div class="about-shell">
-      <LxSection eyebrow="About - 关于本站">
+      <CxSection eyebrow="About - 关于本站">
         <section v-reveal="0" class="about-card">
           <span class="about-card__orb about-card__orb--1"></span>
           <span class="about-card__orb about-card__orb--2"></span>
@@ -73,7 +73,7 @@
             <span class="about-quick-arrow"><SvgIcon name="common-arrow" size="14px" /></span>
           </button>
         </section>
-      </LxSection>
+      </CxSection>
     </div>
   </main>
 </template>
@@ -81,7 +81,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import LxSection from '../components/LxSection.vue'
+import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { renderMarkdown } from '../utils/markdown'

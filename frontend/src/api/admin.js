@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // 管理端独立 axios 实例：自动携带 token，401 时清除本地登录态
-const TOKEN_KEY = 'lx-admin-token'
+const TOKEN_KEY = 'chuxi-admin-token'
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY)
 export const setToken = token => localStorage.setItem(TOKEN_KEY, token)
