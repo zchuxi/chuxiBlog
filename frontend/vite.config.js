@@ -11,5 +11,16 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'pinia', 'vue-router'],
+          'vendor-ui': ['naive-ui'],
+          'vendor-utils': ['axios', 'marked', 'highlight.js']
+        }
+      }
+    }
   }
 })
