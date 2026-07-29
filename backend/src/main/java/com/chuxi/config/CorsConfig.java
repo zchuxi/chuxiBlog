@@ -20,7 +20,7 @@ public class CorsConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000");
+        String allowedOrigins = System.getenv().getOrDefault("APP_CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000");
         List<String> origins = Arrays.asList(allowedOrigins.split(","));
         registry.addMapping("/api/**")
                 .allowedOriginPatterns(origins.toArray(new String[0]))
