@@ -26,12 +26,13 @@
       <div v-if="loading" class="calendar-state">正在向 Bangumi 打听这周播什么…</div>
       <div v-else-if="!days.length" class="calendar-state">放送表暂时拿不到，可能是网络原因，稍后再来看看吧。</div>
 
-      <!-- 管理员提示条：仅当已确认管理员身份时短暂提示可追番 -->
+      <!-- 管理员追番提示弹窗：fixed 居中偏上 -->
       <Transition name="calendar-notice-fade">
-        <div v-if="noticeVisible && notice" class="calendar-notice">
-          <span class="calendar-notice-icon">✅</span>
-          <span class="calendar-notice-text">{{ notice }}</span>
-          <router-link v-if="showNoticeLink" to="/bangumi" class="calendar-notice-link">前往番剧记录 →</router-link>
+        <div v-if="noticeVisible && notice" class="calendar-notice-modal">
+          <div class="calendar-notice-modal-content">
+            <span class="calendar-notice-modal-text">{{ notice }}</span>
+            <router-link v-if="showNoticeLink" to="/bangumi" class="calendar-notice-modal-link">前往番剧记录</router-link>
+          </div>
         </div>
       </Transition>
 
@@ -503,42 +504,44 @@ onMounted(async () => {
   opacity: 0.6;
   cursor: default;
 }
-.calendar-notice {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 24px;
-  margin: 0 auto 20px;
-  max-width: 600px;
-  background: rgba(255, 255, 255, 0.12);
+/* 追番提示弹窗 */
+.calendar-notice-modal {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 16px 28px;
+  background: rgba(30, 40, 60, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.calendar-notice-modal-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.calendar-notice-modal-text {
   font-size: 14px;
-  color: var(--text-primary, #e0e0e0);
+  color: #e0e0e0;
 }
 
-.calendar-notice-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.calendar-notice-text {
-  flex: 1;
-}
-
-.calendar-notice-link {
-  flex-shrink: 0;
+.calendar-notice-modal-link {
   color: var(--theme-color, #7eb8da);
   text-decoration: none;
+  font-size: 13px;
   font-weight: 500;
-  transition: transform 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  transition: color 0.2s ease;
 }
 
-.calendar-notice-link:hover {
+.calendar-notice-modal-link:hover {
   color: var(--theme-color-hover, #a0d0ea);
-  transform: translateY(-1px);
 }
 
 .calendar-notice-fade-enter-active {
@@ -550,25 +553,13 @@ onMounted(async () => {
 }
 
 @keyframes calendar-notice-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 @keyframes calendar-notice-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(-12px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

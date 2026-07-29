@@ -739,18 +739,18 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   text-align: right;
   position: sticky;
   right: 0;
-  z-index: 2;
+  z-index: 3;
   min-width: 120px;
 }
 
-/* sticky 操作列需要不透明背景，避免滚动时内容穿透 */
+/* sticky 操作列需要完全不透明背景，避免滚动时左侧内容穿透 */
 th.admin-col-ops {
-  background-color: var(--adm-card-2);
+  background-color: var(--adm-card-2) !important;
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
 }
 
 td.admin-col-ops {
-  background-color: var(--adm-card);
+  background-color: var(--adm-card) !important;
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
 }
 
@@ -759,13 +759,21 @@ html.dark td.admin-col-ops {
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.35);
 }
 
-/* 行悬停 / 选中时操作列 td 背景跟随 */
+/* 行悬停 / 选中时操作列 td 背景跟随 —— 必须完全不透明，否则左侧滚动内容会穿透 */
 .admin-table tbody tr:hover td.admin-col-ops {
-  background-color: var(--adm-accent-soft);
+  background-color: #e8eff6 !important; /* accent-soft 12% 预混合到 card #fff */
+}
+
+html.dark .admin-table tbody tr:hover td.admin-col-ops {
+  background-color: #253449 !important; /* accent-soft 16% 预混合到 card #1a2230 */
 }
 
 .admin-table tbody tr.is-checked td.admin-col-ops {
-  background-color: var(--adm-accent-soft);
+  background-color: #e8eff6 !important;
+}
+
+html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
+  background-color: #253449 !important;
 }
 
 /* ---------- 编辑抽屉 ---------- */
