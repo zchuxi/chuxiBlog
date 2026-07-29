@@ -27,10 +27,16 @@
       <div v-else-if="!days.length" class="calendar-state">放送表暂时拿不到，可能是网络原因，稍后再来看看吧。</div>
 
       <!-- 管理员提示条：仅当已确认管理员身份时短暂提示可追番 -->
-      <p v-if="notice" class="calendar-notice">{{ notice }}</p>
+      <Transition name="calendar-notice-fade">
+        <div v-if="noticeVisible && notice" class="calendar-notice">
+          <span class="calendar-notice-icon">✅</span>
+          <span class="calendar-notice-text">{{ notice }}</span>
+          <router-link v-if="showNoticeLink" to="/bangumi" class="calendar-notice-link">前往番剧记录 →</router-link>
+        </div>
+      </Transition>
 
       <!-- 当日放送网格：key 含星期，切页签时卡片重新挂载触发错峰入场动效 -->
-      <div v-else class="calendar-grid">
+      <div v-if="!loading && days.length" class="calendar-grid">
         <div
           v-for="(item, i) in activeItems"
           :key="activeDay + '-' + item.id"
@@ -95,11 +101,38 @@ const mine = ref(new Map())
 const isAdmin = ref(false)
 const importingId = ref(null)
 const notice = ref('')
+const noticeVisible = ref(false)
+const noticeType = ref('') // 'success' | 'error' | 'info'
 let noticeTimer = null
+let cleanupTimer = null
+
+const NOTICE_FADE_DELAY = 200  // 替换通知时的淡出等待
+const NOTICE_LEAVE_DURATION = 350  // leave 动画时长（与 CSS 0.35s 对应）
+
+const showNoticeLink = computed(() => noticeType.value === 'success')
+
 function flashNotice(msg) {
-  notice.value = msg
+  const hasExisting = !!notice.value
+  noticeVisible.value = false
   if (noticeTimer) clearTimeout(noticeTimer)
-  noticeTimer = setTimeout(() => (notice.value = ''), 4000)
+  if (cleanupTimer) clearTimeout(cleanupTimer)
+  // 短暂延迟让淡出完成后再设置新消息并淡入
+  setTimeout(() => {
+    // 根据消息内容判断通知类型
+    if (msg.startsWith('已追番')) {
+      noticeType.value = 'success'
+    } else if (msg.includes('失败') || msg.includes('过期')) {
+      noticeType.value = 'error'
+    } else {
+      noticeType.value = 'info'
+    }
+    notice.value = msg
+    noticeVisible.value = true
+    noticeTimer = setTimeout(() => {
+      noticeVisible.value = false
+      cleanupTimer = setTimeout(() => { notice.value = '' }, NOTICE_LEAVE_DURATION)
+    }, 4000)
+  }, hasExisting ? NOTICE_FADE_DELAY : 0)
 }
 
 // bgm 的 weekday.id：1=周一 … 7=周日；JS getDay()：0=周日
@@ -198,6 +231,7 @@ async function importSubject(item) {
 
 onBeforeUnmount(() => {
   if (noticeTimer) clearTimeout(noticeTimer)
+  if (cleanupTimer) clearTimeout(cleanupTimer)
 })
 
 onMounted(async () => {
@@ -470,15 +504,78 @@ onMounted(async () => {
   cursor: default;
 }
 .calendar-notice {
-  align-self: flex-start;
-  margin: -4px 0 0;
-  padding: 6px 16px;
-  border: 1px solid var(--accent-border, rgba(124, 214, 192, 0.5));
-  border-radius: 999px;
-  background: var(--nested-middle-card-bg);
-  font-size: 13.5px;
-  color: var(--text-color);
-  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  margin: 0 auto 20px;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.calendar-notice-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.calendar-notice-text {
+  flex: 1;
+}
+
+.calendar-notice-link {
+  flex-shrink: 0;
+  color: var(--theme-color, #7eb8da);
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.calendar-notice-link:hover {
+  color: var(--theme-color-hover, #a0d0ea);
+  transform: translateY(-1px);
+}
+
+.calendar-notice-fade-enter-active {
+  animation: calendar-notice-in 0.3s ease;
+}
+
+.calendar-notice-fade-leave-active {
+  animation: calendar-notice-out 0.35s ease;
+}
+
+@keyframes calendar-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes calendar-notice-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-notice-fade-enter-active,
+  .calendar-notice-fade-leave-active {
+    animation-duration: 0.01ms;
+  }
 }
 
 /* 移动端 */

@@ -737,6 +737,35 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-col-ops {
   white-space: nowrap;
   text-align: right;
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  min-width: 120px;
+}
+
+/* sticky 操作列需要不透明背景，避免滚动时内容穿透 */
+th.admin-col-ops {
+  background-color: var(--adm-card-2);
+  box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
+}
+
+td.admin-col-ops {
+  background-color: var(--adm-card);
+  box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
+}
+
+html.dark th.admin-col-ops,
+html.dark td.admin-col-ops {
+  box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.35);
+}
+
+/* 行悬停 / 选中时操作列 td 背景跟随 */
+.admin-table tbody tr:hover td.admin-col-ops {
+  background-color: var(--adm-accent-soft);
+}
+
+.admin-table tbody tr.is-checked td.admin-col-ops {
+  background-color: var(--adm-accent-soft);
 }
 
 /* ---------- 编辑抽屉 ---------- */
