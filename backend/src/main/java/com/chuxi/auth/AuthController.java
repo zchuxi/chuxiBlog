@@ -25,7 +25,6 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     static final String ADMIN_USERNAME = "admin";
-    static final String DEFAULT_PASSWORD = "123456";
     static final String PASSWORD_KEY = "admin-password";
 
     private final TokenStore tokenStore;
@@ -49,7 +48,12 @@ public class AuthController {
         }
         String username = body.getOrDefault("username", "");
         String password = body.getOrDefault("password", "");
-        if (!ADMIN_USERNAME.equals(username) || !PasswordHasher.matches(password, storedPassword())) {
+        String stored = storedPassword();
+        if (stored == null) {
+            log.error("管理员密码未设置，请先初始化密码");
+            return R.fail("管理员密码未设置");
+        }
+        if (!ADMIN_USERNAME.equals(username) || !PasswordHasher.matches(password, stored)) {
             recordFailure(ip);
             // 只记用户名与来源 IP，不落口令
             log.warn("登录鉴权失败：ip={}, username={}, uri={}", ip, username, request.getRequestURI());
@@ -84,8 +88,8 @@ public class AuthController {
         if (!PasswordHasher.matches(oldPassword, storedPassword())) {
             return ResponseEntity.ok(R.fail("旧密码不正确"));
         }
-        if (newPassword.length() < 4) {
-            return ResponseEntity.ok(R.fail("新密码至少 4 位"));
+        if (newPassword.length() < 8) {
+            return ResponseEntity.ok(R.fail("新密码至少 8 位"));
         }
         SiteContent sc = siteContentRepo.findByContentKey(PASSWORD_KEY).orElseGet(() -> {
             SiteContent n = new SiteContent();
@@ -104,19 +108,19 @@ public class AuthController {
         return ResponseEntity.ok(R.ok(null));
     }
 
-    /** 库里存的密码串（可能是哈希，也可能是历史明文），无记录用默认口令 */
+    /** 库里存的密码串（可能是哈希，也可能是历史明文），无记录返回 null */
     private String storedPassword() {
         return siteContentRepo.findByContentKey(PASSWORD_KEY)
                 .map(sc -> {
                     try {
                         String pwd = mapper.readTree(sc.getContentJson()).path("password").asText("");
-                        return pwd.isEmpty() ? DEFAULT_PASSWORD : pwd;
+                        return pwd.isEmpty() ? null : pwd;
                     } catch (Exception e) {
-                        log.warn("解析存储密码 JSON 失败，回退默认口令：key={}, err={}", PASSWORD_KEY, e.getMessage());
-                        return DEFAULT_PASSWORD;
+                        log.error("解析存储密码 JSON 失败：key={}, err={}", PASSWORD_KEY, e.getMessage());
+                        return null;
                     }
                 })
-                .orElse(DEFAULT_PASSWORD);
+                .orElse(null);
     }
 
     /** 历史明文密码在登录成功后自动升级为哈希 */

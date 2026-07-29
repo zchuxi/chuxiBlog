@@ -10,12 +10,16 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** 站点文案（site-content）与站点浏览量（site-views） */
 @RestController
 public class SiteContentController {
 
     static final String VIEWS_KEY = "site-views";
+
+    /** 敏感 key 黑名单：禁止通过管理端接口直接写入 */
+    private static final Set<String> PROTECTED_KEYS = Set.of("admin-password");
 
     /** 公开可读的文案 key 白名单：其余（如 admin-password）一律不对外暴露 */
     private static final java.util.Set<String> PUBLIC_KEYS =
@@ -41,17 +45,22 @@ public class SiteContentController {
         return repo.findByContentKey(key).map(R::ok).orElseGet(() -> R.fail("内容不存在"));
     }
 
-    /** 管理端：全部文案列表 */
+    /** 管理端：全部文案列表（过滤敏感 key） */
     @GetMapping("/api/admin/site-content")
     @Transactional(readOnly = true)
     public R<List<SiteContent>> list() {
-        return R.ok(repo.findAll());
+        return R.ok(repo.findAll().stream()
+                .filter(e -> !PROTECTED_KEYS.contains(e.getContentKey()))
+                .toList());
     }
 
     /** 管理端：按 key upsert，body {"contentJson":"..."} */
     @PutMapping("/api/admin/site-content/{key}")
     @Transactional
     public R<SiteContent> save(@PathVariable String key, @RequestBody Map<String, Object> body) {
+        if (PROTECTED_KEYS.contains(key)) {
+            return R.fail("受保护的配置项，不可直接修改");
+        }
         Object json = body.get("contentJson");
         if (json == null) return R.fail("contentJson 不能为空");
         SiteContent sc = repo.findByContentKey(key).orElseGet(() -> {

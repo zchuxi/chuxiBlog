@@ -9,6 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -33,6 +38,19 @@ public class MediaController {
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
 
     private static final Path ROOT = Paths.get("uploads");
+
+    /** 允许上传的文件扩展名白名单 */
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp",
+            ".mp3", ".ogg", ".wav", ".flac", ".aac"
+    );
+
+    /** 允许上传的 MIME 类型白名单 */
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp",
+            "audio/mpeg", "audio/ogg", "audio/wav", "audio/flac", "audio/aac",
+            "audio/x-wav"
+    );
 
     private final OssStorageService oss;
 
@@ -57,7 +75,14 @@ public class MediaController {
     @PostMapping("/api/admin/upload")
     public R<Map<String, Object>> upload(@RequestParam("file") MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) return R.fail("文件为空");
-        String origin = file.getOriginalFilename() == null ? "file" : file.getOriginalFilename();
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) return R.fail("文件名无效");
+        String lowerName = originalFilename.toLowerCase();
+        boolean extOk = ALLOWED_EXTENSIONS.stream().anyMatch(lowerName::endsWith);
+        String contentType = file.getContentType();
+        boolean mimeOk = contentType != null && ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase());
+        if (!extOk || !mimeOk) return R.fail("不支持的文件类型，仅允许图片和音频文件");
+        String origin = originalFilename;
         String cleaned = origin.replaceAll("[^A-Za-z0-9._-]", "_");
         if (cleaned.isBlank() || cleaned.chars().allMatch(c -> c == '.')) cleaned = "file";
         String name = UUID.randomUUID().toString().substring(0, 8) + "-" + cleaned;
@@ -128,9 +153,9 @@ public class MediaController {
         }
     }
 
-    /** 公开读取（不在 /api/admin 下）：字节直出 + 7 天缓存 */
+    /** 公开读取（不在 /api/admin 下）：流式响应 + 7 天缓存 */
     @GetMapping("/api/uploads/{name}")
-    public ResponseEntity<byte[]> serve(@PathVariable String name) throws IOException {
+    public ResponseEntity<Resource> serve(@PathVariable String name) throws IOException {
         if (badName(name)) return ResponseEntity.badRequest().build();
         Path path = resolveSafe(name);
         if (path == null || !Files.isRegularFile(path)) return ResponseEntity.notFound().build();
@@ -140,10 +165,13 @@ public class MediaController {
             if (probed != null) mediaType = MediaType.parseMediaType(probed);
         } catch (Exception ignored) {
         }
+        Resource resource = new InputStreamResource(Files.newInputStream(path));
         return ResponseEntity.ok()
                 .contentType(mediaType)
+                .contentLength(Files.size(path))
                 .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic())
-                .body(Files.readAllBytes(path));
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
+                .body(resource);
     }
 
     /** 列表：OSS 与本地存量合并，按 lastModified 倒序 */

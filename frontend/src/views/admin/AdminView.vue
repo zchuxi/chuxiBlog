@@ -17,10 +17,7 @@
           <input v-model.trim="loginForm.password" class="admin-input" type="password" autocomplete="current-password" />
         </div>
         <p v-if="loginError" class="admin-login-error">{{ loginError }}</p>
-        <label class="admin-login-remember">
-          <input v-model="rememberPwd" type="checkbox" class="admin-check" />
-          <span>记住密码（仅保存在本机浏览器）</span>
-        </label>
+
         <button class="admin-btn admin-btn-block" type="submit" :disabled="loggingIn">
           {{ loggingIn ? '登录中…' : '登录' }}
         </button>
@@ -203,23 +200,7 @@ const loggingIn = ref(false)
 const loginError = ref('')
 const loginForm = reactive({ username: '', password: '' })
 
-// 记住密码：勾选后登录成功将账号密码存 localStorage（base64 轻混淆，仅防直视），
-// 下次打开登录页自动回填；取消勾选登录后清除已存凭据
-const REMEMBER_KEY = 'lx-admin-remember'
-const rememberPwd = ref(false)
-// btoa/atob 不支持非 Latin1 字符，先走 UTF-8 编解码兼容中文账号
-const enc = s => btoa(String.fromCharCode(...new TextEncoder().encode(s)))
-const dec = s => new TextDecoder().decode(Uint8Array.from(atob(s), c => c.charCodeAt(0)))
-try {
-  const saved = JSON.parse(localStorage.getItem(REMEMBER_KEY) || 'null')
-  if (saved && saved.u != null) {
-    loginForm.username = dec(saved.u)
-    loginForm.password = dec(saved.p || '')
-    rememberPwd.value = true
-  }
-} catch {
-  localStorage.removeItem(REMEMBER_KEY)
-}
+
 
 const currentKey = ref('dashboard')
 const currentSchema = computed(() => resourceSchemas.find(s => s.key === currentKey.value))
@@ -279,15 +260,6 @@ async function onLogin() {
   try {
     const data = await login(loginForm.username, loginForm.password)
     setToken(data.token)
-    // 登录成功后才落盘/清除，避免记住错误密码
-    if (rememberPwd.value) {
-      localStorage.setItem(
-        REMEMBER_KEY,
-        JSON.stringify({ u: enc(loginForm.username), p: enc(loginForm.password) })
-      )
-    } else {
-      localStorage.removeItem(REMEMBER_KEY)
-    }
     logged.value = true
     currentKey.value = 'dashboard'
     toast(`欢迎回来，${data.displayName || '站长'}`)
@@ -302,8 +274,7 @@ function logout() {
   clearToken()
   logged.value = false
   pwdOpen.value = false
-  // 勾选了记住密码时，退出后保留回填便于再次登录
-  if (!rememberPwd.value) loginForm.password = ''
+  loginForm.password = ''
 }
 
 // 子组件用：全局提示 + 401 退回登录页

@@ -1,4 +1,5 @@
 import { Marked } from 'marked'
+import DOMPurify from 'dompurify'
 // 按需注册语言：全量 barrel 会打进约 1MB（190 种语言），这里只留博客实际会用到的
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
@@ -66,6 +67,7 @@ export function renderMarkdown(md) {
       }
     }
   })
-  const html = marked.parse(md || '')
+  const rawHtml = marked.parse(md || '')
+  const html = DOMPurify.sanitize(rawHtml)
   return { html, headings }
 }
