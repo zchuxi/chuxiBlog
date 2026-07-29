@@ -109,9 +109,14 @@ const quickEntries = [
 ]
 
 onMounted(async () => {
+  const [settingsData, record, list] = await Promise.all([
+    api.siteContent('site-settings').catch(() => null),
+    api.siteContent('about').catch(() => null),
+    api.friendLinks().catch(() => [])
+  ])
+
   // 加载站点设置
   try {
-    const settingsData = await api.siteContent('site-settings')
     let settingsObj = settingsData
     if (settingsData && typeof settingsData.contentJson === 'string') settingsObj = JSON.parse(settingsData.contentJson)
     if (typeof settingsObj === 'string') settingsObj = JSON.parse(settingsObj)
@@ -121,11 +126,10 @@ onMounted(async () => {
       siteSettings.avatarUrl = settingsObj.avatarUrl || ''
       siteSettings.subtitle = settingsObj.subtitle || '收集工具、追番与灵感碎片的小小基地。'
     }
-  } catch { /* 无数据时使用默认值 */ }
+  } catch { /* 解析失败时使用默认值 */ }
 
   // 加载关于页内容
   try {
-    const record = await api.siteContent('about')
     const parsed = JSON.parse((record && record.contentJson) || '')
     if (!parsed || typeof parsed !== 'object') return
     content.value = { title: parsed.title || '', markdown: parsed.markdown || '' }
@@ -133,10 +137,7 @@ onMounted(async () => {
   } catch { /* 无数据或解析失败时展示占位文案 */ }
 
   // 读取友情链接
-  try {
-    const list = await api.friendLinks()
-    friendLinks.value = (list || []).filter(l => l.visible !== false)
-  } catch { /* 加载失败时展示空状态 */ }
+  friendLinks.value = (list || []).filter(l => l.visible !== false)
   friendLinksLoading.value = false
 })
 </script>

@@ -1,3 +1,4 @@
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '../api'
 
@@ -15,67 +16,78 @@ function load() {
   }
 }
 
-export const useSettingsStore = defineStore('settings', {
-  state: () => ({
-    theme: load().theme || 'light',
-    // 背景模式：关闭后不渲染背景图，只保留纯色底
-    backgroundImageEnabled: load().backgroundImageEnabled !== false,
-    backgroundCarouselEnabled: load().backgroundCarouselEnabled !== false,
-    sakuraEnabled: load().sakuraEnabled === true,
-    live2dEnabled: load().live2dEnabled !== false,
-    selectedLandscapeImage: load().selectedLandscapeImage || DEFAULT_LANDSCAPE[0],
-    selectedVerticalImage: load().selectedVerticalImage || DEFAULT_VERTICAL[0],
-    // 背景图库：可被后台「背景图库」配置（site-content: background-gallery）覆盖
-    galleryLandscape: DEFAULT_LANDSCAPE.slice(),
-    galleryVertical: DEFAULT_VERTICAL.slice()
-  }),
-  getters: {
-    landscapeImages: state => state.galleryLandscape,
-    verticalImages: state => state.galleryVertical,
-    isDark: state => state.theme === 'dark'
-  },
-  actions: {
-    persist() {
-      localStorage.setItem(KEY, JSON.stringify({
-        theme: this.theme,
-        backgroundImageEnabled: this.backgroundImageEnabled,
-        backgroundCarouselEnabled: this.backgroundCarouselEnabled,
-        sakuraEnabled: this.sakuraEnabled,
-        live2dEnabled: this.live2dEnabled,
-        selectedLandscapeImage: this.selectedLandscapeImage,
-        selectedVerticalImage: this.selectedVerticalImage
-      }))
-    },
-    setTheme(theme) {
-      this.theme = theme
-      document.documentElement.classList.toggle('dark', theme === 'dark')
-      this.persist()
-    },
-    update(patch) {
-      Object.assign(this, patch)
-      this.persist()
-    },
-    // 拉取后台配置的背景图库；无记录/请求失败时静默保留内置默认
-    async loadRemoteGallery() {
-      try {
-        const data = await api.siteContent('background-gallery')
-        let obj = data
-        if (data && typeof data.contentJson === 'string') obj = JSON.parse(data.contentJson)
-        if (typeof obj === 'string') obj = JSON.parse(obj)
-        if (Array.isArray(obj?.landscape) && obj.landscape.length > 0) this.galleryLandscape = obj.landscape
-        if (Array.isArray(obj?.vertical) && obj.vertical.length > 0) this.galleryVertical = obj.vertical
-        // 记忆的选中图已被后台移除时，落回图库第一张
-        if (!this.galleryLandscape.includes(this.selectedLandscapeImage)) {
-          this.selectedLandscapeImage = this.galleryLandscape[0]
-          this.persist()
-        }
-        if (!this.galleryVertical.includes(this.selectedVerticalImage)) {
-          this.selectedVerticalImage = this.galleryVertical[0]
-          this.persist()
-        }
-      } catch {
-        /* 未配置时使用内置默认图库 */
-      }
+export const useSettingsStore = defineStore('settings', () => {
+  const saved = load()
+  const theme = ref(saved.theme || 'light')
+  // 背景模式：关闭后不渲染背景图，只保留纯色底
+  const backgroundImageEnabled = ref(saved.backgroundImageEnabled !== false)
+  const backgroundCarouselEnabled = ref(saved.backgroundCarouselEnabled !== false)
+  const sakuraEnabled = ref(saved.sakuraEnabled === true)
+  const live2dEnabled = ref(saved.live2dEnabled !== false)
+  const selectedLandscapeImage = ref(saved.selectedLandscapeImage || DEFAULT_LANDSCAPE[0])
+  const selectedVerticalImage = ref(saved.selectedVerticalImage || DEFAULT_VERTICAL[0])
+  // 背景图库：可被后台「背景图库」配置（site-content: background-gallery）覆盖
+  const galleryLandscape = ref(DEFAULT_LANDSCAPE.slice())
+  const galleryVertical = ref(DEFAULT_VERTICAL.slice())
+
+  const landscapeImages = computed(() => galleryLandscape.value)
+  const verticalImages = computed(() => galleryVertical.value)
+  const isDark = computed(() => theme.value === 'dark')
+
+  function persist() {
+    localStorage.setItem(KEY, JSON.stringify({
+      theme: theme.value,
+      backgroundImageEnabled: backgroundImageEnabled.value,
+      backgroundCarouselEnabled: backgroundCarouselEnabled.value,
+      sakuraEnabled: sakuraEnabled.value,
+      live2dEnabled: live2dEnabled.value,
+      selectedLandscapeImage: selectedLandscapeImage.value,
+      selectedVerticalImage: selectedVerticalImage.value
+    }))
+  }
+
+  function setTheme(val) {
+    theme.value = val
+    document.documentElement.classList.toggle('dark', val === 'dark')
+    persist()
+  }
+
+  function update(patch) {
+    const map = { theme, backgroundImageEnabled, backgroundCarouselEnabled, sakuraEnabled, live2dEnabled, selectedLandscapeImage, selectedVerticalImage }
+    for (const [key, val] of Object.entries(patch)) {
+      if (map[key]) map[key].value = val
     }
+    persist()
+  }
+
+  // 拉取后台配置的背景图库；无记录/请求失败时静默保留内置默认
+  async function loadRemoteGallery() {
+    try {
+      const data = await api.siteContent('background-gallery')
+      let obj = data
+      if (data && typeof data.contentJson === 'string') obj = JSON.parse(data.contentJson)
+      if (typeof obj === 'string') obj = JSON.parse(obj)
+      if (Array.isArray(obj?.landscape) && obj.landscape.length > 0) galleryLandscape.value = obj.landscape
+      if (Array.isArray(obj?.vertical) && obj.vertical.length > 0) galleryVertical.value = obj.vertical
+      // 记忆的选中图已被后台移除时，落回图库第一张
+      if (!galleryLandscape.value.includes(selectedLandscapeImage.value)) {
+        selectedLandscapeImage.value = galleryLandscape.value[0]
+        persist()
+      }
+      if (!galleryVertical.value.includes(selectedVerticalImage.value)) {
+        selectedVerticalImage.value = galleryVertical.value[0]
+        persist()
+      }
+    } catch {
+      /* 未配置时使用内置默认图库 */
+    }
+  }
+
+  return {
+    theme, backgroundImageEnabled, backgroundCarouselEnabled,
+    sakuraEnabled, live2dEnabled, selectedLandscapeImage, selectedVerticalImage,
+    galleryLandscape, galleryVertical,
+    landscapeImages, verticalImages, isDark,
+    persist, setTheme, update, loadRemoteGallery
   }
 })

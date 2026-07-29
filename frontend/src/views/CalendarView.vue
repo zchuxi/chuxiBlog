@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
 import { adminApi, getToken, clearToken } from '../api/admin'
@@ -195,6 +195,10 @@ async function importSubject(item) {
     importingId.value = null
   }
 }
+
+onBeforeUnmount(() => {
+  if (noticeTimer) clearTimeout(noticeTimer)
+})
 
 onMounted(async () => {
   // 先确认管理员身份（决定追番按钮是否可见），失败不阻塞放送表

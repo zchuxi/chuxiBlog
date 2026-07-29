@@ -901,6 +901,7 @@ function togglePlay() {
   const audio = audioRef.value
   if (!audio || !currentTrack.value) return
   if (playing.value) { audio.pause(); playing.value = false }
+  // 浏览器自动播放策略限制时静默处理（预期行为），不弹提示打扰用户
   else { audio.play().then(() => { playing.value = true }).catch(() => {}) }
 }
 
@@ -909,6 +910,7 @@ function playIndex(i) {
   playlistOpen.value = false
   nextTick(() => {
     const audio = audioRef.value
+    // 浏览器自动播放策略限制时静默处理（预期行为），不弹提示打扰用户
     if (audio) audio.play().then(() => { playing.value = true }).catch(() => {})
   })
 }

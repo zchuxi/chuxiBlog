@@ -143,6 +143,7 @@ const draft = ref('')
 const mood = ref('轻声')
 let laneCursor = 0
 let keySeq = 0
+const MAX_DANMU_COUNT = 100
 
 function landscape(i) {
   return `/image/bg/Landscape/${String((i % 13) + 1).padStart(2, '0')}.webp`
@@ -178,6 +179,10 @@ function addDanmu(b, initial = false) {
       animationIterationCount: 'infinite'
     }
   })
+  // 超出限制时移除最早的弹幕，防止 DOM 持续增长
+  if (danmus.value.length > MAX_DANMU_COUNT) {
+    danmus.value.shift()
+  }
 }
 
 async function like(d) {
