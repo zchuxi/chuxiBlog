@@ -61,17 +61,15 @@
           <p class="demo-panel-description">支持类型、圆角、图标、加载态与自定义颜色。</p>
           <div class="demo-panel-body">
             <div class="button-demo-list">
-              <button class="lx-button lx-button--primary" type="button"><span class="lx-button__content"><span class="lx-button__label">Primary</span></span></button>
-              <button class="lx-button lx-button--info" type="button" style="--btn-text: #1f3f63; --btn-plain-text: #1f3f63; --btn-border: #b9d6ef; --btn-bg: #e8f2fb;">
-                <span class="lx-button__content"><SvgIcon name="common-icons" size="18px" /></span>
+              <CxButton type="primary">Primary</CxButton>
+              <CxButton type="info" :color="infoBtnStyle">
+                <SvgIcon name="common-icons" size="18px" />
                 <span class="lx-button__label">Info Icon</span>
-              </button>
-              <button class="lx-button lx-button--warning is-plain" type="button"><span class="lx-button__content"><span class="lx-button__label">Warning Plain</span></span></button>
-              <button class="lx-button lx-button--danger is-round" type="button"><span class="lx-button__content"><span class="lx-button__label">Danger Round</span></span></button>
-              <button class="lx-button lx-button--success is-round is-plain" type="button"><span class="lx-button__content"><span class="lx-button__label">Success</span></span></button>
-              <button class="lx-button lx-button--primary is-round is-circle is-plain is-loading is-disabled" type="button" disabled>
-                <span class="lx-button__content"><SvgIcon name="common-loading" size="18px" class="lx-button__loading" /></span>
-              </button>
+              </CxButton>
+              <CxButton type="warning" plain>Warning Plain</CxButton>
+              <CxButton type="danger" round>Danger Round</CxButton>
+              <CxButton type="success" round plain>Success</CxButton>
+              <CxButton type="primary" round circle plain loading disabled />
             </div>
           </div>
         </section>
@@ -85,11 +83,11 @@
           <p class="demo-panel-description">支持 success / info / error 类型、自动关闭与手动清空。</p>
           <div class="demo-panel-body">
             <div class="message-demo-list">
-              <button class="lx-button lx-button--success" type="button" @click="pushMessage('success', '操作成功：内容已保存')"><span class="lx-button__content"><span class="lx-button__label">Success</span></span></button>
-              <button class="lx-button lx-button--danger is-plain" type="button" @click="pushMessage('error', '出错了：请稍后重试')"><span class="lx-button__content"><span class="lx-button__label">Error</span></span></button>
-              <button class="lx-button lx-button--primary" type="button" @click="pushMessage('info', '提示：这是一条普通消息')"><span class="lx-button__content"><span class="lx-button__label">Info</span></span></button>
-              <button class="lx-button lx-button--primary is-plain" type="button" @click="pushMessage('info', '这条消息不会自动关闭', 0)"><span class="lx-button__content"><span class="lx-button__label">Persistent</span></span></button>
-              <button class="lx-button lx-button--info is-plain" type="button" @click="messages = []"><span class="lx-button__content"><span class="lx-button__label">Close All</span></span></button>
+              <CxButton type="success" @click="messageRef.pushMessage('success', '操作成功：内容已保存')">Success</CxButton>
+              <CxButton type="danger" plain @click="messageRef.pushMessage('error', '出错了：请稍后重试')">Error</CxButton>
+              <CxButton type="primary" @click="messageRef.pushMessage('info', '提示：这是一条普通消息')">Info</CxButton>
+              <CxButton type="primary" plain @click="messageRef.pushMessage('info', '这条消息不会自动关闭', 0)">Persistent</CxButton>
+              <CxButton type="info" plain @click="messageRef.clearMessages()">Close All</CxButton>
             </div>
           </div>
         </section>
@@ -103,20 +101,14 @@
           <p class="demo-panel-description">支持 click / hover 触发、菜单项单独控制关闭行为，且全局同一时刻仅展示一个弹层。</p>
           <div class="demo-panel-body">
             <div class="popover-demo-list">
-              <div v-for="(p, i) in popovers" :key="p.label" class="lx-popover-wrapper">
-                <div class="lx-popover-trigger">
-                  <button class="lx-button" :class="p.btnClass" type="button" @click="activePopover = activePopover === i ? -1 : i">
-                    <span class="lx-button__content"><span class="lx-button__label">{{ p.label }}</span></span>
-                  </button>
-                </div>
-                <transition name="lx-popover-fade">
-                  <div v-if="activePopover === i" class="lx-popover">
-                    <div v-for="item in p.items" :key="item" class="lx-popover-item" @click="activePopover = -1">
-                      <span class="lx-popover-item__content">{{ item }}</span>
-                    </div>
+              <CxPopover v-for="p in popovers" :key="p.label" :trigger="p.trigger">
+                <CxButton :type="p.btnType" :plain="p.plain">{{ p.label }}</CxButton>
+                <template #content="{ close }">
+                  <div v-for="item in p.items" :key="item" class="lx-popover-item" @click="close">
+                    <span class="lx-popover-item__content">{{ item }}</span>
                   </div>
-                </transition>
-              </div>
+                </template>
+              </CxPopover>
             </div>
           </div>
         </section>
@@ -132,18 +124,9 @@
             <div class="radio-demo-stack">
               <div class="demo-card">
                 <span class="demo-card__label">内容状态</span>
-                <div class="lx-radio-group demo-card__control">
-                  <label
-                    v-for="r in radioOptions"
-                    :key="r.value"
-                    class="lx-radio"
-                    :class="{ 'is-checked': radioValue === r.value }"
-                  >
-                    <input class="lx-radio__input" type="radio" :value="r.value" v-model="radioValue" />
-                    <span class="lx-radio__icon"><span class="lx-radio__inner"></span></span>
-                    <span class="lx-radio__label">{{ r.label }}</span>
-                  </label>
-                </div>
+                <CxRadioGroup v-model="radioValue" class="demo-card__control">
+                  <CxRadio v-for="r in radioOptions" :key="r.value" :value="r.value">{{ r.label }}</CxRadio>
+                </CxRadioGroup>
               </div>
               <div class="demo-card">
                 <span class="demo-card__label">当前选中</span>
@@ -152,16 +135,8 @@
               <div class="demo-card">
                 <span class="demo-card__label">禁用态</span>
                 <div class="demo-card__control">
-                  <label class="lx-radio is-disabled">
-                    <input class="lx-radio__input" type="radio" disabled />
-                    <span class="lx-radio__icon"><span class="lx-radio__inner"></span></span>
-                    <span class="lx-radio__label">禁用项</span>
-                  </label>
-                  <label class="lx-radio is-checked">
-                    <input class="lx-radio__input" type="radio" checked />
-                    <span class="lx-radio__icon"><span class="lx-radio__inner"></span></span>
-                    <span class="lx-radio__label">独立单选</span>
-                  </label>
+                  <CxRadio value="disabled" disabled>禁用项</CxRadio>
+                  <CxRadio value="standalone" :model-value="'standalone'">独立单选</CxRadio>
                 </div>
               </div>
             </div>
@@ -182,24 +157,14 @@
                   <span class="demo-card__label">消息提醒</span>
                   <p class="demo-card__hint">模拟常见的设置面板开关场景。</p>
                 </div>
-                <button
-                  class="lx-switch"
-                  :class="{ 'is-checked': switchOn, 'is-disabled': switchLocked }"
-                  type="button"
-                  :disabled="switchLocked"
-                  @click="switchOn = !switchOn"
-                >
-                  <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
-                </button>
+                <CxSwitch v-model="switchOn" :disabled="switchLocked" />
               </div>
               <div class="demo-card demo-card--row">
                 <div>
                   <span class="demo-card__label">锁定演示开关</span>
                   <p class="demo-card__hint">开启后，上方主开关进入禁用状态。</p>
                 </div>
-                <button class="lx-switch" :class="{ 'is-checked': switchLocked }" type="button" @click="switchLocked = !switchLocked">
-                  <span class="lx-switch__core"><span class="lx-switch__action"></span></span>
-                </button>
+                <CxSwitch v-model="switchLocked" />
               </div>
               <div class="demo-card">
                 <span class="demo-card__label">当前状态</span>
@@ -221,21 +186,32 @@
               <div class="demo-card">
                 <span class="demo-card__label">主题与形态</span>
                 <div class="tag-demo-list">
-                  <span v-for="t in tagThemes" :key="t.label" class="lx-tag lx-tag--small is-round" :class="[`lx-tag--${t.type}`, { 'is-plain': t.plain }]">
-                    <span class="lx-tag__content"><span class="lx-tag__prefix">#</span><span class="lx-tag__label">{{ t.label }}</span></span>
-                  </span>
+                  <CxTag
+                    v-for="t in tagThemes"
+                    :key="t.label"
+                    :type="t.type"
+                    size="small"
+                    round
+                    :plain="t.plain"
+                    prefix="#"
+                  >{{ t.label }}</CxTag>
                 </div>
               </div>
               <div class="demo-card">
                 <div class="tag-demo-header">
                   <span class="demo-card__label">可关闭标签</span>
-                  <button class="lx-button lx-button--info is-plain" type="button" @click="resetTags"><span class="lx-button__content"><span class="lx-button__label">重置</span></span></button>
+                  <CxButton type="info" plain @click="resetTags">重置</CxButton>
                 </div>
                 <div class="tag-demo-list">
-                  <span v-for="(t, i) in closableTags" :key="t" class="lx-tag lx-tag--primary lx-tag--small is-round">
-                    <span class="lx-tag__content"><span class="lx-tag__label">{{ t }}</span></span>
-                    <span class="lx-tag__close" @click="closableTags.splice(i, 1)">×</span>
-                  </span>
+                  <CxTag
+                    v-for="(t, i) in closableTags"
+                    :key="t"
+                    type="primary"
+                    size="small"
+                    round
+                    closable
+                    @close="closableTags.splice(i, 1)"
+                  >{{ t }}</CxTag>
                 </div>
               </div>
             </div>
@@ -245,19 +221,14 @@
     </section>
 
     <!-- 消息容器 -->
-    <div class="lx-message-container">
-      <transition-group name="lx-message-slide">
-        <div v-for="m in messages" :key="m.id" class="lx-message-item" :class="`lx-message-${m.type}`">
-          <span>{{ m.text }}</span>
-        </div>
-      </transition-group>
-    </div>
+    <CxMessage ref="messageRef" />
   </main>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import SvgIcon from '../components/SvgIcon.vue'
+import { CxButton, CxTag, CxSwitch, CxRadio, CxRadioGroup, CxMessage, CxPopover } from '../components/cx'
 
 const menus = [
   { id: 'demo-button', name: 'CX-button', desc: '按钮组件' },
@@ -277,24 +248,13 @@ function goPanel(id) {
 }
 
 /* message */
-const messages = ref([])
-let msgSeq = 0
-function pushMessage(type, text, duration = 2600) {
-  const id = ++msgSeq
-  messages.value.push({ id, type, text })
-  if (duration > 0) {
-    setTimeout(() => {
-      messages.value = messages.value.filter(m => m.id !== id)
-    }, duration)
-  }
-}
+const messageRef = ref(null)
 
 /* popover */
-const activePopover = ref(-1)
 const popovers = [
-  { label: '快捷操作', btnClass: 'lx-button--primary', items: ['新建草稿', '打开最近', '同步内容'] },
-  { label: '悬停预览', btnClass: 'lx-button--info is-plain', items: ['预览一', '预览二'] },
-  { label: '多步骤菜单', btnClass: 'lx-button--warning is-plain', items: ['第一步', '第二步', '完成'] }
+  { label: '快捷操作', btnType: 'primary', trigger: 'click', items: ['新建草稿', '打开最近', '同步内容'] },
+  { label: '悬停预览', btnType: 'info', plain: true, trigger: 'hover', items: ['预览一', '预览二'] },
+  { label: '多步骤菜单', btnType: 'warning', plain: true, trigger: 'click', items: ['第一步', '第二步', '完成'] }
 ]
 
 /* radio */
@@ -323,4 +283,7 @@ const closableTags = ref([...DEFAULT_TAGS])
 function resetTags() {
   closableTags.value = [...DEFAULT_TAGS]
 }
+
+/* button info style */
+const infoBtnStyle = '--btn-text: #1f3f63; --btn-plain-text: #1f3f63; --btn-border: #b9d6ef; --btn-bg: #e8f2fb;'
 </script>

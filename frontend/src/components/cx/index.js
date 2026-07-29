@@ -1,0 +1,7 @@
+export { default as CxButton } from './CxButton.vue'
+export { default as CxTag } from './CxTag.vue'
+export { default as CxSwitch } from './CxSwitch.vue'
+export { default as CxRadio } from './CxRadio.vue'
+export { default as CxRadioGroup } from './CxRadioGroup.vue'
+export { default as CxMessage } from './CxMessage.vue'
+export { default as CxPopover } from './CxPopover.vue'
