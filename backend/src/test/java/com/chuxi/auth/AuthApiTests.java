@@ -50,7 +50,7 @@ class AuthApiTests {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(1))
+                    .andExpect(jsonPath("$.code").value(400))
                     .andExpect(jsonPath("$.message").value("管理员密码未设置"));
         } finally {
             // 按 upsert 还原密码记录（若登录意外成功会重建记录），避免影响同一上下文里的其他测试
@@ -74,7 +74,7 @@ class AuthApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("oldPassword", "123456", "newPassword", "1234567"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("新密码至少 8 位"));
     }
 

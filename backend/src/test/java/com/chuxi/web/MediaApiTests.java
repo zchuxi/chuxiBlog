@@ -77,7 +77,7 @@ class MediaApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("url", "https://evil.example.com/x.png"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("OSS 未配置，暂不支持取回外链"));
     }
 

@@ -4,6 +4,7 @@ import com.chuxi.common.PageData;
 import com.chuxi.common.R;
 import com.chuxi.entity.Article;
 import com.chuxi.repo.*;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,10 +66,10 @@ public class HomeController {
     @GetMapping("/articles")
     public R<PageData<Dtos.ArticleItem>> articles(@RequestParam(defaultValue = "1") int pageNo,
                                                   @RequestParam(defaultValue = "10") int pageSize) {
-        var all = latestArticles();
-        var page = all.stream().skip((long) (pageNo - 1) * pageSize).limit(pageSize)
-                .map(Dtos.ArticleItem::of).toList();
-        return R.ok(new PageData<>(page, all.size(), pageNo, pageSize));
+        var pageable = PageRequest.of(pageNo - 1, pageSize);
+        var result = articleRepo.findPublishedPage(pageable);
+        var items = result.getContent().stream().map(Dtos.ArticleItem::of).toList();
+        return R.ok(new PageData<>(items, result.getTotalElements(), pageNo, pageSize));
     }
 
     @GetMapping("/team-members")
@@ -78,10 +79,6 @@ public class HomeController {
 
     /** 已发布文章：置顶优先，其余按 updatedAt 倒序 */
     private List<Article> latestArticles() {
-        return articleRepo.findAll().stream()
-                .filter(a -> !"草稿".equals(a.getStatus()))
-                .sorted(Comparator.comparing((Article a) -> Boolean.TRUE.equals(a.getPinned()) ? 0 : 1)
-                        .thenComparing(Article::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .toList();
+        return articleRepo.findAllPublished();
     }
 }

@@ -1,6 +1,7 @@
 package com.chuxi.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.chuxi.common.ClientIpResolver;
 import com.chuxi.common.R;
 import com.chuxi.entity.SiteContent;
 import com.chuxi.repo.SiteContentRepo;
@@ -30,18 +31,20 @@ public class AuthController {
     private final TokenStore tokenStore;
     private final SiteContentRepo siteContentRepo;
     private final ObjectMapper mapper;
+    private final ClientIpResolver clientIpResolver;
 
-    public AuthController(TokenStore tokenStore, SiteContentRepo siteContentRepo, ObjectMapper mapper) {
+    public AuthController(TokenStore tokenStore, SiteContentRepo siteContentRepo, ObjectMapper mapper, ClientIpResolver clientIpResolver) {
         this.tokenStore = tokenStore;
         this.siteContentRepo = siteContentRepo;
         this.mapper = mapper;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @PostMapping("/login")
     @Transactional
     public R<Map<String, Object>> login(@RequestBody Map<String, String> body,
                                         jakarta.servlet.http.HttpServletRequest request) {
-        String ip = clientIp(request);
+        String ip = clientIpResolver.resolve(request);
         if (isLocked(ip)) {
             log.warn("登录请求被限流拒绝：ip={}, uri={}", ip, request.getRequestURI());
             return R.fail("失败次数过多，请 " + LOCK_MINUTES + " 分钟后再试");
@@ -166,9 +169,4 @@ public class AuthController {
         }
     }
 
-    private static String clientIp(jakarta.servlet.http.HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].trim();
-        return request.getRemoteAddr();
-    }
 }

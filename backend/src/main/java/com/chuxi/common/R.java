@@ -15,6 +15,6 @@ public class R<T> {
     }
 
     public static <T> R<T> fail(String message) {
-        return new R<>(1, message, null);
+        return new R<>(400, message, null);
     }
 }

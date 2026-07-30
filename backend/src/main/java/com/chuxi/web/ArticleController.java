@@ -1,15 +1,21 @@
 package com.chuxi.web;
 
+import com.chuxi.common.ClientIpResolver;
+import com.chuxi.common.InputSanitizer;
 import com.chuxi.common.PageData;
 import com.chuxi.common.R;
+import com.chuxi.common.RateLimiter;
 import com.chuxi.entity.Article;
 import com.chuxi.entity.Comment;
 import com.chuxi.repo.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +25,12 @@ public class ArticleController {
 
     private final ArticleRepo articleRepo;
     private final CommentRepo commentRepo;
+    private final ClientIpResolver clientIpResolver;
 
-    public ArticleController(ArticleRepo articleRepo, CommentRepo commentRepo) {
+    public ArticleController(ArticleRepo articleRepo, CommentRepo commentRepo, ClientIpResolver clientIpResolver) {
         this.articleRepo = articleRepo;
         this.commentRepo = commentRepo;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @GetMapping("/search")
@@ -30,47 +38,71 @@ public class ArticleController {
     public R<PageData<Dtos.ArticleItem>> search(@RequestParam(defaultValue = "") String keyword,
                                                 @RequestParam(defaultValue = "1") int pageNo,
                                                 @RequestParam(defaultValue = "6") int pageSize) {
-        String kw = keyword.trim().toLowerCase();
-        List<Article> hits = articleRepo.findAll().stream()
-                .filter(a -> !"草稿".equals(a.getStatus()))
-                .filter(a -> kw.isEmpty()
-                        || (a.getTitle() != null && a.getTitle().toLowerCase().contains(kw))
-                        || (a.getSummary() != null && a.getSummary().toLowerCase().contains(kw))
-                        || (a.getTags() != null && a.getTags().toLowerCase().contains(kw)))
-                .sorted(Comparator.comparing(Article::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .toList();
-        var page = hits.stream().skip((long) (pageNo - 1) * pageSize).limit(pageSize)
-                .map(Dtos.ArticleItem::of).toList();
-        return R.ok(new PageData<>(page, hits.size(), pageNo, pageSize));
+        var pageable = PageRequest.of(pageNo - 1, pageSize);
+        String kw = keyword.trim();
+        var result = kw.isEmpty()
+                ? articleRepo.findAllPublishedByUpdatedAtDesc(pageable)
+                : articleRepo.searchPublished(kw.toLowerCase(), pageable);
+        var items = result.getContent().stream().map(Dtos.ArticleItem::of).toList();
+        return R.ok(new PageData<>(items, result.getTotalElements(), pageNo, pageSize));
     }
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
-    public R<Dtos.ArticleDetail> detail(@PathVariable Long id) {
+    public R<Map<String, Object>> detail(@PathVariable Long id) {
         return articleRepo.findById(id)
                 // 草稿与不存在返回同样的响应，避免通过差异探测草稿 id
                 .filter(a -> !"草稿".equals(a.getStatus()))
-                .map(a -> R.ok(Dtos.ArticleDetail.of(a)))
+                .map(a -> {
+                    Map<String, Object> prev = articleRepo.findPrevious(a.getId())
+                            .map(p -> {
+                                Map<String, Object> m = new LinkedHashMap<>();
+                                m.put("id", p.getId());
+                                m.put("title", p.getTitle());
+                                return m;
+                            })
+                            .orElse(null);
+                    Map<String, Object> next = articleRepo.findNext(a.getId())
+                            .map(n -> {
+                                Map<String, Object> m = new LinkedHashMap<>();
+                                m.put("id", n.getId());
+                                m.put("title", n.getTitle());
+                                return m;
+                            })
+                            .orElse(null);
+                    Map<String, Object> body = new LinkedHashMap<>();
+                    body.put("article", Dtos.ArticleDetail.of(a));
+                    body.put("prev", prev);
+                    body.put("next", next);
+                    return R.ok(body);
+                })
                 .orElseGet(() -> R.fail("文章不存在"));
     }
 
     @GetMapping("/{id}/comments")
     @Transactional(readOnly = true)
     public R<List<Comment>> comments(@PathVariable Long id) {
-        return R.ok(commentRepo.findByArticleIdOrderByCreatedAtDesc(id));
+        return R.ok(commentRepo.findByArticleIdAndApprovedTrueOrderByCreatedAtDesc(id));
     }
 
     @PostMapping("/{id}/comments")
     @Transactional
-    public R<Comment> addComment(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        String content = body.getOrDefault("content", "").trim();
-        if (content.isEmpty()) return R.fail("内容不能为空");
+    public R<Comment> addComment(@PathVariable Long id,
+                                 @Valid @RequestBody CommentRequest req,
+                                 HttpServletRequest request) {
+        String ip = clientIpResolver.resolve(request);
+        if (!RateLimiter.tryAcquire(ip)) {
+            return R.fail("提交过于频繁，请稍后再试");
+        }
+        String content = InputSanitizer.sanitize(req.getContent());
+        String nickname = InputSanitizer.sanitize(req.getNickname());
         Comment c = new Comment();
         c.setArticleId(id);
-        c.setNickname(body.getOrDefault("nickname", "访客"));
+        c.setNickname(nickname.isEmpty() ? "访客" : nickname);
         c.setContent(content);
         c.setLikeCount(0);
         c.setLiked(false);
+        c.setApproved(true);
         c.setCreatedAt(LocalDateTime.now());
         return R.ok(commentRepo.save(c));
     }
@@ -85,4 +117,5 @@ public class ArticleController {
             return R.ok(commentRepo.save(c));
         }).orElseGet(() -> R.fail("评论不存在"));
     }
+
 }

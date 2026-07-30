@@ -1,9 +1,12 @@
 package com.chuxi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.chuxi.common.ClientIpResolver;
 import com.chuxi.common.R;
+import com.chuxi.common.RateLimiter;
 import com.chuxi.entity.SiteContent;
 import com.chuxi.repo.SiteContentRepo;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,10 +33,12 @@ public class SiteContentController {
 
     private final SiteContentRepo repo;
     private final ObjectMapper mapper;
+    private final ClientIpResolver clientIpResolver;
 
-    public SiteContentController(SiteContentRepo repo, ObjectMapper mapper) {
+    public SiteContentController(SiteContentRepo repo, ObjectMapper mapper, ClientIpResolver clientIpResolver) {
         this.repo = repo;
         this.mapper = mapper;
+        this.clientIpResolver = clientIpResolver;
     }
 
     /** 前台读取文案，无记录返回 code 1 */
@@ -80,10 +85,14 @@ public class SiteContentController {
         return R.ok(Map.of("views", readViews(repo, mapper)));
     }
 
-    /** 前台浏览量 +1 */
+    /** 前台浏览量 +1（同一 IP 每小时最多生效 1 次，超限静默返回当前计数） */
     @PostMapping("/api/front/views/bump")
     @Transactional
-    public R<Map<String, Object>> bump() {
+    public R<Map<String, Object>> bump(HttpServletRequest request) {
+        String ip = clientIpResolver.resolve(request);
+        if (!RateLimiter.tryAcquire("bump:" + ip, 3600, 1)) {
+            return R.ok(Map.of("views", readViews(repo, mapper)));
+        }
         SiteContent sc = repo.findByContentKey(VIEWS_KEY).orElseGet(() -> {
             SiteContent n = new SiteContent();
             n.setContentKey(VIEWS_KEY);
@@ -111,4 +120,5 @@ public class SiteContentController {
             return 0L;
         }
     }
+
 }

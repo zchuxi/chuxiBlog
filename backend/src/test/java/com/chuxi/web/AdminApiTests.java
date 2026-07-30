@@ -48,7 +48,7 @@ class AdminApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "wrong-password"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(1));
+                .andExpect(jsonPath("$.code").value(400));
     }
 
     @Test

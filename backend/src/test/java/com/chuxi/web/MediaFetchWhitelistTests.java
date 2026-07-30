@@ -46,7 +46,7 @@ class MediaFetchWhitelistTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("url", "http://169.254.169.254/latest/meta-data"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("仅支持本站 OSS 公网地址"));
     }
 
@@ -61,7 +61,7 @@ class MediaFetchWhitelistTests {
                         .content(mapper.writeValueAsString(Map.of(
                                 "url", "https://test-bucket.oss-cn-test.example.com.evil.com/x.png"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("仅支持本站 OSS 公网地址"));
     }
 

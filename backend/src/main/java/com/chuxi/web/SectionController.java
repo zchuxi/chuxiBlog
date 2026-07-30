@@ -1,11 +1,18 @@
 package com.chuxi.web;
 
+import com.chuxi.common.ClientIpResolver;
+import com.chuxi.common.InputSanitizer;
 import com.chuxi.common.PageData;
 import com.chuxi.common.R;
+import com.chuxi.common.RateLimiter;
 import com.chuxi.entity.Article;
 import com.chuxi.entity.Barrage;
 import com.chuxi.entity.FriendLink;
 import com.chuxi.repo.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +36,14 @@ public class SectionController {
     private final ToolSiteRepo toolSiteRepo;
     private final MusicRepo musicRepo;
     private final FriendLinkRepo friendLinkRepo;
+    private final ClientIpResolver clientIpResolver;
 
     public SectionController(TimelineCarouselRepo timelineCarouselRepo, TimelineEventRepo timelineEventRepo,
                              ArticleRepo articleRepo, ArchiveCategoryRepo archiveCategoryRepo,
                              BarrageRepo barrageRepo, CalledTextRepo calledTextRepo,
                              ParallaxStoryRepo parallaxStoryRepo, ToolSiteRepo toolSiteRepo,
-                             MusicRepo musicRepo, FriendLinkRepo friendLinkRepo) {
+                             MusicRepo musicRepo, FriendLinkRepo friendLinkRepo,
+                             ClientIpResolver clientIpResolver) {
         this.timelineCarouselRepo = timelineCarouselRepo;
         this.timelineEventRepo = timelineEventRepo;
         this.articleRepo = articleRepo;
@@ -45,6 +54,7 @@ public class SectionController {
         this.toolSiteRepo = toolSiteRepo;
         this.musicRepo = musicRepo;
         this.friendLinkRepo = friendLinkRepo;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @GetMapping("/api/front/timeline/landing")
@@ -79,24 +89,29 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<PageData<Barrage>> barrages(@RequestParam(defaultValue = "1") int pageNo,
                                          @RequestParam(defaultValue = "50") int pageSize) {
-        var all = barrageRepo.findAll().stream()
-                .sorted(Comparator.comparing(Barrage::getId, Comparator.reverseOrder())).toList();
-        var page = all.stream().skip((long) (pageNo - 1) * pageSize).limit(pageSize).toList();
-        return R.ok(new PageData<>(page, all.size(), pageNo, pageSize));
+        var pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(Sort.Direction.DESC, "id"));
+        var result = barrageRepo.findByApprovedTrue(pageable);
+        return R.ok(new PageData<>(result.getContent(), result.getTotalElements(), pageNo, pageSize));
     }
 
     @PostMapping("/api/front/tree-hole/barrages")
     @Transactional
-    public R<Barrage> addBarrage(@RequestBody Map<String, String> body) {
-        String content = body.getOrDefault("content", "").trim();
-        if (content.isEmpty()) return R.fail("内容不能为空");
+    public R<Barrage> addBarrage(@Valid @RequestBody BarrageRequest req,
+                                 HttpServletRequest request) {
+        String ip = clientIpResolver.resolve(request);
+        if (!RateLimiter.tryAcquire(ip)) {
+            return R.fail("提交过于频繁，请稍后再试");
+        }
+        String content = InputSanitizer.sanitize(req.getContent());
+        String nickname = InputSanitizer.sanitize(req.getNickname());
         Barrage b = new Barrage();
         b.setUserId(1L);
-        b.setNickname(body.getOrDefault("nickname", "树友-0001"));
-        b.setMood(body.getOrDefault("mood", "轻声"));
+        b.setNickname(nickname == null || nickname.isEmpty() ? "树友-0001" : nickname);
+        b.setMood(req.getMood() != null ? req.getMood() : "轻声");
         b.setContent(content);
         b.setLikeCount(0);
         b.setLiked(false);
+        b.setApproved(true);
         b.setCreatedAt(LocalDateTime.now());
         b.setUpdatedAt(LocalDateTime.now());
         return R.ok(barrageRepo.save(b));
@@ -117,10 +132,9 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<PageData<?>> calledTexts(@RequestParam(defaultValue = "1") int pageNo,
                                       @RequestParam(defaultValue = "50") int pageSize) {
-        var all = calledTextRepo.findAll().stream()
-                .sorted(Comparator.comparing(c -> -(c.getSortIndex() == null ? 0 : c.getSortIndex()))).toList();
-        var page = all.stream().skip((long) (pageNo - 1) * pageSize).limit(pageSize).toList();
-        return R.ok(new PageData<>(page, all.size(), pageNo, pageSize));
+        var pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(Sort.Direction.DESC, "sortIndex"));
+        var result = calledTextRepo.findAll(pageable);
+        return R.ok(new PageData<>(result.getContent(), result.getTotalElements(), pageNo, pageSize));
     }
 
     @GetMapping("/api/front/parallax/stories")
@@ -142,9 +156,9 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<PageData<?>> music(@RequestParam(defaultValue = "1") int pageNo,
                                 @RequestParam(defaultValue = "10") int pageSize) {
-        var all = musicRepo.findAll();
-        var page = all.stream().skip((long) (pageNo - 1) * pageSize).limit(pageSize).toList();
-        return R.ok(new PageData<>(page, all.size(), pageNo, pageSize));
+        var pageable = PageRequest.of(pageNo - 1, pageSize);
+        var result = musicRepo.findAll(pageable);
+        return R.ok(new PageData<>(result.getContent(), result.getTotalElements(), pageNo, pageSize));
     }
 
     @GetMapping("/api/front/friend-links")
@@ -152,4 +166,5 @@ public class SectionController {
     public List<FriendLink> friendLinks() {
         return friendLinkRepo.findByVisibleTrueOrderBySortIndexAsc();
     }
+
 }

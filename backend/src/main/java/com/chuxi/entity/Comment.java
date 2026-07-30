@@ -25,5 +25,6 @@ public class Comment {
     private String content;
     private Integer likeCount;
     private Boolean liked;
+    private Boolean approved;
     private LocalDateTime createdAt;
 }
