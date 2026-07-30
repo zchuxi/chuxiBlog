@@ -14,6 +14,24 @@ on:
       - '.github/workflows/backend-ci.yml'
 
 jobs:
+  # 实体变更须随附 DDL 供人工审阅（约定见 AGENTS.md 第 2 条，判定逻辑在 scripts/ci/check-entity-ddl.sh，可本地模拟验证）
+  entity-ddl-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 实体变更须随附 DDL 检查
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # 基准提交：PR 用目标分支基点，push 用推送前提交；无效时（如新分支首推）退回上一提交或空树
+          if [ -z "$BASE_SHA" ] || echo "$BASE_SHA" | grep -Eq '^0+$' || ! git cat-file -e "$BASE_SHA" 2>/dev/null; then
+            BASE_SHA=$(git rev-parse HEAD^ 2>/dev/null || git hash-object -t tree /dev/null)
+          fi
+          git diff --name-status "$(git merge-base "$BASE_SHA" HEAD 2>/dev/null || echo "$BASE_SHA")" HEAD \
+            | sh scripts/ci/check-entity-ddl.sh
+
   mvn-test:
     runs-on: ubuntu-latest
     defaults:
