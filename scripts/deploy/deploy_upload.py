@@ -36,18 +36,34 @@ def run(cmd, timeout=60):
     i, o, e = ssh.exec_command(cmd, timeout=timeout)
     out = o.read().decode(errors="replace")
     err = e.read().decode(errors="replace")
+    status = o.channel.recv_exit_status()
     print("CMD> ", cmd)
     if out.strip():
         print(out)
     if err.strip():
         print("[ERR]", err)
+    return out, status
+
+def run_or_abort(cmd, timeout=60):
+    # 备份等前置步骤失败时必须中止部署，避免在无回滚副本的情况下覆盖线上产物
+    out, status = run(cmd, timeout=timeout)
+    if status != 0:
+        print(f"[ABORT] 命令失败（exit={status}），中止部署，线上产物未被替换：{cmd}", file=sys.stderr)
+        s.close()
+        ssh.close()
+        t.close()
+        sys.exit(1)
     return out
 
 ts = datetime.now().strftime("%Y%m%d%H%M%S")
 
-# 1. 备份旧 jar
-print("=== 1. 备份旧 jar ===")
-run(f"mkdir -p /opt/chuxi/backup && cp -f /opt/chuxi/chuxi-backend.jar /opt/chuxi/backup/chuxi-backend.jar.bak.{ts} && echo backed_up")
+# 1. 备份现行 jar + dist（带时间戳，供回滚；必须在任何替换动作之前完成，失败即中止）
+#    回滚步骤见 README「线上部署 · 回滚 runbook」。
+print("=== 1. 备份现行 jar + dist ===")
+run_or_abort(f"mkdir -p /opt/chuxi/backup"
+             f" && {{ test ! -f /opt/chuxi/chuxi-backend.jar || cp -f /opt/chuxi/chuxi-backend.jar /opt/chuxi/backup/chuxi-backend.jar.bak.{ts}; }}"
+             f" && {{ test ! -d /opt/chuxi/dist || cp -a /opt/chuxi/dist /opt/chuxi/backup/dist.bak.{ts}; }}"
+             f" && {{ ls -d /opt/chuxi/backup/*.{ts} 2>/dev/null || true; }} && echo backed_up")
 
 # 2. 上传新 jar
 print("=== 2. 上传 jar ===")

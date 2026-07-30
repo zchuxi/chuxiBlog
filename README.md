@@ -9,7 +9,7 @@
 
 ## 启动方式
 
-1. 确保 MySQL 在 `localhost:3306`，root 密码 `1234`（数据库 `blog_db` 首次启动自动创建并注入种子数据）
+1. 确保 MySQL 在 `localhost:3306`，账号与口令通过环境变量 `DB_USERNAME` / `DB_PASSWORD` 注入（缺省回退值见 `backend/src/main/resources/application.yml`，请按本机实际口令设置；数据库 `blog_db` 首次启动自动创建并注入种子数据）
 2. 双击 `start-backend.bat`（首次会自动 `mvn package`；**务必用 java -jar 方式运行**，中文路径下 `mvn spring-boot:run` 会因 GBK argfile 报 ClassNotFoundException）
 3. 双击 `start-frontend.bat`，浏览器打开 http://localhost:5173
 
@@ -49,7 +49,7 @@
 
 ## 后台管理端
 
-- 入口：`http://localhost:5173/admin`（或右上角头像菜单 →「后台管理」），账号 `admin` / `123456`
+- 入口：`http://localhost:5173/admin`（或右上角头像菜单 →「后台管理」）；账号固定为 `admin`（见 `AuthController`），口令由 `scripts/init-admin-password.sql` 写入库内 `site_content` 的 `admin-password` 记录（执行前请把脚本中的示例口令替换为自己的口令，首次登录后服务端自动升级为哈希存储；README 不记录明文口令）
 - 覆盖前台展示的全部内容：文章（含 markdown 正文宽抽屉）、首页轮播、折叠卡片、团队成员、归档分类、时间线轮播、时间线事件、视差故事、工具站点、树洞弹幕、疗愈文本、音乐曲库、评论管理、番剧记录（支持从 Bangumi 搜索导入），均支持增删改查
 - 图片库：上传 / 复制链接 / 删除 / 自研裁切（比例预设，另存为新图），所有 image 字段可「从图库选择」；文件存 `backend/uploads/`，经 `/api/uploads/{name}` 公开访问
 - 管理端支持暗色模式（侧栏底部切换，与前台主题联动）
@@ -86,10 +86,56 @@
 - **域名**：`https://www.chuxi.online`（主）；`https://chuxi.online` 同步可用
 - **静态资源**：`/opt/chuxi/dist`（vite 构建产物），由 nginx 直接服务
 - **后端**：`127.0.0.1:8080`，systemd unit `chuxi.service`，环境变量在 unit 内声明（DB/CORS/JWT/OSS/上传目录等）
-- **数据库**：MySQL 8，库名 `chuxi`（`chuxi` / `chuxi123`）
+- **数据库**：MySQL 8，库名 `chuxi`；账号与口令由 systemd unit 以环境变量 `DB_USERNAME` / `DB_PASSWORD` 注入（见上条「后端」，README 不记录线上凭证，轮换在服务器密管/unit 内完成）
 - **对象存储**：阿里云 OSS 桶 `chuxisleep`（`oss-cn-beijing`），`/api/admin/media/fetch` 提供白名单 SSRF 安全代理供外链图传回站内
 - **架构**：`nginx(:80/:443) → /api/* → 127.0.0.1:8080`
 - **部署脚本**：`scripts/deploy/deploy_upload.py`（全量 jar+dist，重启服务）、`scripts/deploy/deploy_frontend_only.py`（仅前端，跳过重启）；依赖 `paramiko`，运行前设置环境变量 `SSH_PWD`
+- **部署前备份**：`deploy_upload.py` 在替换任何产物之前，将服务器现行 jar 与 dist 备份到 `/opt/chuxi/backup/`（`chuxi-backend.jar.bak.<时间戳>`、`dist.bak.<时间戳>`，时间戳格式 `YYYYMMDDHHMMSS`）；备份失败会中止部署，线上产物不被替换
 - **前端产物**：`vite.config.js` 已固定 `build.outDir=dist`，在 `frontend/` 运行 `npm run build` 后产物只落在 `frontend/dist/`；打包命令 `cd frontend && tar czf <DIST_TGZ> dist`（tar 顶层必须是 `dist/`）
 - **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，新表必须在重启前先在库内执行（参 `scripts/ddl-friend-link.sql` 风格），顺序不可颠倒
 - **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本
+
+### 回滚 runbook
+
+新版本上线后异常（服务起不来 / 页面白屏 / 接口大面积报错）时，按以下步骤回滚到上一版本。全程在服务器上执行（`ssh root@106.14.202.90`），不需要本地构建。
+
+1. **找到要回滚的备份时间戳**（取最近一次部署产生的那组）：
+
+   ```bash
+   ls -lt /opt/chuxi/backup/ | head
+   TS=<上一版本的时间戳，如 20260730120000>
+   ```
+
+2. **恢复后端 jar**：
+
+   ```bash
+   cp -f /opt/chuxi/backup/chuxi-backend.jar.bak.$TS /opt/chuxi/chuxi-backend.jar
+   ```
+
+3. **恢复前端 dist**：
+
+   ```bash
+   rm -rf /opt/chuxi/dist
+   cp -a /opt/chuxi/backup/dist.bak.$TS /opt/chuxi/dist
+   ```
+
+   只回滚前端时可跳过步骤 2 和 4（nginx 直接服务静态文件，无需重启）。
+
+4. **重启服务**：
+
+   ```bash
+   systemctl restart chuxi
+   ```
+
+5. **确认站点恢复**，逐项检查：
+
+   ```bash
+   systemctl is-active chuxi                          # 期望输出 active
+   journalctl -u chuxi -n 40 --no-pager               # 无 ERROR / 启动异常堆栈
+   curl -s -o /dev/null -w '%{http_code}\n' https://www.chuxi.online/          # 期望 200
+   curl -s -o /dev/null -w '%{http_code}\n' https://www.chuxi.online/api/front/home/landing  # 期望 200
+   ```
+
+   最后用浏览器打开 `https://www.chuxi.online` 确认首页正常渲染、文章页可打开。
+
+> 注意：若本次部署伴随了 DDL 变更（新表/新列），回滚 jar 后旧代码通常兼容多出的表结构（线上为 `validate` 模式，只校验实体声明的字段）；若回滚后启动即报 schema 校验错误，说明该 DDL 与旧版本不兼容，需人工评估，不要盲目删表。
