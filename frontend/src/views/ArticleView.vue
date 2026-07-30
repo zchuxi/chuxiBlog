@@ -105,6 +105,22 @@
         </div>
       </section>
 
+      <!-- 前后篇导航 -->
+      <section class="article-nav-section" v-if="prevArticle || nextArticle">
+        <div class="article-nav">
+          <router-link v-if="prevArticle" :to="`/article/${prevArticle.id}`" class="article-nav-item article-nav-prev">
+            <span class="article-nav-label">上一篇</span>
+            <span class="article-nav-title">{{ prevArticle.title }}</span>
+          </router-link>
+          <div v-else class="article-nav-spacer"></div>
+          <router-link v-if="nextArticle" :to="`/article/${nextArticle.id}`" class="article-nav-item article-nav-next">
+            <span class="article-nav-label">下一篇</span>
+            <span class="article-nav-title">{{ nextArticle.title }}</span>
+          </router-link>
+          <div v-else class="article-nav-spacer"></div>
+        </div>
+      </section>
+
       <!-- 评论区 -->
       <section v-reveal="140" class="timeline-section-container article-comments-section">
         <div class="timeline-section-container-header">
@@ -161,9 +177,12 @@
                 </div>
                 <div class="article-comments-composer-toolbar-right">
                   <span class="article-comments-composer-count">{{ commentDraft.length }}/500</span>
-                  <button class="cx-button cx-button--primary" type="submit">
-                    <span class="cx-button__content"><SvgIcon name="common-send" size="18px" /></span>
-                    <span class="cx-button__label">发表评论</span>
+                  <button class="cx-button cx-button--primary" type="submit" :disabled="commentSubmitting" :class="{ 'is-loading': commentSubmitting }">
+                    <span class="cx-button__content">
+                      <SvgIcon name="common-send" size="18px" />
+                      <span v-if="commentSuccess" class="cx-button__label" style="margin-left:4px">✓ 已发布</span>
+                    </span>
+                    <span v-if="!commentSuccess" class="cx-button__label">发表评论</span>
                   </button>
                 </div>
               </div>
@@ -205,17 +224,24 @@ import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { renderMarkdown } from '../utils/markdown'
 import { coverOf } from '../utils/display'
+import '../assets/css/article.css'
+import '../assets/css/preview.css'
 
 const route = useRoute()
 const articleId = computed(() => route.params.id)
 
 const article = ref(null)
+const prevArticle = ref(null)
+const nextArticle = ref(null)
 const comments = ref([])
 const renderedHtml = ref('')
 const headings = ref([])
 const activeHeading = ref('')
 const previewRef = ref(null)
 const commentDraft = ref('')
+const commentSubmitting = ref(false)
+const commentSuccess = ref(false)
+let commentCooldownTimer = null
 
 const cover = computed(() => coverOf(article.value || {}, Number(articleId.value) || 0))
 const updateDate = computed(() => {
@@ -228,16 +254,21 @@ const wordCount = computed(() => {
 })
 
 let headingObserver = null
+let jsonLdScript = null
 
 async function load() {
   try {
-    article.value = await api.articleDetail(articleId.value)
+    const data = await api.articleDetail(articleId.value)
+    article.value = data.article
+    prevArticle.value = data.prev || null
+    nextArticle.value = data.next || null
     const { html, headings: hs } = renderMarkdown(article.value.content)
     renderedHtml.value = html
     headings.value = hs
     activeHeading.value = hs.length ? hs[0].id : ''
     await nextTick()
     observeHeadings()
+    injectJsonLd()
   } catch { /* 文章不存在 */ }
   try {
     comments.value = await api.articleComments(articleId.value) || []
@@ -264,12 +295,22 @@ function scrollToHeading(id) {
 
 async function submitComment() {
   const content = commentDraft.value.trim()
-  if (!content) return
+  if (!content || commentSubmitting.value) return
+  commentSubmitting.value = true
   try {
     await api.addComment(articleId.value, { content, nickname: '游客' })
     commentDraft.value = ''
     comments.value = await api.articleComments(articleId.value) || []
-  } catch { /* 忽略 */ }
+    commentSuccess.value = true
+    clearTimeout(commentCooldownTimer)
+    commentCooldownTimer = setTimeout(() => {
+      commentSuccess.value = false
+      commentSubmitting.value = false
+    }, 3000)
+  } catch (e) {
+    commentSubmitting.value = false
+    alert(e?.message || '评论提交失败，请稍后再试')
+  }
 }
 
 async function likeComment(c) {
@@ -283,7 +324,29 @@ watch(articleId, load)
 
 onMounted(load)
 
+function injectJsonLd() {
+  if (jsonLdScript) {
+    jsonLdScript.remove()
+    jsonLdScript = null
+  }
+  if (!article.value) return
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.value.title,
+    description: article.value.summary,
+    datePublished: article.value.createdAt,
+    dateModified: article.value.updatedAt,
+    author: { '@type': 'Person', name: '初曦' }
+  }
+  jsonLdScript = document.createElement('script')
+  jsonLdScript.type = 'application/ld+json'
+  jsonLdScript.textContent = JSON.stringify(jsonLd)
+  document.head.appendChild(jsonLdScript)
+}
+
 onBeforeUnmount(() => {
   if (headingObserver) headingObserver.disconnect()
+  if (jsonLdScript) jsonLdScript.remove()
 })
 </script>

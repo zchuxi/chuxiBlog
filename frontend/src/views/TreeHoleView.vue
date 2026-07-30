@@ -60,13 +60,16 @@
                         :placeholder="thConfig?.placeholder || DEFAULT_PLACEHOLDER"
                       />
                     </div>
-                    <button class="cx-button cx-button--primary is-circle" type="submit">
-                      <span class="cx-button__content"><SvgIcon name="common-send" size="18px" /></span>
+                    <button class="cx-button cx-button--primary is-circle" type="submit" :disabled="sending" :class="{ 'is-loading': sending }">
+                      <span class="cx-button__content">
+                        <SvgIcon v-if="sendSuccess" name="common-thumbUp" size="18px" />
+                        <SvgIcon v-else name="common-send" size="18px" />
+                      </span>
                     </button>
                   </div>
                 </div>
                 <div class="tree-hole-danmaku-composer-meta">
-                  <span class="tree-hole-danmaku-composer-hint">写下的话会化作弹幕飘过树洞。</span>
+                  <span class="tree-hole-danmaku-composer-hint">{{ sendSuccess ? '✓ 已发布，请稍候再发' : '写下的话会化作弹幕飘过树洞。' }}</span>
                   <span class="tree-hole-danmaku-composer-count">{{ draft.length }}/80</span>
                 </div>
               </form>
@@ -123,6 +126,7 @@ import { computed, onMounted, ref } from 'vue'
 import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
+import '../assets/css/tree-hole.css'
 
 const VARIANTS = ['featured', 'portrait', 'note', 'wide', 'compact', 'balanced']
 const MOOD_TYPE_MAP = { '轻声': 'primary', '鼓劲': 'success', '拥抱': 'warning', '放空': 'neutral' }
@@ -141,6 +145,9 @@ const danmakuPaused = ref(false)
 const calledTexts = ref([])
 const draft = ref('')
 const mood = ref('轻声')
+const sending = ref(false)
+const sendSuccess = ref(false)
+let sendCooldownTimer = null
 let laneCursor = 0
 let keySeq = 0
 const MAX_DANMU_COUNT = 100
@@ -195,13 +202,22 @@ async function like(d) {
 
 async function send() {
   const content = draft.value.trim()
-  if (!content) return
+  if (!content || sending.value) return
+  sending.value = true
   draft.value = ''
   try {
     const saved = await api.addBarrage({ content, mood: mood.value })
     addDanmu(saved || { content, mood: mood.value, nickname: '树友-0001' })
-  } catch {
+    sendSuccess.value = true
+    clearTimeout(sendCooldownTimer)
+    sendCooldownTimer = setTimeout(() => {
+      sendSuccess.value = false
+      sending.value = false
+    }, 3000)
+  } catch (e) {
+    sending.value = false
     addDanmu({ content, mood: mood.value, nickname: '树友-0001' })
+    if (e?.message) alert(e.message)
   }
 }
 

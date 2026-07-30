@@ -1,5 +1,5 @@
 <template>
-  <main ref="pageRef" class="home-page">
+  <main ref="pageRef" class="home-page" data-home-scope>
     <div class="home-dashboard">
       <!-- 首屏：HERO + 侧栏 -->
       <!-- 第一屏：落地页 -->
@@ -263,6 +263,7 @@ import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { HERO_GRADIENTS, FOLD_TEXT_COLORS, FALLBACK_COVERS, tagPaletteStyle, coverOf, mmdd } from '../utils/display'
+import '../assets/css/home.css'
 
 const router = useRouter()
 
@@ -508,9 +509,9 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* ========== 第一屏：落地页 ========== */
-.home-page .home-landing {
+[data-home-scope] .home-landing {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
@@ -520,13 +521,13 @@ onMounted(async () => {
   min-height: 480px;
   padding: 0 8px;
 }
-.home-page .home-landing__copy {
+[data-home-scope] .home-landing__copy {
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding-left: 8px;
 }
-.home-page .home-landing__title {
+[data-home-scope] .home-landing__title {
   margin: 0;
   font-size: clamp(51px, 6.2vw, 95px);
   font-weight: 800;
@@ -535,29 +536,29 @@ onMounted(async () => {
   color: var(--text-color);
   text-shadow: 0 4px 24px rgba(63, 119, 181, 0.18);
 }
-.home-page .home-landing__subtitle {
+[data-home-scope] .home-landing__subtitle {
   margin: 2px 0 0;
   font-size: 21px;
   font-weight: 600;
   color: color-mix(in srgb, var(--text-color) 82%, transparent);
 }
-.home-page .home-landing__welcome {
+[data-home-scope] .home-landing__welcome {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.home-page .home-landing__welcome p {
+[data-home-scope] .home-landing__welcome p {
   margin: 0;
   font-size: 15.5px;
   color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
-.home-page .home-landing__actions {
+[data-home-scope] .home-landing__actions {
   display: flex;
   gap: 12px;
   margin-top: 16px;
   flex-wrap: wrap;
 }
-.home-page .home-landing__btn {
+[data-home-scope] .home-landing__btn {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -586,11 +587,11 @@ onMounted(async () => {
     border-color 0.24s ease,
     color 0.24s ease;
 }
-.home-page .home-landing__btn .svg-icon {
+[data-home-scope] .home-landing__btn .svg-icon {
   opacity: 0.9;
   transition: transform 0.24s ease, opacity 0.24s ease;
 }
-.home-page .home-landing__btn:hover {
+[data-home-scope] .home-landing__btn:hover {
   transform: translateY(-1px);
   background-color: rgba(255, 255, 255, 0.32);
   border-color: color-mix(in srgb, var(--text-color) 22%, transparent);
@@ -598,13 +599,13 @@ onMounted(async () => {
     0 8px 22px color-mix(in srgb, var(--text-color) 10%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-.home-page .home-landing__btn:hover .svg-icon {
+[data-home-scope] .home-landing__btn:hover .svg-icon {
   opacity: 1;
 }
-.home-page .home-landing__btn:active {
+[data-home-scope] .home-landing__btn:active {
   transform: translateY(0) scale(0.98);
 }
-.home-page .home-landing__btn--primary {
+[data-home-scope] .home-landing__btn--primary {
   /* 玻璃浅底主按钮：主色用 accent 但走"边框+字+内发光"高亮，不铺实色填充 */
   color: var(--accent-strong);
   border-color: color-mix(in srgb, var(--accent-solid) 42%, transparent);
@@ -614,7 +615,7 @@ onMounted(async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
     inset 0 -10px 18px color-mix(in srgb, var(--accent-solid) 8%, transparent);
 }
-.home-page .home-landing__btn--primary:hover {
+[data-home-scope] .home-landing__btn--primary:hover {
   color: color-mix(in srgb, var(--accent-strong) 90%, #ffffff);
   border-color: color-mix(in srgb, var(--accent-solid) 60%, transparent);
   background-color: color-mix(in srgb, var(--accent-solid) 22%, rgba(255, 255, 255, 0.24));
@@ -622,11 +623,11 @@ onMounted(async () => {
     0 10px 26px color-mix(in srgb, var(--accent-solid) 32%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-.home-page .home-landing__btn--primary:hover .svg-icon {
+[data-home-scope] .home-landing__btn--primary:hover .svg-icon {
   transform: translateX(2px);
   opacity: 1;
 }
-html.dark .home-page .home-landing__btn {
+html.dark [data-home-scope] .home-landing__btn {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.14);
   color: color-mix(in srgb, var(--text-color) 96%, transparent);
@@ -634,14 +635,14 @@ html.dark .home-page .home-landing__btn {
     0 4px 14px rgba(0, 0, 0, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-html.dark .home-page .home-landing__btn:hover {
+html.dark [data-home-scope] .home-landing__btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.24);
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
-html.dark .home-page .home-landing__btn--primary {
+html.dark [data-home-scope] .home-landing__btn--primary {
   color: color-mix(in srgb, var(--accent-solid) 88%, #ffffff);
   background: color-mix(in srgb, var(--accent-solid) 18%, rgba(255, 255, 255, 0.08));
   border-color: color-mix(in srgb, var(--accent-solid) 48%, transparent);
@@ -650,23 +651,23 @@ html.dark .home-page .home-landing__btn--primary {
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -10px 18px color-mix(in srgb, var(--accent-solid) 14%, transparent);
 }
-html.dark .home-page .home-landing__btn--primary:hover {
+html.dark [data-home-scope] .home-landing__btn--primary:hover {
   color: #ffffff;
   background-color: color-mix(in srgb, var(--accent-solid) 28%, rgba(255, 255, 255, 0.1));
   border-color: color-mix(in srgb, var(--accent-solid) 70%, transparent);
 }
-.home-page .home-landing__aside {
+[data-home-scope] .home-landing__aside {
   display: flex;
   flex-direction: column;
   gap: 22px;
   min-width: 0;
 }
-.home-page .home-landing__views {
+[data-home-scope] .home-landing__views {
   margin-left: auto;
   font-size: 13px;
   color: color-mix(in srgb, var(--text-color) 55%, transparent);
 }
-.home-page .home-landing__scroll-hint {
+[data-home-scope] .home-landing__scroll-hint {
   position: absolute;
   left: 50%;
   bottom: 10px;
@@ -685,11 +686,11 @@ html.dark .home-page .home-landing__btn--primary:hover {
   transition: border-color 0.24s ease, box-shadow 0.24s ease, color 0.24s ease;
   animation: home-landing-bounce 1.8s ease-in-out infinite;
 }
-.home-page .home-landing__scroll-hint:hover {
+[data-home-scope] .home-landing__scroll-hint:hover {
   border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
   box-shadow: 0 12px 26px rgba(63, 119, 181, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-html.dark .home-page .home-landing__scroll-hint {
+html.dark [data-home-scope] .home-landing__scroll-hint {
   box-shadow: 0 8px 20px rgba(3, 8, 17, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 @keyframes home-landing-bounce {
@@ -697,85 +698,85 @@ html.dark .home-page .home-landing__scroll-hint {
   50% { transform: translate(-50%, 8px); }
 }
 @media (max-width: 960px) {
-  .home-page .home-landing {
+  [data-home-scope] .home-landing {
     grid-template-columns: 1fr;
     height: auto;
     padding-top: 24px;
   }
-  .home-page .home-landing__scroll-hint { display: none; }
+  [data-home-scope] .home-landing__scroll-hint { display: none; }
 }
 
 /* ========== 第二屏：HERO 轮播全宽一屏 ========== */
 /* 滚动定位目标给悬浮顶栏留位 */
-.home-page .dashboard-feed-anchor,
-.home-page .dashboard-highlight {
+[data-home-scope] .dashboard-feed-anchor,
+[data-home-scope] .dashboard-highlight {
   scroll-margin-top: 82px;
 }
-.home-page .dashboard-highlight {
+[data-home-scope] .dashboard-highlight {
   grid-template-columns: 1fr;
   align-items: stretch;
   height: var(--home-screen-h, auto);
   min-height: 0;
 }
-.home-page .dashboard-highlight__hero,
-.home-page .dashboard-highlight__hero-content,
-.home-page .dashboard-highlight__hero-content .timeline-section-container {
+[data-home-scope] .dashboard-highlight__hero,
+[data-home-scope] .dashboard-highlight__hero-content,
+[data-home-scope] .dashboard-highlight__hero-content .timeline-section-container {
   display: flex;
   flex-direction: column;
   min-height: 0;
   height: 100%;
 }
-.home-page .dashboard-highlight__hero-content .timeline-section-container-content {
+[data-home-scope] .dashboard-highlight__hero-content .timeline-section-container-content {
   flex: 1;
   min-height: 0;
 }
-.home-page .dashboard-highlight__hero .hero-bento-frame,
-.home-page .dashboard-highlight__hero .hero-visual {
+[data-home-scope] .dashboard-highlight__hero .hero-bento-frame,
+[data-home-scope] .dashboard-highlight__hero .hero-visual {
   height: 100%;
 }
 @media (max-width: 960px) {
-  .home-page .dashboard-highlight { height: auto; }
-  .home-page .dashboard-highlight__hero .hero-visual { height: var(--home-hero-height, 480px); }
+  [data-home-scope] .dashboard-highlight { height: auto; }
+  [data-home-scope] .dashboard-highlight__hero .hero-visual { height: var(--home-hero-height, 480px); }
 }
 
 /* ========== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ========== */
 @media (max-width: 768px) {
-  .home-page .home-landing {
+  [data-home-scope] .home-landing {
     padding: 16px 4px 0;
     gap: 24px;
   }
-  .home-page .home-landing__copy,
-  .home-page .home-landing__aside {
+  [data-home-scope] .home-landing__copy,
+  [data-home-scope] .home-landing__aside {
     min-width: 0;
     max-width: 100%;
   }
-  .home-page .home-landing__copy { padding-left: 0; }
-  .home-page .home-landing__title {
+  [data-home-scope] .home-landing__copy { padding-left: 0; }
+  [data-home-scope] .home-landing__title {
     font-size: clamp(37px, 9vw, 51px);
     letter-spacing: 1px;
     overflow-wrap: anywhere;
   }
-  .home-page .home-landing__subtitle { font-size: 17.5px; }
-  .home-page .home-landing__aside { gap: 16px; }
-  .home-page .home-landing__aside .profile-card,
-  .home-page .home-landing__aside .signal-board-card { padding: 18px 16px; }
+  [data-home-scope] .home-landing__subtitle { font-size: 17.5px; }
+  [data-home-scope] .home-landing__aside { gap: 16px; }
+  [data-home-scope] .home-landing__aside .profile-card,
+  [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
   /* 第二屏：窄屏交还原站 CSS 的 aspect-ratio 高度，避免固定 480px 底部留白 */
-  .home-page .dashboard-highlight__hero .hero-bento-frame,
-  .home-page .dashboard-highlight__hero .hero-visual { height: auto; }
+  [data-home-scope] .dashboard-highlight__hero .hero-bento-frame,
+  [data-home-scope] .dashboard-highlight__hero .hero-visual { height: auto; }
 }
 @media (max-width: 480px) {
-  .home-page .home-landing__title { font-size: clamp(33px, 8.6vw, 42px); }
-  .home-page .home-landing__actions {
+  [data-home-scope] .home-landing__title { font-size: clamp(33px, 8.6vw, 42px); }
+  [data-home-scope] .home-landing__actions {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
   }
-  .home-page .home-landing__btn {
+  [data-home-scope] .home-landing__btn {
     width: 100%;
     justify-content: center;
     min-height: 44px;
   }
-  .home-page .home-landing__aside .profile-card,
-  .home-page .home-landing__aside .signal-board-card { padding: 16px 14px; }
+  [data-home-scope] .home-landing__aside .profile-card,
+  [data-home-scope] .home-landing__aside .signal-board-card { padding: 16px 14px; }
 }
 </style>

@@ -138,6 +138,7 @@ import AppearancePanel from './AppearancePanel.vue'
 import NavMenuPanel from './NavMenuPanel.vue'
 import PageContentPanel from './PageContentPanel.vue'
 import '../../assets/css/admin.css'
+import '../../assets/css/preview.css'
 
 // 菜单 key → SiteContentPanel 的 contentKey
 const SITE_CONTENT_KEYS = {

@@ -85,6 +85,7 @@ import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { renderMarkdown } from '../utils/markdown'
+import '../assets/css/preview.css'
 
 const router = useRouter()
 

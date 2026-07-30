@@ -136,6 +136,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '../api'
+import '../assets/css/parallax.css'
 
 const DEFAULT_PARALLAX = {
   introTitle: 'A Quiet Opening',

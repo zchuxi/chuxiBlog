@@ -196,6 +196,8 @@ import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { mmdd } from '../utils/display'
+import '../assets/css/archive.css'
+import '../assets/css/article.css'
 
 const router = useRouter()
 const entries = ref([])

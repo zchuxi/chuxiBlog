@@ -114,6 +114,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import CxSection from '../components/CxSection.vue'
 import { api } from '../api'
+import '../assets/css/timeline.css'
 
 const DEFAULT_HERO = { eyebrow: 'Timeline', title: '把时间节点排成一条可以浏览的故事轨道。', description: '每一个标记都是一段被留住的时间。' }
 const heroConfig = ref(null)

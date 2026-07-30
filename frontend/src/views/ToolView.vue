@@ -158,6 +158,7 @@ import { RouterLink } from 'vue-router'
 import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
+import '../assets/css/tool.css'
 
 const DEFAULT_TOOL = { title: '工具地图', description: '把常用工具、网站和灵感碎片排成一张可浏览的在线地图。', searchPlaceholder: '搜索网站名、用途、域名或标签' }
 const toolConfig = ref(null)
