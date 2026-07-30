@@ -1,2 +1,4 @@
 # git hooks 由 sh 解释执行，必须保持 LF 行尾（core.autocrlf=true 环境下 CRLF 会导致钩子语法错误）
 scripts/git-hooks/* text eol=lf
+# CI 判定脚本同样由 sh 解释执行，保持 LF 行尾
+scripts/ci/* text eol=lf
