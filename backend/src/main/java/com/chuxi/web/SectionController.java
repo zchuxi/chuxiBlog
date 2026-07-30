@@ -28,13 +28,13 @@ public class SectionController {
     private final ParallaxStoryRepo parallaxStoryRepo;
     private final ToolSiteRepo toolSiteRepo;
     private final MusicRepo musicRepo;
-    private final FriendLinkRepository friendLinkRepo;
+    private final FriendLinkRepo friendLinkRepo;
 
     public SectionController(TimelineCarouselRepo timelineCarouselRepo, TimelineEventRepo timelineEventRepo,
                              ArticleRepo articleRepo, ArchiveCategoryRepo archiveCategoryRepo,
                              BarrageRepo barrageRepo, CalledTextRepo calledTextRepo,
                              ParallaxStoryRepo parallaxStoryRepo, ToolSiteRepo toolSiteRepo,
-                             MusicRepo musicRepo, FriendLinkRepository friendLinkRepo) {
+                             MusicRepo musicRepo, FriendLinkRepo friendLinkRepo) {
         this.timelineCarouselRepo = timelineCarouselRepo;
         this.timelineEventRepo = timelineEventRepo;
         this.articleRepo = articleRepo;

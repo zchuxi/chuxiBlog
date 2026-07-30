@@ -44,7 +44,7 @@ public class AdminContentController {
                                   MusicRepo musicRepo,
                                   CommentRepo commentRepo,
                                   BangumiRecordRepo bangumiRecordRepo,
-                                  FriendLinkRepository friendLinkRepo) {
+                                  FriendLinkRepo friendLinkRepo) {
         // 复制一份 Spring 的 ObjectMapper，容忍未知字段
         this.mapper = springMapper.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.commentRepo = commentRepo;
