@@ -9,6 +9,10 @@ backend/uploads/
 *.log
 nohup.out
 
+# Python 字节码缓存（部署脚本运行产物）
+__pycache__/
+*.pyc
+
 # IDE / 系统
 .idea/
 .vscode/
