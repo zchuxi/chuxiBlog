@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { api } from '../api'
+import { api } from '../api/index.js'
 
 // 内置默认图库（后台未配置「背景图库」时的兜底）
 export const DEFAULT_LANDSCAPE = Array.from({ length: 13 }, (_, i) => `/image/bg/Landscape/${String(i + 1).padStart(2, '0')}.webp`)
