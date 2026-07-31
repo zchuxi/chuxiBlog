@@ -1,7 +1,17 @@
 server:
   port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/css,application/javascript,text/javascript
+    min-response-size: 1024
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=5m
   servlet:
     multipart:
       # 音频导入需要更大体积上限
@@ -11,12 +21,8 @@ spring:
     # 读取服务器 unit 注入的 DB_URL（指向线上 chuxi 库），本地缺省回退 chuxi_db
     url: ${DB_URL:jdbc:mysql://localhost:3306/chuxi_db?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1234}
+    password: ${DB_PASSWORD:}
   jpa:
-    hibernate:
-      # 本地缺省 update；线上由 systemd unit 注入 JPA_DDL_AUTO=validate，
-      # 实体与库结构不一致时启动直接报校验失败，禁止静默改线上库结构
-      ddl-auto: ${JPA_DDL_AUTO:update}
     open-in-view: false
     properties:
       hibernate:

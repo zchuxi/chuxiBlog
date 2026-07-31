@@ -4,4 +4,5 @@ import com.chuxi.entity.TimelineCarousel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TimelineCarouselRepo extends JpaRepository<TimelineCarousel, Long> {
+    java.util.List<TimelineCarousel> findAllByOrderByIdDesc();
 }

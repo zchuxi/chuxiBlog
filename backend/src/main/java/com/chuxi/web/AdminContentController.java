@@ -49,21 +49,21 @@ public class AdminContentController {
         this.mapper = springMapper.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.commentRepo = commentRepo;
         this.bangumiRecordRepo = bangumiRecordRepo;
-        handlers.put("articles", new ResourceHandler<>(articleRepo, Article.class, false, true, false));
-        handlers.put("home-carousels", new ResourceHandler<>(homeCarouselRepo, HomeCarousel.class, false, false, false));
-        handlers.put("collapse-cards", new ResourceHandler<>(collapseCardRepo, CollapseCard.class, false, false, false));
-        handlers.put("team-members", new ResourceHandler<>(teamMemberRepo, TeamMember.class, false, false, false));
+        handlers.put("articles", new ResourceHandler<>(articleRepo, Article.class, true, true, false));
+        handlers.put("home-carousels", new ResourceHandler<>(homeCarouselRepo, HomeCarousel.class, true, false, false));
+        handlers.put("collapse-cards", new ResourceHandler<>(collapseCardRepo, CollapseCard.class, true, false, false));
+        handlers.put("team-members", new ResourceHandler<>(teamMemberRepo, TeamMember.class, true, false, false));
         handlers.put("archive-categories", new ResourceHandler<>(archiveCategoryRepo, ArchiveCategory.class, true, true, false));
-        handlers.put("timeline-carousels", new ResourceHandler<>(timelineCarouselRepo, TimelineCarousel.class, false, false, false));
-        handlers.put("timeline-events", new ResourceHandler<>(timelineEventRepo, TimelineEvent.class, false, false, false));
-        handlers.put("parallax-stories", new ResourceHandler<>(parallaxStoryRepo, ParallaxStory.class, false, false, false));
-        handlers.put("tool-sites", new ResourceHandler<>(toolSiteRepo, ToolSite.class, false, true, false));
+        handlers.put("timeline-carousels", new ResourceHandler<>(timelineCarouselRepo, TimelineCarousel.class, true, false, false));
+        handlers.put("timeline-events", new ResourceHandler<>(timelineEventRepo, TimelineEvent.class, true, false, false));
+        handlers.put("parallax-stories", new ResourceHandler<>(parallaxStoryRepo, ParallaxStory.class, true, false, false));
+        handlers.put("tool-sites", new ResourceHandler<>(toolSiteRepo, ToolSite.class, true, true, false));
         handlers.put("barrages", new ResourceHandler<>(barrageRepo, Barrage.class, true, false, true));
-        handlers.put("called-texts", new ResourceHandler<>(calledTextRepo, CalledText.class, false, false, false));
-        handlers.put("musics", new ResourceHandler<>(musicRepo, Music.class, false, false, false));
+        handlers.put("called-texts", new ResourceHandler<>(calledTextRepo, CalledText.class, true, false, false));
+        handlers.put("musics", new ResourceHandler<>(musicRepo, Music.class, true, false, false));
         handlers.put("comments", new ResourceHandler<>(commentRepo, Comment.class, true, false, true));
         handlers.put("bangumi-records", new ResourceHandler<>(bangumiRecordRepo, BangumiRecord.class, true, true, true));
-        handlers.put("friend-links", new ResourceHandler<>(friendLinkRepo, FriendLink.class, false, false, false));
+        handlers.put("friend-links", new ResourceHandler<>(friendLinkRepo, FriendLink.class, true, false, false));
     }
 
     @GetMapping("/{res}")
@@ -148,9 +148,6 @@ public class AdminContentController {
         Object create(Map<String, Object> body) {
             T entity = toEntity(body);
             BeanWrapper bw = new BeanWrapperImpl(entity);
-            if (!autoId && bw.getPropertyValue("id") == null) {
-                bw.setPropertyValue("id", nextId());
-            }
             fillTimes(bw, null);
             return toOut(repo.save(entity));
         }
@@ -167,13 +164,6 @@ public class AdminContentController {
 
         void delete(Long id) {
             if (repo.existsById(id)) repo.deleteById(id);
-        }
-
-        /** 无自增实体的兜底 id：max(id)+1 */
-        private long nextId() {
-            return repo.findAll(Sort.by(Sort.Direction.DESC, "id")).stream().findFirst()
-                    .map(e -> (Long) new BeanWrapperImpl(e).getPropertyValue("id"))
-                    .orElse(0L) + 1;
         }
 
         /** createdAt 入参为空保留原值（新建取当前时间）；updatedAt 入参为空取当前时间 */

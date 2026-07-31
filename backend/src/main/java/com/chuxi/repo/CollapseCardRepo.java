@@ -4,4 +4,5 @@ import com.chuxi.entity.CollapseCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CollapseCardRepo extends JpaRepository<CollapseCard, Long> {
+    java.util.List<CollapseCard> findAllByOrderBySortIndexDesc();
 }

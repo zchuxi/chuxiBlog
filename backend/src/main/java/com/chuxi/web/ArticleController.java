@@ -95,7 +95,7 @@ public class ArticleController {
             return R.fail("提交过于频繁，请稍后再试");
         }
         String content = InputSanitizer.sanitize(req.getContent());
-        String nickname = InputSanitizer.sanitize(req.getNickname());
+        String nickname = InputSanitizer.truncate(InputSanitizer.sanitize(req.getNickname()), 20);
         Comment c = new Comment();
         c.setArticleId(id);
         c.setNickname(nickname.isEmpty() ? "访客" : nickname);
@@ -112,9 +112,12 @@ public class ArticleController {
     public R<Comment> likeComment(@PathVariable Long commentId) {
         return commentRepo.findById(commentId).map(c -> {
             boolean liked = Boolean.TRUE.equals(c.getLiked());
-            c.setLiked(!liked);
-            c.setLikeCount(Math.max(0, (c.getLikeCount() == null ? 0 : c.getLikeCount()) + (liked ? -1 : 1)));
-            return R.ok(commentRepo.save(c));
+            boolean newLiked = !liked;
+            int newLikeCount = Math.max(0, (c.getLikeCount() == null ? 0 : c.getLikeCount()) + (liked ? -1 : 1));
+            commentRepo.updateLike(commentId, newLiked, newLikeCount);
+            c.setLiked(newLiked);
+            c.setLikeCount(newLikeCount);
+            return R.ok(c);
         }).orElseGet(() -> R.fail("评论不存在"));
     }
 

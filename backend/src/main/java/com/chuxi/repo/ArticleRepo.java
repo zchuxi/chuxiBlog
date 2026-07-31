@@ -36,4 +36,25 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
 
     @Query("SELECT a FROM Article a WHERE a.id > :currentId AND a.status <> '草稿' ORDER BY a.id ASC")
     Optional<Article> findNext(@Param("currentId") Long currentId);
+
+    long countByStatus(String status);
+
+    @Query("SELECT a.categoryName, COUNT(a) FROM Article a WHERE a.status <> '草稿' " +
+           "AND a.categoryName IS NOT NULL AND a.categoryName <> '' " +
+           "GROUP BY a.categoryName ORDER BY COUNT(a) DESC")
+    java.util.List<Object[]> findCategoryDistribution();
+
+    @Query("SELECT a.tags FROM Article a WHERE a.status <> '草稿' AND a.tags IS NOT NULL")
+    java.util.List<String> findPublishedTags();
+
+    @Query("SELECT DISTINCT a.categoryName FROM Article a WHERE a.status <> '草稿' " +
+           "AND a.categoryName IS NOT NULL AND a.categoryName <> ''")
+    java.util.List<String> findDistinctPublishedCategoryNames();
+
+    @Query("SELECT DISTINCT a.archiveCategory FROM Article a WHERE a.status <> '草稿' " +
+           "AND a.archiveCategory IS NOT NULL AND a.archiveCategory <> ''")
+    java.util.List<String> findDistinctPublishedArchiveCategories();
+
+    @Query("SELECT a FROM Article a WHERE a.status <> '草稿' ORDER BY a.publishedAt DESC NULLS LAST")
+    java.util.List<Article> findAllPublishedOrderByPublishedAtDesc();
 }

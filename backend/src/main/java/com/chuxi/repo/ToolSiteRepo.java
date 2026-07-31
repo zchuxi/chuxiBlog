@@ -4,4 +4,5 @@ import com.chuxi.entity.ToolSite;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ToolSiteRepo extends JpaRepository<ToolSite, Long> {
+    java.util.List<ToolSite> findAllByOrderByIdAsc();
 }

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,13 +35,8 @@ public class HomeController {
 
     @GetMapping("/landing")
     public R<Map<String, Object>> landing() {
-        var carousels = carouselRepo.findAll().stream()
-                .filter(c -> !Boolean.FALSE.equals(c.getVisible()))
-                .sorted(Comparator.comparing(c -> -(c.getSortIndex() == null ? 0 : c.getSortIndex())))
-                .toList();
-        var cards = collapseCardRepo.findAll().stream()
-                .sorted(Comparator.comparing(c -> -(c.getSortIndex() == null ? 0 : c.getSortIndex())))
-                .toList();
+        var carousels = carouselRepo.findVisibleOrderBySortIndexDesc();
+        var cards = collapseCardRepo.findAllByOrderBySortIndexDesc();
         var published = latestArticles();
         var articles = published.stream().limit(6).map(Dtos.ArticleItem::of).toList();
         long categoryCount = published.stream()

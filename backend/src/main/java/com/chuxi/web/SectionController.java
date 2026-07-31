@@ -5,7 +5,6 @@ import com.chuxi.common.InputSanitizer;
 import com.chuxi.common.PageData;
 import com.chuxi.common.R;
 import com.chuxi.common.RateLimiter;
-import com.chuxi.entity.Article;
 import com.chuxi.entity.Barrage;
 import com.chuxi.entity.FriendLink;
 import com.chuxi.repo.*;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,10 +59,8 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<Map<String, Object>> timelineLanding() {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("carousels", timelineCarouselRepo.findAll().stream()
-                .sorted(Comparator.comparing(c -> -c.getId())).toList());
-        data.put("timelines", timelineEventRepo.findAll().stream()
-                .sorted(Comparator.comparing(t -> t.getId())).toList());
+        data.put("carousels", timelineCarouselRepo.findAllByOrderByIdDesc());
+        data.put("timelines", timelineEventRepo.findAllByOrderByIdAsc());
         return R.ok(data);
     }
 
@@ -72,9 +68,7 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<Map<String, Object>> archiveLanding() {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("entries", articleRepo.findAll().stream()
-                .filter(a -> !"草稿".equals(a.getStatus()))
-                .sorted(Comparator.comparing(Article::getPublishedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+        data.put("entries", articleRepo.findAllPublishedOrderByPublishedAtDesc().stream()
                 .map(Dtos.ArchiveEntry::of).toList());
         data.put("categories", archiveCategoryRepo.findAll().stream().map(c -> Map.of(
                 "category", c.getCategory(),
@@ -103,7 +97,7 @@ public class SectionController {
             return R.fail("提交过于频繁，请稍后再试");
         }
         String content = InputSanitizer.sanitize(req.getContent());
-        String nickname = InputSanitizer.sanitize(req.getNickname());
+        String nickname = InputSanitizer.truncate(InputSanitizer.sanitize(req.getNickname()), 20);
         Barrage b = new Barrage();
         b.setUserId(1L);
         b.setNickname(nickname == null || nickname.isEmpty() ? "树友-0001" : nickname);
@@ -122,9 +116,12 @@ public class SectionController {
     public R<Barrage> likeBarrage(@PathVariable Long id) {
         return barrageRepo.findById(id).map(b -> {
             boolean liked = Boolean.TRUE.equals(b.getLiked());
-            b.setLiked(!liked);
-            b.setLikeCount(Math.max(0, (b.getLikeCount() == null ? 0 : b.getLikeCount()) + (liked ? -1 : 1)));
-            return R.ok(barrageRepo.save(b));
+            boolean newLiked = !liked;
+            int newLikeCount = Math.max(0, (b.getLikeCount() == null ? 0 : b.getLikeCount()) + (liked ? -1 : 1));
+            barrageRepo.updateLike(id, newLiked, newLikeCount);
+            b.setLiked(newLiked);
+            b.setLikeCount(newLikeCount);
+            return R.ok(b);
         }).orElseGet(() -> R.fail("弹幕不存在"));
     }
 
@@ -140,15 +137,13 @@ public class SectionController {
     @GetMapping("/api/front/parallax/stories")
     @Transactional(readOnly = true)
     public R<List<?>> parallaxStories() {
-        return R.ok(parallaxStoryRepo.findAll().stream()
-                .sorted(Comparator.comparing(s -> s.getSortIndex() == null ? 0 : s.getSortIndex())).toList());
+        return R.ok(parallaxStoryRepo.findAllByOrderBySortIndexAsc());
     }
 
     @GetMapping("/api/front/tools/landing")
     @Transactional(readOnly = true)
     public R<List<?>> toolsLanding() {
-        return R.ok(toolSiteRepo.findAll().stream()
-                .sorted(Comparator.comparing(t -> t.getId()))
+        return R.ok(toolSiteRepo.findAllByOrderByIdAsc().stream()
                 .map(Dtos::toolOf).toList());
     }
 
