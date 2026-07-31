@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { compression } from 'vite-plugin-compression2'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    compression({ algorithm: 'gzip' })
+  ],
   server: {
     port: 5173,
     proxy: {
@@ -25,7 +29,6 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash:8].js',
         manualChunks: {
           'vendor-vue': ['vue', 'pinia', 'vue-router'],
-          'vendor-ui': ['naive-ui'],
           'vendor-utils': ['axios', 'marked', 'highlight.js']
         }
       }

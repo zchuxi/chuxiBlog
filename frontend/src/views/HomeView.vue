@@ -98,33 +98,29 @@
                     </button>
                   </div>
                   <div class="hero-visual__frame">
-                    <n-carousel
-                      ref="heroCarousel"
-                      direction="vertical"
-                      :autoplay="true"
-                      :interval="6000"
-                      :show-dots="false"
-                      :loop="true"
-                      style="height: 100%"
-                      @update:current-index="onHeroChange"
-                    >
-                      <div v-for="(c, i) in carousels" :key="c.id" class="hero-slide" :style="{ backgroundImage: HERO_GRADIENTS[i % HERO_GRADIENTS.length] }">
-                        <img v-if="c.imageUrl" class="hero-slide__image" :src="c.imageUrl" :alt="c.title" />
-                        <div class="hero-slide__overlay">
-                          <div class="hero-slide__top">
-                            <div class="hero-slide__headline"><span>{{ c.kicker || 'PERSPECTIVE' }}</span></div>
-                            <strong>{{ c.title }}</strong>
-                            <div class="hero-slide__text-group">
-                              <p class="hero-slide__description">{{ c.description }}</p>
-                              <p class="hero-slide__content">{{ c.content }}</p>
+                    <div class="hero-carousel">
+                      <div
+                        class="hero-carousel__track"
+                        :style="{ transform: `translateY(-${heroIndex * 100}%)`, transition: 'transform 0.5s ease-in-out' }"
+                      >
+                        <div v-for="(c, i) in carousels" :key="c.id" class="hero-slide" :style="{ backgroundImage: HERO_GRADIENTS[i % HERO_GRADIENTS.length] }">
+                          <img v-if="c.imageUrl" class="hero-slide__image" :src="c.imageUrl" :alt="c.title" />
+                          <div class="hero-slide__overlay">
+                            <div class="hero-slide__top">
+                              <div class="hero-slide__headline"><span>{{ c.kicker || 'PERSPECTIVE' }}</span></div>
+                              <strong>{{ c.title }}</strong>
+                              <div class="hero-slide__text-group">
+                                <p class="hero-slide__description">{{ c.description }}</p>
+                                <p class="hero-slide__content">{{ c.content }}</p>
+                              </div>
                             </div>
-                          </div>
-                          <div class="hero-slide__bottom">
-                            <span class="hero-slide__date">{{ c.badge || mmdd(c.updatedAt) }}</span>
+                            <div class="hero-slide__bottom">
+                              <span class="hero-slide__date">{{ c.badge || mmdd(c.updatedAt) }}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </n-carousel>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -258,7 +254,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { NCarousel } from 'naive-ui'
 import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
@@ -292,7 +287,7 @@ function applyLandingCopy(record) {
       primaryTarget: parsed.primaryTarget || DEFAULT_LANDING.primaryTarget,
       secondaryTarget: parsed.secondaryTarget || DEFAULT_LANDING.secondaryTarget
     }
-  } catch { /* JSON 异常时保持默认文案 */ }
+  } catch (e) { console.warn('[首页] 落地页配置解析失败:', e) }
 }
 
 const carousels = ref([])
@@ -303,15 +298,32 @@ const stats = ref(null)
 
 /* HERO */
 const heroIndex = ref(0)
-const heroCarousel = ref(null)
-
-function onHeroChange(i) {
-  heroIndex.value = i
-}
+let heroAutoplayTimer = null
 
 function goHero(i) {
   heroIndex.value = i
-  if (heroCarousel.value) heroCarousel.value.to(i)
+  resetHeroAutoplay()
+}
+
+function startHeroAutoplay() {
+  stopHeroAutoplay()
+  heroAutoplayTimer = setInterval(() => {
+    if (carousels.value.length > 0) {
+      heroIndex.value = (heroIndex.value + 1) % carousels.value.length
+    }
+  }, 6000)
+}
+
+function stopHeroAutoplay() {
+  if (heroAutoplayTimer) {
+    clearInterval(heroAutoplayTimer)
+    heroAutoplayTimer = null
+  }
+}
+
+function resetHeroAutoplay() {
+  stopHeroAutoplay()
+  startHeroAutoplay()
 }
 
 /* 人员卡片 */
@@ -366,7 +378,7 @@ function bumpVisits() {
     const n = Number(localStorage.getItem('chuxi-visits') || 0) + 1
     localStorage.setItem('chuxi-visits', String(n))
     visits.value = n
-  } catch { visits.value = 1 }
+  } catch (e) { console.warn('[访问] 记录失败:', e); visits.value = 1 }
 }
 
 /* bump 由 LayoutView 负责，这里只读；服务端可用时不再动 localStorage */
@@ -374,9 +386,7 @@ async function loadVisits() {
   try {
     const data = await api.views()
     visits.value = Number(data && data.views) || 0
-  } catch {
-    bumpVisits()
-  }
+  } catch (e) { console.warn('[访问] 加载失败:', e); bumpVisits() }
 }
 
 function scrollToSection(selector) {
@@ -442,7 +452,7 @@ async function loadMore() {
     total.value = data.total
     const known = new Set(articles.value.map(a => a.id))
     articles.value = [...articles.value, ...data.records.filter(a => !known.has(a.id))]
-  } catch { /* 忽略 */ } finally {
+  } catch (e) { console.warn('[文章] 加载更多失败:', e) } finally {
     loadingMore.value = false
   }
 }
@@ -485,6 +495,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateFirstScreen)
   if (screenResizeObserver) screenResizeObserver.disconnect()
+  stopHeroAutoplay()
 })
 
 onMounted(async () => {
@@ -505,7 +516,8 @@ onMounted(async () => {
     if (bangumi.status === 'fulfilled') bangumiCount.value = (bangumi.value || []).length
     if (tools.status === 'fulfilled') toolCount.value = (tools.value || []).length
     runCountUp()
-  } catch { /* 后端未启动时页面保持空态 */ }
+    startHeroAutoplay()
+  } catch (e) { console.warn('[首页] 加载失败:', e) }
 })
 </script>
 
@@ -704,6 +716,24 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
     padding-top: 24px;
   }
   [data-home-scope] .home-landing__scroll-hint { display: none; }
+}
+
+/* ========== 自定义垂直轮播 ========== */
+[data-home-scope] .hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+[data-home-scope] .hero-carousel__track {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  will-change: transform;
+}
+[data-home-scope] .hero-carousel__track > .hero-slide {
+  flex: 0 0 100%;
+  min-height: 0;
 }
 
 /* ========== 第二屏：HERO 轮播全宽一屏 ========== */

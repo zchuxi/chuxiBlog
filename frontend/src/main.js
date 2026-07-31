@@ -14,7 +14,6 @@ import './assets/css/cx-switch.css'
 import './assets/css/cx-popover.css'
 import './assets/css/cx-section.css'
 import './assets/css/layout.css'
-import './assets/css/components-show.css'
 import './assets/css/hljs-atom-one-dark.css'
 
 injectSvgSprite()

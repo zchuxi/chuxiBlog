@@ -227,6 +227,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import '../assets/css/components-show.css'
 import SvgIcon from '../components/SvgIcon.vue'
 import { CxButton, CxTag, CxSwitch, CxRadio, CxRadioGroup, CxMessage, CxPopover } from '../components/cx'
 
