@@ -45,7 +45,7 @@ class FrontApiTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.nickname").value("测试用户"))
-                .andExpect(jsonPath("$.data.content").value("好文章！"));
+                .andExpect(jsonPath("$.data.content").value("好文章&#xff01;"));
     }
 
     @Test
