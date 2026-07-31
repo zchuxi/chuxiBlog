@@ -3,7 +3,10 @@ package com.chuxi.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,10 +16,14 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "article")
+@Table(name = "article", indexes = {
+    @Index(name = "idx_article_status_updated", columnList = "status, updatedAt"),
+    @Index(name = "idx_article_category", columnList = "categoryName")
+})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Article {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
     @Column(length = 1000)

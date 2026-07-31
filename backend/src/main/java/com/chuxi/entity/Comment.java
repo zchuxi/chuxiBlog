@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "article_comment")
+@Table(name = "article_comment", indexes = {
+    @Index(name = "idx_comment_article", columnList = "articleId")
+})
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

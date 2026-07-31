@@ -29,5 +29,8 @@ public class SiteContent {
     @Column(name = "content_json", columnDefinition = "LONGTEXT")
     private String contentJson;
 
+    @Column(name = "views")
+    private Long views;
+
     private LocalDateTime updatedAt;
 }
