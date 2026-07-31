@@ -13,8 +13,9 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,9 +85,14 @@ public class MediaController {
         boolean mimeOk = contentType != null && ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase());
         if (!extOk || !mimeOk) return R.fail("不支持的文件类型，仅允许图片和音频文件");
 
-        // 文件头 Magic Number 校验：验证文件真实内容与声明类型一致
-        byte[] fileBytes = file.getBytes();
-        if (!validateMagicNumber(fileBytes, contentType)) {
+        // 文件头 Magic Number 校验：只读头部 16 字节，验证文件真实内容与声明类型一致
+        byte[] header = new byte[16];
+        try (InputStream is = file.getInputStream()) {
+            int read = is.read(header);
+            if (read < 4) return R.fail("文件内容过短");
+            header = Arrays.copyOf(header, read);
+        }
+        if (!validateMagicNumber(header, contentType)) {
             return R.fail("文件内容与声明类型不符");
         }
 
@@ -97,7 +103,7 @@ public class MediaController {
 
         if (oss.available()) {
             try {
-                return R.ok(oss.upload(name, new ByteArrayInputStream(fileBytes), file.getSize(), file.getContentType()));
+                return R.ok(oss.upload(name, file.getInputStream(), file.getSize(), file.getContentType()));
             } catch (Exception e) {
                 log.error("OSS 上传失败：name={}, size={}, contentType={}", name, file.getSize(), file.getContentType(), e);
                 return R.fail("OSS 上传失败：" + e.getMessage());
@@ -107,7 +113,9 @@ public class MediaController {
         Files.createDirectories(ROOT);
         Path target = resolveSafe(name);
         if (target == null) return R.fail("非法文件名");
-        Files.copy(new ByteArrayInputStream(fileBytes), target, StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream is = file.getInputStream()) {
+            Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+        }
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("name", name);
@@ -223,29 +231,29 @@ public class MediaController {
      * 文件头 Magic Number 校验：根据声明的 MIME 类型检查文件头字节是否匹配。
      * 未知图片/音频类型保守放行，已知类型必须匹配。
      */
-    private boolean validateMagicNumber(byte[] fileBytes, String contentType) {
-        if (fileBytes == null || fileBytes.length < 4) return false;
+    private boolean validateMagicNumber(byte[] header, String contentType) {
+        if (header == null || header.length < 4) return false;
         if (contentType == null) return true;
         String ct = contentType.toLowerCase();
 
         // JPEG: FF D8 FF
         if (ct.contains("jpeg")) {
-            return (fileBytes[0] & 0xFF) == 0xFF && (fileBytes[1] & 0xFF) == 0xD8 && (fileBytes[2] & 0xFF) == 0xFF;
+            return (header[0] & 0xFF) == 0xFF && (header[1] & 0xFF) == 0xD8 && (header[2] & 0xFF) == 0xFF;
         }
         // PNG: 89 50 4E 47
         if (ct.contains("png")) {
-            return (fileBytes[0] & 0xFF) == 0x89 && (fileBytes[1] & 0xFF) == 0x50
-                    && (fileBytes[2] & 0xFF) == 0x4E && (fileBytes[3] & 0xFF) == 0x47;
+            return (header[0] & 0xFF) == 0x89 && (header[1] & 0xFF) == 0x50
+                    && (header[2] & 0xFF) == 0x4E && (header[3] & 0xFF) == 0x47;
         }
         // GIF: 47 49 46 38
         if (ct.contains("gif")) {
-            return fileBytes[0] == 'G' && fileBytes[1] == 'I' && fileBytes[2] == 'F' && fileBytes[3] == '8';
+            return header[0] == 'G' && header[1] == 'I' && header[2] == 'F' && header[3] == '8';
         }
         // WebP: RIFF....WEBP
         if (ct.contains("webp")) {
-            return fileBytes.length >= 12
-                    && fileBytes[0] == 'R' && fileBytes[1] == 'I' && fileBytes[2] == 'F' && fileBytes[3] == 'F'
-                    && fileBytes[8] == 'W' && fileBytes[9] == 'E' && fileBytes[10] == 'B' && fileBytes[11] == 'P';
+            return header.length >= 12
+                    && header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[3] == 'F'
+                    && header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P';
         }
         // 未知类型，放行（保守策略）
         return true;

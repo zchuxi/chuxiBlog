@@ -10,6 +10,7 @@ import com.chuxi.config.OssProperties;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -95,7 +96,11 @@ public class OssStorageService {
         if (contentType != null && !contentType.isBlank()) meta.setContentType(contentType);
         // 公共读 bucket 默认 7 天浏览器缓存，与本地实现口径一致
         meta.setCacheControl("public, max-age=604800");
-        client().putObject(props.getBucket(), key, in, meta);
+        try (InputStream stream = in) {
+            client().putObject(props.getBucket(), key, stream, meta);
+        } catch (IOException e) {
+            throw new RuntimeException("OSS 上传流读取/关闭失败", e);
+        }
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("name", fileName);

@@ -1,24 +1,34 @@
 package com.chuxi.common;
 
-import java.util.regex.Pattern;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 
-/** 输入内容净化工具：过滤危险 HTML 标签 */
+/** 输入内容净化工具：基于 OWASP 白名单策略过滤 HTML */
 public final class InputSanitizer {
 
-    private static final Pattern SCRIPT_TAG = Pattern.compile("<\\s*/?\\s*script[^>]*>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern SCRIPT_BLOCK = Pattern.compile("<\\s*script[^>]*>.*?<\\s*/\\s*script\\s*>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern IFRAME_TAG = Pattern.compile("<\\s*/?\\s*iframe[^>]*>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ON_EVENT_ATTR = Pattern.compile("\\bon\\w+\\s*=\\s*[\"'][^\"']*[\"']", Pattern.CASE_INSENSITIVE);
+    private static final PolicyFactory POLICY = new HtmlPolicyBuilder()
+            .allowElements("p", "br", "strong", "b", "em", "i", "u",
+                           "a", "img", "ul", "ol", "li", "h1", "h2",
+                           "h3", "h4", "h5", "h6", "blockquote", "code",
+                           "pre", "hr", "table", "thead", "tbody", "tr",
+                           "th", "td", "span", "div", "figure", "figcaption")
+            .allowAttributes("href").onElements("a")
+            .allowAttributes("src", "alt", "title").onElements("img")
+            .allowAttributes("class").globally()
+            .allowUrlProtocols("http", "https")
+            .toFactory();
 
     private InputSanitizer() {}
 
-    /** 去除 script / iframe / on* 事件属性等危险片段 */
+    /** 使用白名单策略净化 HTML 输入，仅保留安全标签和属性 */
     public static String sanitize(String input) {
-        if (input == null) return null;
-        String cleaned = SCRIPT_BLOCK.matcher(input).replaceAll("");
-        cleaned = SCRIPT_TAG.matcher(cleaned).replaceAll("");
-        cleaned = IFRAME_TAG.matcher(cleaned).replaceAll("");
-        cleaned = ON_EVENT_ATTR.matcher(cleaned).replaceAll("");
-        return cleaned.trim();
+        if (input == null || input.isBlank()) return "";
+        return POLICY.sanitize(input);
+    }
+
+    /** 截断字符串到指定最大长度 */
+    public static String truncate(String input, int maxLength) {
+        if (input == null) return "";
+        return input.length() <= maxLength ? input : input.substring(0, maxLength);
     }
 }
