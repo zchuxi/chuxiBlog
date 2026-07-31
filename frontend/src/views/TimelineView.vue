@@ -161,10 +161,10 @@ onMounted(async () => {
     const data = await api.timelineLanding()
     carousels.value = data.carousels || []
     timelines.value = data.timelines || []
-  } catch { /* 后端未启动 */ }
+  } catch (e) { console.warn('[时间线] 加载失败:', e) }
   try {
     heroConfig.value = await api.siteContent('timeline-hero')
-  } catch { /* 使用默认值 */ }
+  } catch (e) { console.warn('[时间线] 配置加载失败:', e) }
   requestAnimationFrame(() => {
     if (!storyListRef.value) return
     storyObserver = new IntersectionObserver(entries => {

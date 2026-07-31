@@ -78,7 +78,8 @@ export const useSettingsStore = defineStore('settings', () => {
         selectedVerticalImage.value = galleryVertical.value[0]
         persist()
       }
-    } catch {
+    } catch (e) {
+      console.warn('[设置] 图库配置解析失败:', e)
       /* 未配置时使用内置默认图库 */
     }
   }

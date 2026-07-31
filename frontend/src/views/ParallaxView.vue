@@ -304,7 +304,7 @@ async function loadStories() {
       imageUrl: (t.imageUrl || '').trim() || fallbackImage(i),
       sortIndex: t.sortIndex
     }))
-  } catch { /* 后端未启动时保持空列表 */ }
+  } catch (e) { console.warn('[视差] 加载失败:', e) }
 }
 
 // —— 滚动/尺寸测量（rAF 节流，无滚轮接管、无吸附） ——
@@ -351,7 +351,7 @@ onMounted(async () => {
   await loadStories()
   try {
     parallaxConfig.value = await api.siteContent('parallax-config')
-  } catch { /* 使用默认值 */ }
+  } catch (e) { console.warn('[视差] 配置加载失败:', e) }
   await nextTick()
   scroller = findScrollParent(pageRef.value)
   if (scroller instanceof HTMLElement) {

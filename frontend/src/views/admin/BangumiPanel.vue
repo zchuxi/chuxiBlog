@@ -96,7 +96,7 @@ async function loadExisting() {
   try {
     const list = await adminApi['bangumi-records'].list()
     existingSubjectIds.value = new Set((list || []).map(r => Number(r.subjectId)).filter(Boolean))
-  } catch { /* 拉取失败时不拦截，交由后端兜底去重 */ }
+  } catch (e) { console.warn('[番剧管理] 已有记录加载失败:', e) }
 }
 
 onMounted(loadExisting)
@@ -286,12 +286,13 @@ async function doSearch() {
       if (!res.ok) throw new Error(`v0 搜索失败: ${res.status}`)
       const data = await res.json()
       list = data && Array.isArray(data.data) ? data.data : []
-    } catch {
+    } catch (e) {
+      console.warn('[番剧管理] v0搜索失败，降级旧接口:', e)
       // 降级：旧版搜索接口
       const res = await fetch(
         `https://api.bgm.tv/search/subject/${encodeURIComponent(kw)}?type=2&responseGroup=large&max_results=10`
       )
-      if (!res.ok) throw new Error(`搜索失败: ${res.status}`)
+      if (!res.ok) throw new Error(`搜索失败: ${res.status}`, { cause: e })
       const data = await res.json()
       list = data && Array.isArray(data.list) ? data.list : []
     }

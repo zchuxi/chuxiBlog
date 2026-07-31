@@ -127,7 +127,7 @@ onMounted(async () => {
       siteSettings.avatarUrl = settingsObj.avatarUrl || ''
       siteSettings.subtitle = settingsObj.subtitle || '收集工具、追番与灵感碎片的小小基地。'
     }
-  } catch { /* 解析失败时使用默认值 */ }
+  } catch (e) { console.warn('[关于页] 设置解析失败:', e) }
 
   // 加载关于页内容
   try {
@@ -135,7 +135,7 @@ onMounted(async () => {
     if (!parsed || typeof parsed !== 'object') return
     content.value = { title: parsed.title || '', markdown: parsed.markdown || '' }
     renderedHtml.value = renderMarkdown(content.value.markdown).html
-  } catch { /* 无数据或解析失败时展示占位文案 */ }
+  } catch (e) { console.warn('[关于页] 内容加载失败:', e) }
 
   // 读取友情链接
   friendLinks.value = (list || []).filter(l => l.visible !== false)

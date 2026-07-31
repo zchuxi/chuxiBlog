@@ -197,10 +197,10 @@ function siteCardVariant(i) {
 onMounted(async () => {
   try {
     tools.value = await api.toolsLanding() || []
-  } catch { /* 后端未启动 */ }
+  } catch (e) { console.warn('[工具] 加载失败:', e) }
   try {
     toolConfig.value = await api.siteContent('tool-hero')
-  } catch { /* 使用默认值 */ }
+  } catch (e) { console.warn('[工具] 配置加载失败:', e) }
 })
 </script>
 

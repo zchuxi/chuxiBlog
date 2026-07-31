@@ -192,7 +192,8 @@ async function copyLink() {
   const url = site.value.websiteUrl
   try {
     await navigator.clipboard.writeText(url)
-  } catch {
+  } catch (e) {
+    console.warn('[工具] 剪贴板API不可用，使用兜底复制:', e)
     // 剪贴板 API 不可用时的兜底
     const ta = document.createElement('textarea')
     ta.value = url
@@ -209,7 +210,7 @@ async function copyLink() {
 onMounted(async () => {
   try {
     tools.value = await api.toolsLanding() || []
-  } catch { /* 后端未启动 */ }
+  } catch (e) { console.warn('[工具] 加载失败:', e) }
   loaded.value = true
 })
 

@@ -289,7 +289,8 @@ async function loadAvatar() {
     const { avatarUrl: saved, ...rest } = obj
     avatarUrl.value = saved || ''
     settingsRest.value = rest
-  } catch {
+  } catch (e) {
+    console.warn('[站点内容] 头像/设置加载失败:', e)
     // 站点设置尚未创建时按空处理，保存会新建记录
     avatarUrl.value = ''
     settingsRest.value = {}

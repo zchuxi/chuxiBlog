@@ -242,19 +242,21 @@ onMounted(async () => {
   try {
     const list = (await api.bangumiRecords()) || []
     mine.value = new Map(list.filter(r => r.subjectId).map(r => [Number(r.subjectId), r.id]))
-  } catch {
+  } catch (e) {
+    console.warn('[日历] 记录加载失败:', e)
     mine.value = new Map()
   }
   try {
     calendarConfig.value = await api.siteContent('calendar-hero')
-  } catch { /* 使用默认值 */ }
+  } catch (e) { console.warn('[日历] 配置加载失败:', e) }
   try {
     const res = await fetch('https://api.bgm.tv/calendar')
     if (!res.ok) throw new Error(String(res.status))
     const data = await res.json()
     days.value = (Array.isArray(data) ? data : []).map(normalizeDay).filter(d => d.weekdayId)
     activeDay.value = days.value.some(d => d.weekdayId === todayId) ? todayId : days.value[0]?.weekdayId || 1
-  } catch {
+  } catch (e) {
+    console.warn('[日历] 放送表加载失败:', e)
     days.value = []
   } finally {
     loading.value = false

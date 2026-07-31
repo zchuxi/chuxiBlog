@@ -227,7 +227,7 @@ function applyHeroCopy(record) {
       description: parsed.description || DEFAULT_ARCHIVE_HERO.description,
       notes: Array.isArray(parsed.notes) && parsed.notes.length ? parsed.notes : DEFAULT_ARCHIVE_HERO.notes
     }
-  } catch { /* JSON 异常时保持默认文案 */ }
+  } catch (e) { console.warn('[归档] 配置解析失败:', e) }
 }
 
 const featured = computed(() => entries.value[0] || null)

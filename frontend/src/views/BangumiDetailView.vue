@@ -370,8 +370,8 @@ async function load(id) {
 
   try {
     record.value = await api.bangumiDetail(id)
-  } catch {
-    /* 本地记录取不到时展示空态 */
+  } catch (e) {
+    console.warn('[番剧] 详情加载失败:', e)
   } finally {
     loading.value = false
   }
@@ -380,7 +380,8 @@ async function load(id) {
   try {
     const list = (await api.bangumiRecords()) || []
     others.value = list.filter(r => String(r.id) !== String(id)).slice(0, 12)
-  } catch {
+  } catch (e) {
+    console.warn('[番剧] 更多记录加载失败:', e)
     others.value = []
   }
 

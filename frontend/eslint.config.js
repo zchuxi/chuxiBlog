@@ -19,7 +19,12 @@ export default [
     rules: {
       // 最小机械检查：仅拦截真实错误，不做风格约束
       'no-unused-vars': ['warn', { args: 'none' }],
-      'vue/multi-word-component-names': 'off'
+      'vue/multi-word-component-names': 'off',
+      'no-console': 'warn',
+      'no-debugger': 'error',
+      'eqeqeq': ['warn', 'always', { null: 'ignore' }],
+      'no-var': 'error',
+      'prefer-const': 'warn'
     }
   }
 ]

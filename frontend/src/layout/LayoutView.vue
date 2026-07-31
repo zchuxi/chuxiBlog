@@ -234,7 +234,7 @@ async function loadSiteSettings() {
         document.title = siteSettings.siteName
       }
     }
-  } catch { /* 无数据时使用默认值 */ }
+  } catch (e) { console.warn('[设置] 站点配置加载失败:', e) }
 }
 
 /* ---------- 外观设置 ---------- */
@@ -270,7 +270,7 @@ async function loadAppearanceSettings() {
     if (Object.keys(patch).length > 0) {
       settings.update(patch)
     }
-  } catch { /* 无数据时使用现有默认 */ }
+  } catch (e) { console.warn('[设置] 外观配置加载失败:', e) }
 }
 
 /* ---------- 主题 ---------- */
@@ -332,7 +332,7 @@ async function initLive2d() {
     if (window.loadlive2d) {
       window.loadlive2d('live2d-canvas', '/live2d/model/mashiro/shifuku.model.json')
     }
-  } catch { /* live2d 加载失败时静默 */ }
+  } catch (e) { console.warn('[Live2D] 加载失败:', e) }
 }
 
 function reloadLive2d() {

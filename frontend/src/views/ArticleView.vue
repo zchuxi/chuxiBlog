@@ -269,10 +269,10 @@ async function load() {
     await nextTick()
     observeHeadings()
     injectJsonLd()
-  } catch { /* 文章不存在 */ }
+  } catch (e) { console.warn('[文章] 加载失败:', e) }
   try {
     comments.value = await api.articleComments(articleId.value) || []
-  } catch { comments.value = [] }
+  } catch (e) { console.warn('[评论] 加载失败:', e); comments.value = [] }
 }
 
 function observeHeadings() {
@@ -317,7 +317,7 @@ async function likeComment(c) {
   try {
     const updated = await api.likeComment(c.id)
     if (updated) Object.assign(c, updated)
-  } catch { /* 忽略 */ }
+  } catch (e) { console.warn('[点赞] 操作失败:', e) }
 }
 
 watch(articleId, load)

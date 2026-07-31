@@ -197,7 +197,7 @@ async function like(d) {
   try {
     const updated = await api.likeBarrage(d.id)
     if (updated) d.likeCount = updated.likeCount
-  } catch { /* 忽略 */ }
+  } catch (e) { console.warn('[点赞] 操作失败:', e) }
 }
 
 async function send() {
@@ -226,10 +226,10 @@ onMounted(async () => {
     const [barrages, texts] = await Promise.all([api.treeHoleBarrages(), api.calledTexts()])
     calledTexts.value = texts.records || []
     for (const b of barrages.records || []) addDanmu(b, true)
-  } catch { /* 后端未启动 */ }
+  } catch (e) { console.warn('[树洞] 加载失败:', e) }
   try {
     thConfig.value = await api.siteContent('treehole-config')
-  } catch { /* 使用默认值 */ }
+  } catch (e) { console.warn('[树洞] 配置加载失败:', e) }
 })
 </script>
 

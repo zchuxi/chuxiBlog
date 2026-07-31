@@ -112,7 +112,8 @@ async function load() {
     const obj = parseContent(await siteContentApi.get(CONTENT_KEY))
     form.landscape = Array.isArray(obj?.landscape) ? obj.landscape : DEFAULT_LANDSCAPE.slice()
     form.vertical = Array.isArray(obj?.vertical) ? obj.vertical : DEFAULT_VERTICAL.slice()
-  } catch {
+  } catch (e) {
+    console.warn('[背景管理] 配置加载失败:', e)
     // 尚无记录：用内置默认起步
     form.landscape = DEFAULT_LANDSCAPE.slice()
     form.vertical = DEFAULT_VERTICAL.slice()

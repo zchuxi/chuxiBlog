@@ -108,7 +108,8 @@ async function doSearch() {
   searchLoading.value = true
   try {
     searchResult.value = await api.searchArticles(kw, 1, 12)
-  } catch {
+  } catch (e) {
+    console.warn('[搜索] 查询失败:', e)
     searchResult.value = { records: [], total: 0 }
   } finally {
     searchLoading.value = false

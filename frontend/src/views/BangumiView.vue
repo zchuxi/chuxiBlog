@@ -216,14 +216,14 @@ function openDetail(r) {
 onMounted(async () => {
   try {
     records.value = (await api.bangumiRecords()) || []
-  } catch {
-    /* 后端未启动时保持空态 */
+  } catch (e) {
+    console.warn('[番剧] 加载失败:', e)
   } finally {
     loading.value = false
   }
   try {
     bangumiConfig.value = await api.siteContent('bangumi-hero')
-  } catch { /* 使用默认值 */ }
+  } catch (e) { console.warn('[番剧] 配置加载失败:', e) }
 })
 </script>
 

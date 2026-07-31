@@ -138,7 +138,7 @@ async function toggleMusicBar() {
     try {
       const data = await api.music()
       tracks.value = data.records || []
-    } catch { /* 忽略 */ }
+    } catch (e) { console.warn('[音乐] 加载失败:', e) }
   }
 }
 
