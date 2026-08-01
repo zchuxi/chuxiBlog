@@ -8,20 +8,22 @@
     >
       <slot />
     </div>
-    <transition name="cx-popover-fade">
-      <div
-        v-if="visible"
-        ref="popoverRef"
-        class="cx-popover"
-        :style="popoverStyle"
-        @mouseenter="handleMouseEnter"
-        @mouseleave="handleMouseLeave"
-      >
-        <div class="cx-popover__content">
-          <slot name="content" :close="close" />
+    <teleport to="body">
+      <transition name="cx-popover-fade">
+        <div
+          v-if="visible"
+          ref="popoverRef"
+          class="cx-popover"
+          :style="popoverStyle"
+          @mouseenter="handleMouseEnter"
+          @mouseleave="handleMouseLeave"
+        >
+          <div class="cx-popover__content">
+            <slot name="content" :close="close" />
+          </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </teleport>
   </div>
 </template>
 
