@@ -5,7 +5,7 @@
 
 export default [
   { path: '/', redirect: '/index' },
-  { path: '/index', name: 'home', meta: { title: '首页', description: '初曦の巢 - 个人博客首页' } },
+  { path: '/index', name: 'home', meta: { title: '首页', description: '初曦の窝 - 个人博客首页' } },
   { path: '/timeline', name: 'timeline', meta: { title: '时间线', description: '按时间顺序浏览所有文章' } },
   { path: '/tree-hole', name: 'treeHole', meta: { title: '树洞', description: '说说你的想法，留下你的回声' } },
   { path: '/parallax', name: 'parallax', meta: { title: '视差', description: '视差滚动效果展示' } },
@@ -16,7 +16,7 @@ export default [
   { path: '/bangumi/:id', name: 'bangumiDetail', meta: { title: '番剧详情', description: '番剧详情页面' } },
   { path: '/calendar', name: 'calendar', meta: { title: '日历', description: '番剧更新日历' } },
   { path: '/components', name: 'components', meta: { title: '组件展示', description: 'UI 组件展示页面' } },
-  { path: '/about', name: 'about', meta: { title: '关于', description: '关于初曦の巢和站主' } },
+  { path: '/about', name: 'about', meta: { title: '关于', description: '关于初曦の窝和站主' } },
   { path: '/article/:id', name: 'article', meta: { title: '文章', description: '文章详情' } },
   { path: '/admin', name: 'admin', meta: { title: '管理后台' } },
   // 兜底路由：未匹配的路径统一重定向回首页

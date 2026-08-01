@@ -51,7 +51,7 @@ router.onError((error, to) => {
 
 router.afterEach((to) => {
   // 设置 title
-  const title = to.meta.title ? `${to.meta.title} - 初曦の巢` : '初曦の巢'
+  const title = to.meta.title ? `${to.meta.title} - 初曦の窝` : '初曦の窝'
   document.title = title
 
   // 设置 meta description
@@ -61,7 +61,7 @@ router.afterEach((to) => {
     meta.name = 'description'
     document.head.appendChild(meta)
   }
-  meta.content = to.meta.description || '初曦の巢 - 个人博客'
+  meta.content = to.meta.description || '初曦の窝 - 个人博客'
 
   // 设置 OG 标签
   const setOg = (property, content) => {
@@ -74,7 +74,7 @@ router.afterEach((to) => {
     tag.content = content
   }
   setOg('og:title', title)
-  setOg('og:description', to.meta.description || '初曦の巢 - 个人博客')
+  setOg('og:description', to.meta.description || '初曦の窝 - 个人博客')
   setOg('og:type', 'website')
   setOg('og:url', window.location.href)
 })

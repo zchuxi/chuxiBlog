@@ -26,8 +26,8 @@ public class RssController {
         StringBuilder xml = new StringBuilder();
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         xml.append("<feed xmlns=\"http://www.w3.org/2005/Atom\">\n");
-        xml.append("  <title>初曦の巢</title>\n");
-        xml.append("  <subtitle>初曦の巢 - 个人博客</subtitle>\n");
+        xml.append("  <title>初曦の窝</title>\n");
+        xml.append("  <subtitle>初曦の窝 - 个人博客</subtitle>\n");
         xml.append("  <link href=\"https://chuxi.online\" rel=\"alternate\"/>\n");
         xml.append("  <link href=\"/api/rss\" rel=\"self\"/>\n");
         xml.append("  <id>https://chuxi.online</id>\n");
