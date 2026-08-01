@@ -139,6 +139,8 @@
                   <article
                     v-for="(card, i) in collapseCards"
                     :key="card.id"
+                    :ref="el => setFoldBoxRef(el, i)"
+                    :data-fold-index="i"
                     class="fold-box"
                     :class="{ 'is-active': foldActive === i, 'is-hover': foldHover === i }"
                     @mouseenter="foldHover = i; foldActive = i"
@@ -252,7 +254,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
@@ -414,6 +416,36 @@ function goTarget(target) {
 const foldActive = ref(0)
 const foldHover = ref(-1)
 
+/* 移动端：滚动到视口的折叠卡片自动展开（桌面 hover/click 仍生效，桌面下不 observe） */
+const foldBoxes = []
+let foldObserver = null
+function setFoldBoxRef(el, i) {
+  foldBoxes[i] = el || null
+}
+function teardownFoldObserver() {
+  if (foldObserver) { foldObserver.disconnect(); foldObserver = null }
+}
+function setupFoldObserver() {
+  teardownFoldObserver()
+  if (typeof IntersectionObserver === 'undefined') return
+  const isMobile = typeof window !== 'undefined'
+    && (window.matchMedia('(hover:none)').matches || window.matchMedia('(max-width:860px)').matches)
+  if (!isMobile) return
+  const scroller = pageRef.value && pageRef.value.closest('.app-shell-main')
+  if (!scroller) return
+  // 观测区域收窄为屏幕 60% 高度处的一条水平线（比正中央略靠下）：
+  // 卡片任一位置滚到该线即展开（threshold:0 表示有相交即触发）
+  foldObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return
+      const i = Number(e.target.dataset.foldIndex)
+      if (Number.isInteger(i) && foldActive.value !== i) foldActive.value = i
+    })
+  }, { root: scroller, rootMargin: '-60% 0px -40% 0px', threshold: 0 })
+  foldBoxes.forEach(el => el && foldObserver.observe(el))
+}
+watch(collapseCards, () => { nextTick(setupFoldObserver) }, { flush: 'post' })
+
 /* 文章画廊：行模式 [2,3,4,3] 循环 */
 const ROW_PATTERN = [2, 3, 4, 3]
 const articleRows = computed(() => {
@@ -497,6 +529,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateFirstScreen)
   if (screenResizeObserver) screenResizeObserver.disconnect()
+  teardownFoldObserver()
   stopHeroAutoplay()
 })
 
@@ -520,6 +553,7 @@ onMounted(async () => {
     runCountUp()
     startHeroAutoplay()
   } catch (e) { console.warn('[首页] 加载失败:', e) }
+  nextTick(setupFoldObserver)
 })
 </script>
 
