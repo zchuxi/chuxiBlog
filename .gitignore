@@ -36,3 +36,13 @@ docs/screenshots/
 
 # 阿里云 OSS 密钥（本地环境变量脚本，绝不入仓）
 oss-keys.bat
+
+# WorkBuddy 项目记忆（含服务器凭据/密码，勿入库）
+.workbuddy/
+
+# 前端构建备份与 vite 临时文件
+frontend/dist.bak/
+frontend/*.timestamp-*.mjs
+
+# Bangumi 日历本地缓存备份
+scripts/bangumi-calendar.local.json

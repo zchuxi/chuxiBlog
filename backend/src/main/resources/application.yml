@@ -41,6 +41,11 @@ spring:
   flyway:
     enabled: false
 
+# Bangumi.tv 可选 access token（提高日历直连的限流配额）；服务器通常走磁盘缓存，直连仅兜底
+app:
+  bangumi:
+    token: ${APP_BANGUMI_TOKEN:}
+
 logging:
   level:
     org.hibernate.SQL: warn

@@ -250,10 +250,14 @@ onMounted(async () => {
     calendarConfig.value = await api.siteContent('calendar-hero')
   } catch (e) { console.warn('[日历] 配置加载失败:', e) }
   try {
-    const res = await fetch('https://api.bgm.tv/calendar')
-    if (!res.ok) throw new Error(String(res.status))
-    const data = await res.json()
-    days.value = (Array.isArray(data) ? data : []).map(normalizeDay).filter(d => d.weekdayId)
+    // 走后端三层缓存接口（api.bgm.tv 被墙，服务器靠本机脚本上传的磁盘缓存秒回）；
+    // 8s 硬超时避免任何异常拖慢页面渲染
+    const res = await Promise.race([
+      api.bangumiCalendar(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时')), 8000))
+    ])
+    const data = Array.isArray(res) ? res : []
+    days.value = data.map(normalizeDay).filter(d => d.weekdayId)
     activeDay.value = days.value.some(d => d.weekdayId === todayId) ? todayId : days.value[0]?.weekdayId || 1
   } catch (e) {
     console.warn('[日历] 放送表加载失败:', e)

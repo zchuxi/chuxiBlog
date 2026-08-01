@@ -3,6 +3,8 @@ package com.chuxi.web;
 import com.chuxi.common.R;
 import com.chuxi.entity.BangumiRecord;
 import com.chuxi.repo.BangumiRecordRepo;
+import com.chuxi.service.BangumiCalendarService;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +21,18 @@ import java.util.Map;
 public class BangumiController {
 
     private final BangumiRecordRepo bangumiRecordRepo;
+    private final BangumiCalendarService bangumiCalendarService;
 
-    public BangumiController(BangumiRecordRepo bangumiRecordRepo) {
+    public BangumiController(BangumiRecordRepo bangumiRecordRepo,
+                             BangumiCalendarService bangumiCalendarService) {
         this.bangumiRecordRepo = bangumiRecordRepo;
+        this.bangumiCalendarService = bangumiCalendarService;
+    }
+
+    /** 每周放送日历：走三层缓存（内存 → 磁盘缓存文件 → 直连兜底），服务器被墙也能秒回 */
+    @GetMapping("/api/front/bangumi/calendar")
+    public R<JsonNode> calendar() {
+        return R.ok(bangumiCalendarService.fetchCalendar());
     }
 
     @GetMapping("/api/front/bangumi")

@@ -27,6 +27,8 @@ export const api = {
   toolsLanding: () => http.get('/front/tools/landing'),
   bangumiRecords: () => http.get('/front/bangumi'),
   bangumiDetail: id => http.get(`/front/bangumi/${id}`),
+  // 每周放送日历：后端三层缓存（内存→磁盘→直连兜底），不再浏览器直连 api.bgm.tv
+  bangumiCalendar: () => http.get('/front/bangumi/calendar'),
   friendLinks: () => http.get('/front/friend-links'),
   siteContent: key => http.get(`/front/site-content/${key}`),
   bumpViews: () => http.post('/front/views/bump'),
