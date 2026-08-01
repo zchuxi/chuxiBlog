@@ -471,6 +471,8 @@ function updateFirstScreen() {
   const scroller = page.closest('.app-shell-main')
   if (!scroller) return
   const cs = getComputedStyle(scroller)
+  // 高度必须是上下 padding 之和（只取 paddingTop 会少算底部，全屏时第二屏
+  // HERO 被迫溢出 20px，与下方折叠卡片区域重叠，视觉上像两个组件合并）
   const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
   // 窄屏（单列布局）不强制一屏
   if (window.innerWidth < 960) {
@@ -736,36 +738,34 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
   min-height: 0;
 }
 
-/* ========== 第二屏：HERO 轮播全宽一屏 ========== */
+/* ========== 第二屏：HERO 轮播全宽 ========== */
 /* 滚动定位目标给悬浮顶栏留位 */
 [data-home-scope] .dashboard-feed-anchor,
 [data-home-scope] .dashboard-highlight {
   scroll-margin-top: 82px;
 }
+/* 模板里这一屏已没有 aside，单列铺满即可。 */
 [data-home-scope] .dashboard-highlight {
   grid-template-columns: 1fr;
-  align-items: stretch;
-  height: var(--home-screen-h, auto);
-  min-height: 0;
+  align-items: start;
 }
-[data-home-scope] .dashboard-highlight__hero,
-[data-home-scope] .dashboard-highlight__hero-content,
-[data-home-scope] .dashboard-highlight__hero-content .timeline-section-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  height: 100%;
-}
-[data-home-scope] .dashboard-highlight__hero-content .timeline-section-container-content {
-  flex: 1;
-  min-height: 0;
-}
+/* HERO 焦点占满整屏：把 JS 在 updateFirstScreen() 里算出的【确定像素值】
+   --home-screen-h（= 可视区高度）直接落到 .hero-visual 上，减去上方 CxSection
+   标签行（header 30px + gap 12px = 42px），让「标签 + HERO」正好占满一屏。
+
+   关键：确定像素值直接赋给 .hero-visual，不经过 .dashboard-highlight → __hero →
+   __hero-content 的 height:100% 百分比继承链。那条链任一环解析不出百分比时，
+   .hero-visual 高度会塌成 auto，hero-slide__image 固有高度（数千 px）撑破盒子并压到
+   下方折叠卡片。这里 .hero-visual 拿到确定高度后，内部 __frame{flex:1;height:100%}
+   与 __nav{flex-direction:column} 会在确定父高内正确均分填充。 */
 [data-home-scope] .dashboard-highlight__hero .hero-bento-frame,
 [data-home-scope] .dashboard-highlight__hero .hero-visual {
-  height: 100%;
+  height: calc(var(--home-screen-h, 580px) - 42px);
+  min-height: 0;
 }
 @media (max-width: 960px) {
-  [data-home-scope] .dashboard-highlight { height: auto; }
+  /* 窄屏 --home-screen-h 已被 JS 移除，交回原站 CSS 的 aspect-ratio / 固定高度 */
+  [data-home-scope] .dashboard-highlight__hero .hero-bento-frame,
   [data-home-scope] .dashboard-highlight__hero .hero-visual { height: var(--home-hero-height, 480px); }
 }
 
