@@ -24,6 +24,11 @@ spring:
     password: ${DB_PASSWORD:}
   jpa:
     open-in-view: false
+    # 生产实际以 mysql profile 运行（非 dev/prod），此处兜底 ddl-auto=update，
+    # 由 Hibernate 自动补齐实体新增的列/表，避免运行时 Unknown column 类回归。
+    # dev profile 仍为 update、prod profile 仍为 validate，互不影响。
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: false
