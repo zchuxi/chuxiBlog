@@ -7,16 +7,18 @@
     <TopBar
       ref="topBarRef"
       :site-name="siteName"
-      :paw-open="pawOpen"
+      :paw-progress="pawEnabled ? pawProgress : 0"
       :solid="topbarSolid"
+      :setting-open="settingOpen"
       @open-search="searchOpen = true"
       @toggle-theme="toggleTheme"
       @toggle-ai="aiExpanded = !aiExpanded"
       @toggle-music="musicBarRef?.toggleMusicBar()"
       @open-settings="settingOpen = true"
+      @close-settings="settingOpen = false"
       @open-auth="openAuthDialog"
       @go-admin="goAdmin"
-      @paw-toggle="pawOpen = !pawOpen"
+      @paw-toggle="togglePaw"
       @scroll-to-top="scrollMainToTop"
     />
 
@@ -174,6 +176,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { RouterView, useRouter } from 'vue-router'
 import SvgIcon from '../components/SvgIcon.vue'
 import { useSettingsStore } from '../stores/settings'
@@ -296,8 +299,24 @@ const settingOpen = ref(false)
 const authOpen = ref(false)
 const authMode = ref('password')
 const authPanel = ref('login')
-const pawOpen = ref(false)
+const pawProgress = ref(0)
+const pawEnabled = ref(true)
 const topbarSolid = ref(false)
+const PAW_SCROLL_THRESHOLD = 1600
+
+function togglePaw() {
+  pawEnabled.value = !pawEnabled.value
+}
+
+// 路由切换时关闭所有浮层，避免 keep-alive / 滚动导致的状态残留
+const route = useRoute()
+watch(() => route.path, () => {
+  settingOpen.value = false
+  aiExpanded.value = false
+  searchOpen.value = false
+  musicBarOpen.value = false
+  authOpen.value = false
+})
 
 function openAuthDialog() {
   authPanel.value = 'login'
@@ -308,10 +327,11 @@ function goAdmin() {
   router.push('/admin')
 }
 
-// ESC 关闭登录弹窗
+// ESC 关闭登录弹窗 / 设置弹窗
 function onAuthKeydown(e) {
   if (e.key !== 'Escape') return
-  authOpen.value = false
+  if (settingOpen.value) { settingOpen.value = false; return }
+  if (authOpen.value) authOpen.value = false
 }
 
 /* ---------- live2d ---------- */
@@ -352,7 +372,7 @@ function scrollMainToTop() {
 let pawScrollEl = null
 function onMainScroll() {
   const st = pawScrollEl ? pawScrollEl.scrollTop : 0
-  pawOpen.value = st > 120
+  pawProgress.value = Math.min(1, Math.max(0, st / PAW_SCROLL_THRESHOLD))
   topbarSolid.value = st > 24
 }
 

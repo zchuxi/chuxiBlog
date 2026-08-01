@@ -58,9 +58,9 @@
           <SvgIcon name="common-cat" class="action-icon" />
         </button>
         <transition name="paw-rope">
-          <div v-if="pawOpen" class="paw-rope">
+          <div v-show="pawProgress > 0" class="paw-rope">
             <div class="paw-rope__sway">
-              <span class="paw-rope__line"></span>
+              <span class="paw-rope__line" :style="ropeLineStyle"></span>
               <span class="paw-rope__paw" title="返回顶部" @click="$emit('scroll-to-top')">
                 <SvgIcon name="common-paw" size="22px" />
               </span>
@@ -68,7 +68,14 @@
           </div>
         </transition>
       </div>
-      <button type="button" class="shell-action-btn is-setting" @click="$emit('open-settings')">
+      <button
+        type="button"
+        class="shell-action-btn is-setting"
+        :class="{ 'is-active': settingOpen }"
+        :aria-pressed="settingOpen"
+        :title="settingOpen ? '关闭设置' : '打开设置'"
+        @click="$emit(settingOpen ? 'close-settings' : 'open-settings')"
+      >
         <SvgIcon name="common-setting" class="action-icon" />
       </button>
       <div class="cx-popover-wrapper">
@@ -95,18 +102,26 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import SvgIcon from '../../components/SvgIcon.vue'
 import { useSettingsStore } from '../../stores/settings'
 
-defineProps({
+const props = defineProps({
   siteName: { type: String, default: '初曦的窝' },
-  pawOpen: { type: Boolean, default: false },
-  solid: { type: Boolean, default: false }
+  pawProgress: { type: Number, default: 0 },
+  solid: { type: Boolean, default: false },
+  settingOpen: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['open-search', 'toggle-theme', 'toggle-ai', 'toggle-music', 'open-settings', 'open-auth', 'go-admin', 'paw-toggle', 'scroll-to-top'])
+const emit = defineEmits(['open-search', 'toggle-theme', 'toggle-ai', 'toggle-music', 'open-settings', 'close-settings', 'open-auth', 'go-admin', 'paw-toggle', 'scroll-to-top'])
+
+const MIN_ROPE_HEIGHT = 24
+const MAX_ROPE_HEIGHT = 120
+
+const ropeLineStyle = computed(() => ({
+  height: `${MIN_ROPE_HEIGHT + (MAX_ROPE_HEIGHT - MIN_ROPE_HEIGHT) * Math.min(1, Math.max(0, props.pawProgress))}px`
+}))
 
 const settings = useSettingsStore()
 const route = useRoute()
