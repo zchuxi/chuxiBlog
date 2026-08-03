@@ -1,7 +1,7 @@
 # 初曦の巢 — 项目完整参考文档
 
 > 本文档涵盖项目架构、开发指南、数据模型、安全机制、部署运维等全部内容。
-> 
+>
 > API 接口文档请参阅 [API.md](./API.md)
 
 ## 目录
@@ -1538,8 +1538,9 @@ journalctl -u chuxi-backend -f    # 查看日志
 | `SERVER_PORT` | `8080` | 服务端口 |
 | `DB_URL` | `jdbc:mysql://localhost:3306/chuxi_db?...` | MySQL 连接 URL |
 | `DB_USERNAME` | `root` | 数据库用户名 |
-| `DB_PASSWORD` | `1234` | 数据库密码 |
+| `DB_PASSWORD` | （空） | 数据库密码（线上由 systemd unit 注入，不写入 README/仓库） |
 | `JPA_DDL_AUTO` | `update` | Hibernate DDL 策略（线上设为 `validate`） |
+| `APP_TRUST_PROXY` | `false` | 是否信任反向代理转发头（fail-closed；线上经 nginx 时须设 `true` 且 nginx 覆盖 XFF/X-Real-IP/X-Forwarded-Proto） |
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | CORS 允许源 |
 | `APP_OSS_ENABLED` | `true` | 是否启用阿里云 OSS |
 | `APP_OSS_ENDPOINT` | `https://oss-cn-beijing.aliyuncs.com` | OSS Endpoint |

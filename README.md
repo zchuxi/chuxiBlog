@@ -49,7 +49,8 @@
 
 ## 后台管理端
 
-- 入口：`http://localhost:5173/admin`（或右上角头像菜单 →「后台管理」）；账号固定为 `admin`（见 `AuthController`），口令由 `scripts/init-admin-password.sql` 写入库内 `site_content` 的 `admin-password` 记录（执行前请把脚本中的示例口令替换为自己的口令，首次登录后服务端自动升级为哈希存储；README 不记录明文口令）
+- 入口：`http://localhost:5173/admin`（或右上角头像菜单 →「后台管理」）；账号固定为 `admin`（见 `AuthController`）。管理员密码**无默认值**，初始化执行 `python scripts/init-admin-password.py`（交互式输入 ≥16 位新口令，脚本按 PBKDF2 生成哈希并写入库内 `site_content` 的 `admin-password` 记录；记录已存在时不覆盖）。README 与仓库不记录任何明文口令
+- `scripts/init-admin-password.sql` 仅是说明性模板，**不得直接执行**（见文件头部警告）
 - 覆盖前台展示的全部内容：文章（含 markdown 正文宽抽屉）、首页轮播、折叠卡片、团队成员、归档分类、时间线轮播、时间线事件、视差故事、工具站点、树洞弹幕、疗愈文本、音乐曲库、评论管理、番剧记录（支持从 Bangumi 搜索导入），均支持增删改查
 - 图片库：上传 / 复制链接 / 删除 / 自研裁切（比例预设，另存为新图），所有 image 字段可「从图库选择」；文件存 `backend/uploads/`，经 `/api/uploads/{name}` 公开访问
 - 管理端支持暗色模式（侧栏底部切换，与前台主题联动）
@@ -95,6 +96,7 @@
 - **部署前备份**：`deploy_upload.py` 在替换任何产物之前，将服务器现行 jar 与 dist 备份到 `/opt/chuxi/backup/`（`chuxi-backend.jar.bak.<时间戳>`、`dist.bak.<时间戳>`，时间戳格式 `YYYYMMDDHHMMSS`）；备份失败会中止部署，线上产物不被替换
 - **前端产物**：`vite.config.js` 已固定 `build.outDir=dist`，在 `frontend/` 运行 `npm run build` 后产物只落在 `frontend/dist/`；打包命令 `cd frontend && tar czf <DIST_TGZ> dist`（tar 顶层必须是 `dist/`）
 - **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，部署本次评论点赞隔离改动时必须先在库内执行 `scripts/ddl-comment-like.sql`，确认 `comment_like` 表创建成功后再重启后端；其他新表同样须先执行随变更提供的 DDL，顺序不可颠倒
+- **可信代理**：应用默认不信任客户端转发头（`app.trust-proxy=false`，fail-closed）。生产经 nginx 接入时，必须在 systemd unit 注入 `APP_TRUST_PROXY=true`，且 nginx 以 `proxy_set_header` **覆盖** `X-Forwarded-For`/`X-Real-IP`/`X-Forwarded-Proto`（勿透传客户端值）；同时确保 8080 端口不对公网开放（仅监听回环）
 - **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本
 
 ### 回滚 runbook

@@ -1,7 +1,7 @@
 # 初曦の巣 — 后端 API 文档
 
-> **Base URL**: `http://localhost:8080`（可通过环境变量 `SERVER_PORT` 覆盖）  
-> **前端代理**: 开发环境 `/api/*` → `http://localhost:8081`  
+> **Base URL**: `http://localhost:8080`（可通过环境变量 `SERVER_PORT` 覆盖）
+> **前端代理**: 开发环境 `/api/*` → `http://localhost:8081`
 > **文档版本**: 基于 Spring Boot 3.x (Jakarta EE)
 
 ---
@@ -399,7 +399,7 @@ Content-Type: multipart/form-data
 | 图片 | `.jpg` `.jpeg` `.png` `.gif` `.webp` `.bmp` |
 | 音频 | `.mp3` `.ogg` `.wav` `.flac` `.aac` |
 
-> 三重校验：扩展名 + MIME + Magic Number  
+> 三重校验：扩展名 + MIME + Magic Number
 > 存储策略：OSS 配置齐全时上传到 OSS，否则回退到本地 `uploads/`
 
 ### 5.2 取回外链图
@@ -495,7 +495,7 @@ GET /api/front/articles/search
 }
 ```
 
-> 搜索范围：标题、摘要、标签（LIKE 模糊匹配）  
+> 搜索范围：标题、摘要、标签（LIKE 模糊匹配）
 > 排序：置顶优先，其余按 `updatedAt` 降序
 
 ### 6.2 文章详情
