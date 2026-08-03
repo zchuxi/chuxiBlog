@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jakarta.servlet.http.Cookie;
+import com.chuxi.auth.TokenStore;
 
 import java.util.List;
 import java.util.Map;
@@ -21,9 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * 核心 API 最小行为检查（MockMvc，复用 src/test/resources 的 H2 内存库配置）：
- * 1. /api/admin/** 无 token 被拦截为 401；
+ * 1. /api/admin/** 无管理 Cookie 被拦截为 401；
  * 2. 密码错误的登录返回业务失败（同时触发 AuthController 的鉴权失败 warn 日志）；
- * 3. 登录拿 token 后走一条 CRUD 正常路径（archive-categories 新建→列表→删除）。
+ * 3. 登录取得管理 Cookie 后走一条 CRUD 正常路径（archive-categories 新建→列表→删除）。
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -53,7 +55,7 @@ class AdminApiTests {
 
     @Test
     void loginThenArchiveCategoryCrud() throws Exception {
-        String token = login();
+        Cookie session = login();
 
         // 新建
         Map<String, Object> body = Map.of(
@@ -62,7 +64,7 @@ class AdminApiTests {
                 "description", "MockMvc 测试用",
                 "tags", List.of("测试", "临时"));
         MvcResult created = mockMvc.perform(post("/api/admin/archive-categories")
-                        .header("Authorization", "Bearer " + token)
+                        .cookie(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
@@ -75,7 +77,7 @@ class AdminApiTests {
 
         // 列表可见
         MvcResult listed = mockMvc.perform(get("/api/admin/archive-categories")
-                        .header("Authorization", "Bearer " + token))
+                        .cookie(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
@@ -90,20 +92,19 @@ class AdminApiTests {
 
         // 删除
         mockMvc.perform(delete("/api/admin/archive-categories/" + id)
-                        .header("Authorization", "Bearer " + token))
+                        .cookie(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
     }
 
-    /** 用默认账号登录换取管理 token */
-    private String login() throws Exception {
+    /** 用默认账号登录换取 HttpOnly 管理 Cookie。 */
+    private Cookie login() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
-        return mapper.readTree(result.getResponse().getContentAsString())
-                .path("data").path("token").asText();
+        return result.getResponse().getCookie(TokenStore.COOKIE_NAME);
     }
 }

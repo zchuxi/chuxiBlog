@@ -120,7 +120,7 @@
 <script setup>
 import { computed, onMounted, provide, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { clearToken, getToken, login, setToken } from '../../api/admin'
+import { login, logout as logoutApi, me } from '../../api/admin'
 import { useSettingsStore } from '../../stores/settings'
 import resourceSchemas from './resourceSchemas'
 import SvgIcon from '../../components/SvgIcon.vue'
@@ -196,7 +196,7 @@ const menuGroups = [
   }
 ]
 
-const logged = ref(!!getToken())
+const logged = ref(false)
 const loggingIn = ref(false)
 const loginError = ref('')
 const loginForm = reactive({ username: '', password: '' })
@@ -236,8 +236,14 @@ const isDark = computed(() => settings.isDark)
 function toggleTheme() {
   settings.setTheme(settings.isDark ? 'light' : 'dark')
 }
-onMounted(() => {
+onMounted(async () => {
   document.documentElement.classList.toggle('dark', settings.isDark)
+  try {
+    await me()
+    logged.value = true
+  } catch {
+    logged.value = false
+  }
 })
 
 // 简易 toast：右上角堆叠，自动消失
@@ -260,7 +266,6 @@ async function onLogin() {
   loginError.value = ''
   try {
     const data = await login(loginForm.username, loginForm.password)
-    setToken(data.token)
     logged.value = true
     currentKey.value = 'dashboard'
     toast(`欢迎回来，${data.displayName || '站长'}`)
@@ -271,8 +276,12 @@ async function onLogin() {
   }
 }
 
-function logout() {
-  clearToken()
+async function logout() {
+  try {
+    await logoutApi()
+  } catch {
+    // 即使网络异常也立即清理当前页面的登录态。
+  }
   logged.value = false
   pwdOpen.value = false
   loginForm.password = ''
@@ -281,7 +290,7 @@ function logout() {
 // 子组件用：全局提示 + 401 退回登录页
 provide('adminToast', toast)
 provide('adminUnauthorized', () => {
-  logout()
+  void logout()
   toast('登录已过期，请重新登录', 'error')
 })
 </script>

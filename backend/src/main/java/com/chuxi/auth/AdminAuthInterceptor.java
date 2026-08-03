@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-/** 拦截 /api/admin/**，校验 Bearer token */
+/** 拦截 /api/admin/**，校验 Bearer token 或 HttpOnly Cookie。 */
 @Component
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
@@ -19,7 +19,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 放行 CORS 预检
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
-        if (tokenStore.resolveBearer(request.getHeader("Authorization")) != null) return true;
+        if (tokenStore.resolveRequest(request) != null) return true;
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"code\":401,\"message\":\"未登录\"}");

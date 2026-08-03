@@ -3,6 +3,8 @@ package com.chuxi.auth;
 import com.chuxi.entity.SiteContent;
 import com.chuxi.repo.SiteContentRepo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /** 基于 site_content 表的持久化 token 存储 */
@@ -21,6 +24,7 @@ public class TokenStore {
     private static final Logger log = LoggerFactory.getLogger(TokenStore.class);
 
     private static final String TOKEN_KEY_PREFIX = "auth-token-";
+    public static final String COOKIE_NAME = "chuxi_admin_session";
     private static final int TOKEN_EXPIRE_DAYS = 7;
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -56,20 +60,50 @@ public class TokenStore {
         return token;
     }
 
-    /** 从 Authorization: Bearer xxx 头解析用户名，无效或过期返回 null */
+    /** 优先兼容 Bearer token，其次读取 HttpOnly Cookie。 */
+    @Transactional
+    public String resolveRequest(HttpServletRequest request) {
+        String token = tokenFromRequest(request);
+        return resolveToken(token);
+    }
+
+    public String tokenFromRequest(HttpServletRequest request) {
+        if (request == null) return null;
+        String bearer = bearerToken(request.getHeader("Authorization"));
+        if (bearer != null) return bearer;
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return null;
+        return java.util.Arrays.stream(cookies)
+                .filter(cookie -> COOKIE_NAME.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .filter(value -> value != null && !value.isBlank())
+                .findFirst()
+                .orElse(null);
+    }
+
+    /** 从 Authorization: Bearer xxx 头解析用户名，无效或过期返回 null。 */
     @Transactional
     public String resolveBearer(String authorization) {
+        return resolveToken(bearerToken(authorization));
+    }
+
+    private String bearerToken(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) return null;
         String token = authorization.substring(7).trim();
-        if (token.isEmpty()) return null;
+        return token.isEmpty() ? null : token;
+    }
+
+    @Transactional
+    public String resolveToken(String token) {
+        if (token == null || token.isBlank()) return null;
 
         String key = TOKEN_KEY_PREFIX + token;
         return siteContentRepo.findByContentKey(key)
                 .map(sc -> {
                     try {
-                        Map<String, Object> data = mapper.readValue(sc.getContentJson(), Map.class);
-                        String username = (String) data.get("username");
-                        String expiresAt = (String) data.get("expiresAt");
+                        Map<?, ?> data = mapper.readValue(sc.getContentJson(), Map.class);
+                        String username = Optional.ofNullable(data.get("username")).map(String::valueOf).orElse(null);
+                        String expiresAt = Optional.ofNullable(data.get("expiresAt")).map(String::valueOf).orElse(null);
                         if (expiresAt != null && LocalDateTime.parse(expiresAt, DT_FMT).isBefore(LocalDateTime.now())) {
                             log.info("Token 已过期，自动清理：key={}", key);
                             siteContentRepo.deleteByContentKey(key);
@@ -100,8 +134,8 @@ public class TokenStore {
         int cleaned = 0;
         for (SiteContent sc : tokenRecords) {
             try {
-                Map<String, Object> data = mapper.readValue(sc.getContentJson(), Map.class);
-                String expiresAt = (String) data.get("expiresAt");
+                Map<?, ?> data = mapper.readValue(sc.getContentJson(), Map.class);
+                String expiresAt = Optional.ofNullable(data.get("expiresAt")).map(String::valueOf).orElse(null);
                 if (expiresAt != null && LocalDateTime.parse(expiresAt, DT_FMT).isBefore(LocalDateTime.now())) {
                     siteContentRepo.delete(sc);
                     cleaned++;

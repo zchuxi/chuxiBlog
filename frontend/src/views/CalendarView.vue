@@ -85,7 +85,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
-import { adminApi, getToken, clearToken } from '../api/admin'
+import { adminApi } from '../api/admin'
 
 const DEFAULT_CALENDAR = { title: '每日放送', subtitle: '查看今日播出的番剧时间表，不再错过任何一集。' }
 const calendarConfig = ref(null)
@@ -168,18 +168,12 @@ function normalizeDay(raw) {
   }
 }
 
-// 确认管理员身份：本地有 token 且后端 /api/auth/me 校验通过才视为已确认。
-// 失败（无 token / 过期）则隐藏追番按钮，避免越权入口暴露。
+// 由后端 /api/auth/me 校验 HttpOnly Cookie，失败则隐藏追番按钮。
 async function confirmAdmin() {
-  if (!getToken()) {
-    isAdmin.value = false
-    return
-  }
   try {
     await adminApi.me()
     isAdmin.value = true
   } catch {
-    clearToken()
     isAdmin.value = false
   }
 }
@@ -219,7 +213,6 @@ async function importSubject(item) {
     flashNotice(`已追番「${record.nameCn || record.name}」，可到「番剧记录」查看`)
   } catch (err) {
     if (err && err.unauthorized) {
-      clearToken()
       isAdmin.value = false
       flashNotice('登录已过期，请到后台重新登录')
       return

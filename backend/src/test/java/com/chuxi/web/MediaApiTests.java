@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jakarta.servlet.http.Cookie;
+import com.chuxi.auth.TokenStore;
 
 import java.util.Map;
 
@@ -22,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * 媒体接口高危分支最小行为检查（复用 src/test/resources 的 H2 配置，OSS enabled=false）：
- * 1. 带 token 上传小图走本地回退分支，返回 /api/uploads/ 可访问路径，用后经删除接口清理；
+ * 1. 带管理 Cookie 上传小图走本地回退分支，返回 /api/uploads/ 可访问路径，用后经删除接口清理；
  * 2. OSS 未配置时外链抓取接口直接拒绝，返回业务失败码而非 200+code 0。
  */
 @SpringBootTest
@@ -37,13 +39,13 @@ class MediaApiTests {
 
     @Test
     void uploadFallsBackToLocalAndUrlIsServable() throws Exception {
-        String token = login();
+        Cookie session = login();
 
         MockMultipartFile file = new MockMultipartFile(
                 "file", "tiny.png", "image/png", new byte[]{(byte) 0x89, 'P', 'N', 'G', 1, 2, 3, 4});
         MvcResult uploaded = mockMvc.perform(multipart("/api/admin/upload")
                         .file(file)
-                        .header("Authorization", "Bearer " + token))
+                        .cookie(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.name").isString())
@@ -62,7 +64,7 @@ class MediaApiTests {
         } finally {
             // 清理测试落盘文件，避免污染 uploads/ 目录
             mockMvc.perform(delete("/api/admin/media/" + name)
-                            .header("Authorization", "Bearer " + token))
+                            .cookie(session))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(0));
         }
@@ -70,10 +72,10 @@ class MediaApiTests {
 
     @Test
     void fetchIsRejectedWhenOssNotConfigured() throws Exception {
-        String token = login();
+        Cookie session = login();
 
         mockMvc.perform(post("/api/admin/media/fetch")
-                        .header("Authorization", "Bearer " + token)
+                        .cookie(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("url", "https://evil.example.com/x.png"))))
                 .andExpect(status().isOk())
@@ -81,15 +83,14 @@ class MediaApiTests {
                 .andExpect(jsonPath("$.message").value("OSS 未配置，暂不支持取回外链"));
     }
 
-    /** 用默认账号登录换取管理 token */
-    private String login() throws Exception {
+    /** 用默认账号登录换取 HttpOnly 管理 Cookie。 */
+    private Cookie login() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
-        return mapper.readTree(result.getResponse().getContentAsString())
-                .path("data").path("token").asText();
+        return result.getResponse().getCookie(TokenStore.COOKIE_NAME);
     }
 }

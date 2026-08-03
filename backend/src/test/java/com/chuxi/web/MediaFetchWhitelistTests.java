@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jakarta.servlet.http.Cookie;
+import com.chuxi.auth.TokenStore;
 
 import java.util.Map;
 
@@ -38,11 +40,11 @@ class MediaFetchWhitelistTests {
 
     @Test
     void fetchRejectsUrlOutsideOssWhitelist() throws Exception {
-        String token = login();
+        Cookie session = login();
 
         // 白名单主机为 https://test-bucket.oss-cn-test.example.com，内网地址必须被拒绝
         mockMvc.perform(post("/api/admin/media/fetch")
-                        .header("Authorization", "Bearer " + token)
+                        .cookie(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("url", "http://169.254.169.254/latest/meta-data"))))
                 .andExpect(status().isOk())
@@ -52,11 +54,11 @@ class MediaFetchWhitelistTests {
 
     @Test
     void fetchRejectsWhitelistHostPrefixTrick() throws Exception {
-        String token = login();
+        Cookie session = login();
 
         // 前缀伪装（白名单域作为恶意域子串）同样必须被拒绝
         mockMvc.perform(post("/api/admin/media/fetch")
-                        .header("Authorization", "Bearer " + token)
+                        .cookie(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of(
                                 "url", "https://test-bucket.oss-cn-test.example.com.evil.com/x.png"))))
@@ -65,15 +67,14 @@ class MediaFetchWhitelistTests {
                 .andExpect(jsonPath("$.message").value("仅支持本站 OSS 公网地址"));
     }
 
-    /** 用默认账号登录换取管理 token */
-    private String login() throws Exception {
+    /** 用默认账号登录换取 HttpOnly 管理 Cookie。 */
+    private Cookie login() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
-        return mapper.readTree(result.getResponse().getContentAsString())
-                .path("data").path("token").asText();
+        return result.getResponse().getCookie(TokenStore.COOKIE_NAME);
     }
 }

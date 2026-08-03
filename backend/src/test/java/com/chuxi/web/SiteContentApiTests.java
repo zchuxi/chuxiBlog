@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jakarta.servlet.http.Cookie;
+import com.chuxi.auth.TokenStore;
 
 import java.util.Map;
 
@@ -22,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 站点文案与浏览量接口测试：
  * 1. 前台读取白名单 key（如 site-settings）返回 200（code=0 或 code=400 取决于是否已配置）；
  * 2. 前台读取非白名单 key 返回 200 + code=400（"内容不存在"）；
- * 3. 管理端文案列表需登录，无 token 返回 401；
+ * 3. 管理端文案列表需登录，无管理 Cookie 返回 401；
  * 4. 浏览量读取返回 200；
  * 5. 浏览量 bump 首次返回 200。
  */
@@ -74,9 +76,9 @@ class SiteContentApiTests {
 
     @Test
     void adminList_withToken_returns200() throws Exception {
-        String token = login();
+        Cookie session = login();
         mockMvc.perform(get("/api/admin/site-content")
-                        .header("Authorization", "Bearer " + token))
+                        .cookie(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").isArray());
@@ -98,15 +100,14 @@ class SiteContentApiTests {
                 .andExpect(jsonPath("$.data.views").isNumber());
     }
 
-    /** 用默认账号登录换取管理 token */
-    private String login() throws Exception {
+    /** 用默认账号登录换取 HttpOnly 管理 Cookie。 */
+    private Cookie login() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
-        return mapper.readTree(result.getResponse().getContentAsString())
-                .path("data").path("token").asText();
+        return result.getResponse().getCookie(TokenStore.COOKIE_NAME);
     }
 }

@@ -1,19 +1,7 @@
 import axios from 'axios'
 
-// 管理端独立 axios 实例：自动携带 token，401 时清除本地登录态
-const TOKEN_KEY = 'chuxi-admin-token'
-
-export const getToken = () => localStorage.getItem(TOKEN_KEY)
-export const setToken = token => localStorage.setItem(TOKEN_KEY, token)
-export const clearToken = () => localStorage.removeItem(TOKEN_KEY)
-
-const http = axios.create({ baseURL: '/api', timeout: 15000 })
-
-http.interceptors.request.use(config => {
-  const token = getToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
+// 管理端使用 HttpOnly Cookie；JavaScript 不再接触或持久化管理 token。
+const http = axios.create({ baseURL: '/api', timeout: 15000, withCredentials: true })
 
 http.interceptors.response.use(
   res => {
@@ -23,7 +11,6 @@ http.interceptors.response.use(
   },
   err => {
     if (err.response && err.response.status === 401) {
-      clearToken()
       const e = new Error('未登录或登录已过期')
       e.unauthorized = true
       return Promise.reject(e)
@@ -34,6 +21,7 @@ http.interceptors.response.use(
 
 export const login = (username, password) => http.post('/auth/login', { username, password })
 export const me = () => http.get('/auth/me')
+export const logout = () => http.post('/auth/logout')
 
 // 概览统计（仪表盘）
 export const overview = () => http.get('/admin/overview')

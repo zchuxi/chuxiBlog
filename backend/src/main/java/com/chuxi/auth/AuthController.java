@@ -8,15 +8,16 @@ import com.chuxi.repo.SiteContentRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseCookie;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Map;
 
 @RestController
@@ -43,7 +44,8 @@ public class AuthController {
     @PostMapping("/login")
     @Transactional
     public R<Map<String, Object>> login(@RequestBody Map<String, String> body,
-                                        jakarta.servlet.http.HttpServletRequest request) {
+                                        jakarta.servlet.http.HttpServletRequest request,
+                                        jakarta.servlet.http.HttpServletResponse response) {
         String ip = clientIpResolver.resolve(request);
         if (isLocked(ip)) {
             log.warn("登录请求被限流拒绝：ip={}, uri={}", ip, request.getRequestURI());
@@ -65,12 +67,14 @@ public class AuthController {
         FAILURES.remove(ip);
         // 首次用明文口令登录成功后，顺手把库里的密码升级为哈希
         upgradeToHashIfNeeded(password);
-        return R.ok(Map.of("token", tokenStore.issue(username), "displayName", ADMIN_USERNAME));
+        String token = tokenStore.issue(username);
+        response.addHeader("Set-Cookie", sessionCookie(token, request, Duration.ofDays(7)).toString());
+        return R.ok(Map.of("displayName", ADMIN_USERNAME));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Object> me(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        String username = tokenStore.resolveBearer(authorization);
+    public ResponseEntity<Object> me(jakarta.servlet.http.HttpServletRequest request) {
+        String username = tokenStore.resolveRequest(request);
         if (username == null) {
             return ResponseEntity.status(401).body(Map.of("code", 401, "message", "未登录"));
         }
@@ -81,9 +85,9 @@ public class AuthController {
     @PostMapping("/password")
     @Transactional
     public ResponseEntity<Object> changePassword(
-            @RequestHeader(value = "Authorization", required = false) String authorization,
+            jakarta.servlet.http.HttpServletRequest request,
             @RequestBody Map<String, String> body) {
-        if (tokenStore.resolveBearer(authorization) == null) {
+        if (tokenStore.resolveRequest(request) == null) {
             return ResponseEntity.status(401).body(Map.of("code", 401, "message", "未登录"));
         }
         String oldPassword = body.getOrDefault("oldPassword", "");
@@ -109,6 +113,26 @@ public class AuthController {
         sc.setUpdatedAt(LocalDateTime.now());
         siteContentRepo.save(sc);
         return ResponseEntity.ok(R.ok(null));
+    }
+
+    @PostMapping("/logout")
+    public R<Object> logout(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response) {
+        tokenStore.invalidate(tokenStore.tokenFromRequest(request));
+        response.addHeader("Set-Cookie", sessionCookie("", request, Duration.ZERO).toString());
+        return R.ok(null);
+    }
+
+    private ResponseCookie sessionCookie(String token, jakarta.servlet.http.HttpServletRequest request, Duration maxAge) {
+        boolean secure = request.isSecure()
+                || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
+        return ResponseCookie.from(TokenStore.COOKIE_NAME, token)
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite("Strict")
+                .path("/api")
+                .maxAge(maxAge)
+                .build();
     }
 
     /** 库里存的密码串（可能是哈希，也可能是历史明文），无记录返回 null */

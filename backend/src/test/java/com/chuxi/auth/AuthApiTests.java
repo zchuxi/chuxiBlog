@@ -11,10 +11,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import jakarta.servlet.http.Cookie;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 认证路径行为检查（MockMvc，复用 src/test/resources 的 H2 内存库配置）：
  * 1. 库里没有密码记录时登录被拒绝（不再回退默认口令）；
  * 2. 修改密码时短于 8 位的新密码被拒绝；
- * 3. 正确凭据仍可正常登录换取 token。
+ * 3. 正确凭据仍可正常登录并取得 HttpOnly 管理 Cookie。
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,9 +71,9 @@ class AuthApiTests {
 
     @Test
     void changePasswordShorterThanEightRejected() throws Exception {
-        String token = login();
+        Cookie session = login();
         mockMvc.perform(post("/api/auth/password")
-                        .header("Authorization", "Bearer " + token)
+                        .cookie(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("oldPassword", "123456", "newPassword", "1234567"))))
                 .andExpect(status().isOk())
@@ -85,19 +88,46 @@ class AuthApiTests {
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
-                .andExpect(jsonPath("$.data.token").isNotEmpty())
                 .andExpect(jsonPath("$.data.displayName").value(AuthController.ADMIN_USERNAME));
     }
 
-    /** 用默认账号登录换取管理 token */
-    private String login() throws Exception {
+    @Test
+    void loginCookieAuthenticatesAndLogoutInvalidatesSession() throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
+                .andExpect(status().isOk())
+                .andReturn();
+        String setCookie = loginResult.getResponse().getHeader("Set-Cookie");
+        org.assertj.core.api.Assertions.assertThat(setCookie)
+                .contains(TokenStore.COOKIE_NAME + "=")
+                .contains("HttpOnly")
+                .contains("SameSite=Strict")
+                .contains("Path=/api");
+
+        Cookie session = loginResult.getResponse().getCookie(TokenStore.COOKIE_NAME);
+        org.assertj.core.api.Assertions.assertThat(session).isNotNull();
+        mockMvc.perform(get("/api/auth/me").cookie(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.username").value(AuthController.ADMIN_USERNAME));
+
+        mockMvc.perform(post("/api/auth/logout").cookie(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        mockMvc.perform(get("/api/auth/me").cookie(session))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    /** 用默认账号登录换取 HttpOnly 管理 Cookie。 */
+    private Cookie login() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
-        return mapper.readTree(result.getResponse().getContentAsString())
-                .path("data").path("token").asText();
+        return result.getResponse().getCookie(TokenStore.COOKIE_NAME);
     }
 }

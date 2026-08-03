@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jakarta.servlet.http.Cookie;
+import com.chuxi.auth.TokenStore;
 
 import java.util.Map;
 
@@ -18,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * 管理后台概览接口测试：
- * 1. 无 token 访问 /api/admin/overview 返回 401；
+ * 1. 无管理 Cookie 访问 /api/admin/overview 返回 401；
  * 2. 登录后访问返回 200，响应包含 articleCount、viewCount 等统计字段。
  */
 @SpringBootTest
@@ -40,10 +42,10 @@ class OverviewApiTests {
 
     @Test
     void overviewWithToken_returns200AndContainsExpectedFields() throws Exception {
-        String token = login();
+        Cookie session = login();
 
         mockMvc.perform(get("/api/admin/overview")
-                        .header("Authorization", "Bearer " + token))
+                        .cookie(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.articleCount").isNumber())
@@ -62,15 +64,14 @@ class OverviewApiTests {
                 .andExpect(jsonPath("$.data.categoryDistribution").isArray());
     }
 
-    /** 用默认账号登录换取管理 token */
-    private String login() throws Exception {
+    /** 用默认账号登录换取 HttpOnly 管理 Cookie。 */
+    private Cookie login() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(Map.of("username", "admin", "password", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
-        return mapper.readTree(result.getResponse().getContentAsString())
-                .path("data").path("token").asText();
+        return result.getResponse().getCookie(TokenStore.COOKIE_NAME);
     }
 }
