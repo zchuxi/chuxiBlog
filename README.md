@@ -96,7 +96,7 @@
 - **部署前备份**：`deploy_upload.py` 在替换任何产物之前，将服务器现行 jar 与 dist 备份到 `/opt/chuxi/backup/`（`chuxi-backend.jar.bak.<时间戳>`、`dist.bak.<时间戳>`，时间戳格式 `YYYYMMDDHHMMSS`）；备份失败会中止部署，线上产物不被替换
 - **前端产物**：`vite.config.js` 已固定 `build.outDir=dist`，在 `frontend/` 运行 `npm run build` 后产物只落在 `frontend/dist/`；打包命令 `cd frontend && tar czf <DIST_TGZ> dist`（tar 顶层必须是 `dist/`）
 - **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，部署本次评论点赞隔离改动时必须先在库内执行 `scripts/ddl-comment-like.sql`，确认 `comment_like` 表创建成功后再重启后端；其他新表同样须先执行随变更提供的 DDL，顺序不可颠倒
-- **可信代理**：应用默认不信任客户端转发头（`app.trust-proxy=false`，fail-closed）。生产经 nginx 接入时，必须在 systemd unit 注入 `APP_TRUST_PROXY=true`，且 nginx 以 `proxy_set_header` **覆盖** `X-Forwarded-For`/`X-Real-IP`/`X-Forwarded-Proto`（勿透传客户端值）；同时确保 8080 端口不对公网开放（仅监听回环）
+- **可信代理**：应用默认只监听 `127.0.0.1:8080` 且不信任客户端转发头（`app.trust-proxy=false`，fail-closed）。生产经 nginx 接入时，必须在 systemd unit 注入 `APP_TRUST_PROXY=true`，且 nginx 以 `proxy_set_header` **覆盖** `X-Forwarded-For`（用 `$remote_addr`，勿用 `$proxy_add_x_forwarded_for` 追加客户端值）与 `X-Forwarded-Proto`；`SERVER_ADDRESS` 默认已为回环，无需改动
 - **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本
 
 ### 回滚 runbook

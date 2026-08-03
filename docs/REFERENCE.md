@@ -1536,6 +1536,7 @@ journalctl -u chuxi-backend -f    # 查看日志
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `SERVER_PORT` | `8080` | 服务端口 |
+| `SERVER_ADDRESS` | `127.0.0.1` | 监听地址（默认仅回环，生产经 nginx 反代） |
 | `DB_URL` | `jdbc:mysql://localhost:3306/chuxi_db?...` | MySQL 连接 URL |
 | `DB_USERNAME` | `root` | 数据库用户名 |
 | `DB_PASSWORD` | （空） | 数据库密码（线上由 systemd unit 注入，不写入 README/仓库） |
