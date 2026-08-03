@@ -23,7 +23,7 @@
 
 ## 改动后验证（约定）
 
-- **后端改动后必须在 `backend/` 目录运行 `mvn test`**：冒烟测试 `BlogApplicationTests` 会完整加载 Spring 上下文（H2 内存库替代 MySQL，测试配置见 `src/test/resources/application.yml`，无需本地 MySQL/OSS），Bean 装配、实体映射、种子数据导入出错都会直接失败
+- **后端改动后必须在 `backend/` 目录运行 `mvn test`**：冒烟测试 `ChuxiApplicationTests` 会完整加载 Spring 上下文（H2 内存库替代 MySQL，测试配置见 `src/test/resources/application.yml`，无需本地 MySQL/OSS），并检查 `/actuator/health` 可用；Bean 装配、实体映射、种子数据导入出错都会直接失败
 - **前端改动后在 `frontend/` 目录运行 `npm run lint` 和 `npm run build`**，以 lint 与构建双通过作为机械检查（lint 为最小 eslint 配置，见 `frontend/eslint.config.js`，已纳入 pre-commit 钩子；build 耗时较长仍为手动约定；type 检查暂未引入，按需另行评估）
 - **前端改动后在 `frontend/` 目录运行 `npm test`**：Node 内置测试器（`node --test`，Node ≥ 21，零额外依赖）跑 `src/**/*.test.js` 下的纯数据行为检查（当前覆盖 `resourceSchemas.js` 的 schema 结构约束：字段类型合法性、select 必填 options、batch/ratio/default 规则、columns 与字段的对应关系）；新增可被 Node 直接加载的纯逻辑模块时按同一约定补测试
 - `start-backend.bat` 打包时保留 `-DskipTests`（启动提速），因此**跳过测试仅限启动脚本，提交前仍须手动跑 `mvn test`**
@@ -54,7 +54,8 @@
 - 图片库：上传 / 复制链接 / 删除 / 自研裁切（比例预设，另存为新图），所有 image 字段可「从图库选择」；文件存 `backend/uploads/`，经 `/api/uploads/{name}` 公开访问
 - 管理端支持暗色模式（侧栏底部切换，与前台主题联动）
 - 换网站图标：把头像图存为项目根 `avatar.png`，运行 `pwsh scripts/make-favicon.ps1`（自动裁白边 + 圆形遮罩 → `frontend/public/favicon.png`）
-- 管理 API：`POST /api/auth/login` 签发 token，`/api/admin/{resource}` 系列 REST 接口（Bearer 鉴权，未登录 401）；删除文章会级联删除其评论；tags 在 API 层为数组、库内为 CSV，由服务端互转
+- 管理 API：`POST /api/auth/login` 登录成功后写入 7 天有效的 `HttpOnly` Cookie，Cookie 使用 `SameSite=Strict`、`Path=/api`，在 HTTPS 或 `X-Forwarded-Proto: https` 下自动启用 `Secure`；浏览器不会保存或读取明文 token，`POST /api/auth/logout` 会使当前会话失效并清除 Cookie
+- `/api/admin/{resource}` 系列 REST 接口使用管理 Cookie 鉴权（未登录 401，服务端暂保留 Bearer 读取兼容）；删除文章会级联删除其评论与评论点赞记录；tags 在 API 层为数组、库内为 CSV，由服务端互转
 
 ## 主要接口
 
@@ -65,6 +66,7 @@
 - `GET /api/front/timeline/landing` · `GET /api/front/archive/landing`
 - `GET/POST /api/front/tree-hole/barrages`（`POST .../{id}/likes`）· `GET /api/front/tree-hole/called-texts`
 - `GET /api/front/parallax/stories` · `GET /api/front/tools/landing` · `GET /api/music`
+- `GET /actuator/health`（仅返回健康状态，不暴露组件详情）
 
 种子数据在 `backend/src/main/resources/seed/*.json`（取自原站接口样例），表空时自动导入，可随意清库重建。
 
@@ -92,7 +94,7 @@
 - **部署脚本**：`scripts/deploy/deploy_upload.py`（全量 jar+dist，重启服务）、`scripts/deploy/deploy_frontend_only.py`（仅前端，跳过重启）；依赖 `paramiko`，运行前设置环境变量 `SSH_PWD`
 - **部署前备份**：`deploy_upload.py` 在替换任何产物之前，将服务器现行 jar 与 dist 备份到 `/opt/chuxi/backup/`（`chuxi-backend.jar.bak.<时间戳>`、`dist.bak.<时间戳>`，时间戳格式 `YYYYMMDDHHMMSS`）；备份失败会中止部署，线上产物不被替换
 - **前端产物**：`vite.config.js` 已固定 `build.outDir=dist`，在 `frontend/` 运行 `npm run build` 后产物只落在 `frontend/dist/`；打包命令 `cd frontend && tar czf <DIST_TGZ> dist`（tar 顶层必须是 `dist/`）
-- **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，新表必须在重启前先在库内执行（参 `scripts/ddl-friend-link.sql` 风格），顺序不可颠倒
+- **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，部署本次评论点赞隔离改动时必须先在库内执行 `scripts/ddl-comment-like.sql`，确认 `comment_like` 表创建成功后再重启后端；其他新表同样须先执行随变更提供的 DDL，顺序不可颠倒
 - **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本
 
 ### 回滚 runbook

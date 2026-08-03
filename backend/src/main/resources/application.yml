@@ -50,6 +50,15 @@ logging:
   level:
     org.hibernate.SQL: warn
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 # 阿里云 OSS：配齐 access-key 后上传自动走 OSS；留空则回退本地 uploads/ 目录
 # AK/SK 通过环境变量注入（与服务器 systemd unit 的 APP_OSS_* 命名对齐）
 aliyun:
