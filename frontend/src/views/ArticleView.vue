@@ -201,7 +201,13 @@
                     </div>
                     <p class="article-comments-card-text">{{ c.content }}</p>
                     <div class="article-comments-card-actions">
-                      <button type="button" class="article-comments-action-button" @click="likeComment(c)">
+                      <button
+                        type="button"
+                        class="article-comments-action-button"
+                        :class="{ 'is-liked': c.liked }"
+                        :aria-pressed="Boolean(c.liked)"
+                        @click="likeComment(c)"
+                      >
                         <SvgIcon name="common-thumbUp" size="14px" />
                         <span>{{ c.likeCount || 0 }}</span>
                       </button>

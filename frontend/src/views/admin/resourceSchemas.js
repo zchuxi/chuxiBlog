@@ -209,7 +209,6 @@ export const resourceSchemas = [
       { name: 'nickname', label: '昵称', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'likeCount', label: '点赞数', type: 'number' },
-      { name: 'liked', label: '已点赞', type: 'boolean' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' }
     ]
   },

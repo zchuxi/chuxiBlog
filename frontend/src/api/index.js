@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getVisitorId } from '../utils/visitorId.js'
 
 const http = axios.create({ baseURL: '/api', timeout: 15000 })
 
@@ -13,9 +14,13 @@ export const api = {
   homeArticles: (pageNo = 1, pageSize = 6) => http.get('/front/home/articles', { params: { pageNo, pageSize } }),
   teamMembers: () => http.get('/front/home/team-members'),
   articleDetail: id => http.get(`/front/articles/${id}`),
-  articleComments: id => http.get(`/front/articles/${id}/comments`),
+  articleComments: id => http.get(`/front/articles/${id}/comments`, {
+    headers: { 'X-Visitor-Id': getVisitorId() }
+  }),
   addComment: (id, data) => http.post(`/front/articles/${id}/comments`, data),
-  likeComment: id => http.post(`/front/articles/comments/${id}/likes`),
+  likeComment: id => http.post(`/front/articles/comments/${id}/likes`, null, {
+    headers: { 'X-Visitor-Id': getVisitorId() }
+  }),
   searchArticles: (keyword, pageNo = 1, pageSize = 6) => http.get('/front/articles/search', { params: { keyword, pageNo, pageSize } }),
   timelineLanding: () => http.get('/front/timeline/landing'),
   archiveLanding: () => http.get('/front/archive/landing'),
