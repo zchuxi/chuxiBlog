@@ -46,3 +46,6 @@ frontend/*.timestamp-*.mjs
 
 # Bangumi 日历本地缓存备份
 scripts/bangumi-calendar.local.json
+
+# graphify 知识图谱产物（本地生成，6MB+，用 graphify update . 重建）
+graphify-out/
