@@ -33,12 +33,17 @@ public class AuthController {
     private final SiteContentRepo siteContentRepo;
     private final ObjectMapper mapper;
     private final ClientIpResolver clientIpResolver;
+    /** 与 ClientIpResolver 同源：仅在生产由受控代理接入且显式开启时才信任 X-Forwarded-Proto */
+    private final boolean trustProxy;
 
-    public AuthController(TokenStore tokenStore, SiteContentRepo siteContentRepo, ObjectMapper mapper, ClientIpResolver clientIpResolver) {
+    public AuthController(TokenStore tokenStore, SiteContentRepo siteContentRepo, ObjectMapper mapper,
+                          ClientIpResolver clientIpResolver,
+                          @org.springframework.beans.factory.annotation.Value("${app.trust-proxy:false}") boolean trustProxy) {
         this.tokenStore = tokenStore;
         this.siteContentRepo = siteContentRepo;
         this.mapper = mapper;
         this.clientIpResolver = clientIpResolver;
+        this.trustProxy = trustProxy;
     }
 
     @PostMapping("/login")
@@ -125,7 +130,7 @@ public class AuthController {
 
     private ResponseCookie sessionCookie(String token, jakarta.servlet.http.HttpServletRequest request, Duration maxAge) {
         boolean secure = request.isSecure()
-                || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
+                || (trustProxy && "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto")));
         return ResponseCookie.from(TokenStore.COOKIE_NAME, token)
                 .httpOnly(true)
                 .secure(secure)
