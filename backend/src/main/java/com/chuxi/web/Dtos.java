@@ -38,6 +38,15 @@ public final class Dtos {
         }
     }
 
+    /** 评论出参：liked 是当前访客的状态，不再直接暴露 JPA Entity。 */
+    public record CommentItem(Long id, String nickname, String content, Integer likeCount,
+                              boolean liked, LocalDateTime createdAt) {
+        public static CommentItem of(com.chuxi.entity.Comment c, boolean liked) {
+            return new CommentItem(c.getId(), c.getNickname(), c.getContent(),
+                    c.getLikeCount(), liked, c.getCreatedAt());
+        }
+    }
+
     /** 归档视图: /archive/landing.entries */
     public record ArchiveEntry(Long id, String title, String summary, String category,
                                List<String> tags, LocalDateTime publishedAt, String readingTime, String mood) {

@@ -60,6 +60,7 @@ public class HomeController {
     @GetMapping("/articles")
     public R<PageData<Dtos.ArticleItem>> articles(@RequestParam(defaultValue = "1") int pageNo,
                                                   @RequestParam(defaultValue = "10") int pageSize) {
+        if (pageNo < 1 || pageSize < 1 || pageSize > 50) return R.fail("分页参数无效");
         var pageable = PageRequest.of(pageNo - 1, pageSize);
         var result = articleRepo.findPublishedPage(pageable);
         var items = result.getContent().stream().map(Dtos.ArticleItem::of).toList();

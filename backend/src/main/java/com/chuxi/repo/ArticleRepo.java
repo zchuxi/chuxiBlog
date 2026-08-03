@@ -31,11 +31,9 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
            "ORDER BY a.updatedAt DESC NULLS LAST")
     Page<Article> searchPublished(String kw, Pageable pageable);
 
-    @Query("SELECT a FROM Article a WHERE a.id < :currentId AND a.status <> '草稿' ORDER BY a.id DESC")
-    Optional<Article> findPrevious(@Param("currentId") Long currentId);
+    Optional<Article> findFirstByStatusNotAndIdLessThanOrderByIdDesc(String status, Long currentId);
 
-    @Query("SELECT a FROM Article a WHERE a.id > :currentId AND a.status <> '草稿' ORDER BY a.id ASC")
-    Optional<Article> findNext(@Param("currentId") Long currentId);
+    Optional<Article> findFirstByStatusNotAndIdGreaterThanOrderByIdAsc(String status, Long currentId);
 
     long countByStatus(String status);
 

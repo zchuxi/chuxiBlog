@@ -83,6 +83,7 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<PageData<Barrage>> barrages(@RequestParam(defaultValue = "1") int pageNo,
                                          @RequestParam(defaultValue = "50") int pageSize) {
+        if (pageNo < 1 || pageSize < 1 || pageSize > 100) return R.fail("分页参数无效");
         var pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(Sort.Direction.DESC, "id"));
         var result = barrageRepo.findByApprovedTrue(pageable);
         return R.ok(new PageData<>(result.getContent(), result.getTotalElements(), pageNo, pageSize));
@@ -129,6 +130,7 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<PageData<?>> calledTexts(@RequestParam(defaultValue = "1") int pageNo,
                                       @RequestParam(defaultValue = "50") int pageSize) {
+        if (pageNo < 1 || pageSize < 1 || pageSize > 100) return R.fail("分页参数无效");
         var pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(Sort.Direction.DESC, "sortIndex"));
         var result = calledTextRepo.findAll(pageable);
         return R.ok(new PageData<>(result.getContent(), result.getTotalElements(), pageNo, pageSize));
@@ -151,6 +153,7 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<PageData<?>> music(@RequestParam(defaultValue = "1") int pageNo,
                                 @RequestParam(defaultValue = "10") int pageSize) {
+        if (pageNo < 1 || pageSize < 1 || pageSize > 100) return R.fail("分页参数无效");
         var pageable = PageRequest.of(pageNo - 1, pageSize);
         var result = musicRepo.findAll(pageable);
         return R.ok(new PageData<>(result.getContent(), result.getTotalElements(), pageNo, pageSize));

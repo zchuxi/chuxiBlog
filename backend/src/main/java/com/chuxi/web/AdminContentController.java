@@ -26,6 +26,7 @@ public class AdminContentController {
 
     private final ObjectMapper mapper;
     private final CommentRepo commentRepo;
+    private final CommentLikeRepo commentLikeRepo;
     private final BangumiRecordRepo bangumiRecordRepo;
     private final Map<String, ResourceHandler<?>> handlers = new LinkedHashMap<>();
 
@@ -43,11 +44,13 @@ public class AdminContentController {
                                   CalledTextRepo calledTextRepo,
                                   MusicRepo musicRepo,
                                   CommentRepo commentRepo,
+                                  CommentLikeRepo commentLikeRepo,
                                   BangumiRecordRepo bangumiRecordRepo,
                                   FriendLinkRepo friendLinkRepo) {
         // 复制一份 Spring 的 ObjectMapper，容忍未知字段
         this.mapper = springMapper.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.commentRepo = commentRepo;
+        this.commentLikeRepo = commentLikeRepo;
         this.bangumiRecordRepo = bangumiRecordRepo;
         handlers.put("articles", new ResourceHandler<>(articleRepo, Article.class, true, true, false));
         handlers.put("home-carousels", new ResourceHandler<>(homeCarouselRepo, HomeCarousel.class, true, false, false));
@@ -119,7 +122,14 @@ public class AdminContentController {
         ResourceHandler<?> h = handlers.get(res);
         if (h == null) return R.fail("未知资源: " + res);
         // 删文章时顺带删除其全部评论
-        if ("articles".equals(res)) commentRepo.deleteByArticleId(id);
+        if ("articles".equals(res)) {
+            List<Long> commentIds = commentRepo.findByArticleIdOrderByCreatedAtDesc(id).stream()
+                    .map(Comment::getId).toList();
+            if (!commentIds.isEmpty()) commentLikeRepo.deleteByCommentIdIn(commentIds);
+            commentRepo.deleteByArticleId(id);
+        } else if ("comments".equals(res)) {
+            commentLikeRepo.deleteByCommentIdIn(List.of(id));
+        }
         h.delete(id);
         return R.ok(null);
     }

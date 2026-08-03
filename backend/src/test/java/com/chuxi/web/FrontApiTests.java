@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,6 +78,27 @@ class FrontApiTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.content").value("你好世界"));
+    }
+
+    /* ========== 文章详情（回归：findPrevious/findNext 曾缺 LIMIT 1 抛 NonUniqueResultException）========== */
+
+    @Test
+    void articleDetail_existingId_returnsArticle() throws Exception {
+        mockMvc.perform(get("/api/front/articles/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.article.id").value(2))
+                // id=2 存在上一篇(1)与下一篇(3)，prev/next 均应有值（回归：曾缺 LIMIT 1 抛 NonUniqueResultException）
+                .andExpect(jsonPath("$.data.prev.id").isNumber())
+                .andExpect(jsonPath("$.data.next.id").isNumber());
+    }
+
+    @Test
+    void articleDetail_nonExistentId_returnsArticleNotFound() throws Exception {
+        mockMvc.perform(get("/api/front/articles/999999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("文章不存在"));
     }
 
     /* ========== 浏览量 bump 防刷 ========== */
