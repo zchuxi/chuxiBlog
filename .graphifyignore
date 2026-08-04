@@ -1,0 +1,18 @@
+# graphify 建图排除规则（默认已尊重 .gitignore，此处补充未被 git 忽略但不该进图谱的内容）
+
+# 前端构建产物与历次备份：压缩后的 bundle 会灌入大量无意义节点
+frontend/dist/
+frontend/dist.bak/
+frontend/dist.bak-pre/
+frontend/dist.bak2-*/
+frontend/dist.prelaunch-*/
+frontend/dist_fresh*/
+
+# 第三方压缩库：live2d 运行时为 min.js，符号无可读性
+frontend/public/live2d/
+
+# 交付物归档（文档快照，非源码）
+deliverables/
+
+# 图谱自身产物
+graphify-out/

@@ -42,6 +42,9 @@ oss-keys.bat
 
 # 前端构建备份与 vite 临时文件
 frontend/dist.bak/
+frontend/dist.bak-pre/
+frontend/dist.bak2-*/
+frontend/dist.prelaunch-*/
 frontend/*.timestamp-*.mjs
 
 # Bangumi 日历本地缓存备份
