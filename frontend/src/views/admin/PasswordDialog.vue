@@ -13,7 +13,7 @@
         <div class="admin-field">
           <label class="admin-field-label">新密码</label>
           <input v-model.trim="form.newPassword" class="admin-input" type="password" autocomplete="new-password" />
-          <p class="admin-field-tip">至少 4 位，修改后立即生效</p>
+          <p class="admin-field-tip">至少 16 位，修改后立即生效</p>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">确认新密码</label>
@@ -47,8 +47,8 @@ async function onSubmit() {
     error.value = '请填写全部三项'
     return
   }
-  if (form.newPassword.length < 4) {
-    error.value = '新密码至少 4 位'
+  if (form.newPassword.length < 16) {
+    error.value = '新密码至少 16 位'
     return
   }
   if (form.newPassword !== form.confirmPassword) {

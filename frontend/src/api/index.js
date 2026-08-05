@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { toastError } from '../utils/toast.js'
-import { getVisitorId } from '../utils/visitorId.js'
+import { getVisitorToken, saveVisitorToken } from '../utils/visitorId.js'
 
 const http = axios.create({ baseURL: '/api', timeout: 15000 })
 
@@ -10,6 +10,9 @@ function shouldToast(config) {
 }
 
 http.interceptors.response.use(res => {
+  // 服务端签发的匿名身份（SEC-001）：任何响应都可能带回新 token，前端持久化
+  const issued = res.headers && res.headers['x-visitor-token']
+  if (issued) saveVisitorToken(issued)
   const body = res.data
   if (body && body.code === 0) return body.data
   // 业务码失败（如 4xx 语义错误），默认弹提示
@@ -18,6 +21,10 @@ http.interceptors.response.use(res => {
   return Promise.reject(new Error(message))
 }, err => {
   // 网络错误 / 超时 / 5xx
+  if (err.response && err.response.headers) {
+    const issued = err.response.headers['x-visitor-token']
+    if (issued) saveVisitorToken(issued)
+  }
   const message = (err.response && err.response.data && err.response.data.message)
     || err.message
     || '网络请求失败，请稍后重试'
@@ -30,19 +37,24 @@ export const api = {
   homeArticles: (pageNo = 1, pageSize = 6) => http.get('/front/home/articles', { params: { pageNo, pageSize } }),
   teamMembers: () => http.get('/front/home/team-members', { silent: true }),
   articleDetail: id => http.get(`/front/articles/${id}`),
-  articleComments: id => http.get(`/front/articles/${id}/comments`, {
-    headers: { 'X-Visitor-Id': getVisitorId() }
+  articleComments: (id, pageNo = 1, pageSize = 20) => http.get(`/front/articles/${id}/comments`, {
+    params: { pageNo, pageSize },
+    headers: { 'X-Visitor-Id': getVisitorToken() }
   }),
   addComment: (id, data) => http.post(`/front/articles/${id}/comments`, data),
   likeComment: id => http.post(`/front/articles/comments/${id}/likes`, null, {
-    headers: { 'X-Visitor-Id': getVisitorId() }
+    headers: { 'X-Visitor-Id': getVisitorToken() }
   }),
+  // 匿名访客身份签发（SEC-001）：写操作前调用确保服务端签名 token
+  visitorToken: () => http.get('/front/visitor/token', { silent: true }),
   searchArticles: (keyword, pageNo = 1, pageSize = 6) => http.get('/front/articles/search', { params: { keyword, pageNo, pageSize } }),
   timelineLanding: () => http.get('/front/timeline/landing', { silent: true }),
   archiveLanding: () => http.get('/front/archive/landing', { silent: true }),
   treeHoleBarrages: () => http.get('/front/tree-hole/barrages', { silent: true }),
   addBarrage: data => http.post('/front/tree-hole/barrages', data),
-  likeBarrage: id => http.post(`/front/tree-hole/barrages/${id}/likes`),
+  likeBarrage: id => http.post(`/front/tree-hole/barrages/${id}/likes`, null, {
+    headers: { 'X-Visitor-Id': getVisitorToken() }
+  }),
   calledTexts: () => http.get('/front/tree-hole/called-texts', { silent: true }),
   parallaxStories: () => http.get('/front/parallax/stories', { silent: true }),
   toolsLanding: () => http.get('/front/tools/landing', { silent: true }),

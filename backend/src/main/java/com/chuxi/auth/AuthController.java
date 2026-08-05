@@ -3,6 +3,7 @@ package com.chuxi.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.chuxi.common.ClientIpResolver;
 import com.chuxi.common.R;
+import com.chuxi.common.RateLimiter;
 import com.chuxi.entity.SiteContent;
 import com.chuxi.repo.SiteContentRepo;
 import org.slf4j.Logger;
@@ -52,6 +53,11 @@ public class AuthController {
                                         jakarta.servlet.http.HttpServletRequest request,
                                         jakarta.servlet.http.HttpServletResponse response) {
         String ip = clientIpResolver.resolve(request);
+        // 登录整体速率预算：即使未触发失败锁定，也限制同 IP 尝试频率（PBKDF2 120k 迭代有 CPU 成本）
+        if (!RateLimiter.tryAcquire("login:" + ip, 60, 10)) {
+            log.warn("登录请求触发速率限制：ip={}, uri={}", ip, request.getRequestURI());
+            return R.fail("尝试过于频繁，请稍后再试");
+        }
         if (isLocked(ip)) {
             log.warn("登录请求被限流拒绝：ip={}, uri={}", ip, request.getRequestURI());
             return R.fail("失败次数过多，请 " + LOCK_MINUTES + " 分钟后再试");
@@ -100,8 +106,8 @@ public class AuthController {
         if (!PasswordHasher.matches(oldPassword, storedPassword())) {
             return ResponseEntity.ok(R.fail("旧密码不正确"));
         }
-        if (newPassword.length() < 8) {
-            return ResponseEntity.ok(R.fail("新密码至少 8 位"));
+        if (newPassword.length() < 16) {
+            return ResponseEntity.ok(R.fail("新密码至少 16 位"));
         }
         SiteContent sc = siteContentRepo.findByContentKey(PASSWORD_KEY).orElseGet(() -> {
             SiteContent n = new SiteContent();
@@ -117,6 +123,8 @@ public class AuthController {
         }
         sc.setUpdatedAt(LocalDateTime.now());
         siteContentRepo.save(sc);
+        // 修改密码后吊销该用户全部旧会话，防止已窃取 token 继续有效
+        tokenStore.invalidateAllForUser(ADMIN_USERNAME);
         return ResponseEntity.ok(R.ok(null));
     }
 
@@ -178,23 +186,75 @@ public class AuthController {
 
     private static final int MAX_FAILURES = 5;
     private static final int LOCK_MINUTES = 15;
-    private static final java.util.Map<String, int[]> FAILURES = new java.util.concurrent.ConcurrentHashMap<>();
+    /** 失败计数：long[]{failureCount, lastFailureMillis}；同一记录用 synchronized 保证计数原子 */
+    private static final java.util.Map<String, long[]> FAILURES = new java.util.concurrent.ConcurrentHashMap<>();
     private static final java.util.Map<String, Long> LOCKED_UNTIL = new java.util.concurrent.ConcurrentHashMap<>();
+    /** 登录状态全局清扫：两 map 合计超阈值后周期性移除过期记录，防止随机 IP 各失败几次后永不回收 */
+    private static final int AUTH_SWEEP_THRESHOLD = 4096;
+    private static final long AUTH_SWEEP_MIN_INTERVAL_MS = 60 * 1000L;
+    private static volatile long lastAuthSweepAt = 0;
 
     private static boolean isLocked(String ip) {
+        sweepAuthState();
         Long until = LOCKED_UNTIL.get(ip);
-        if (until == null) return false;
+        if (until == null) {
+            pruneStaleFailures(ip);
+            return false;
+        }
         if (System.currentTimeMillis() < until) return true;
         LOCKED_UNTIL.remove(ip);
         FAILURES.remove(ip);
         return false;
     }
 
+    /** 全局惰性清扫：map 规模超阈值时，移除过期的失败计数与锁定记录 */
+    private static void sweepAuthState() {
+        if (FAILURES.size() + LOCKED_UNTIL.size() < AUTH_SWEEP_THRESHOLD) return;
+        long now = System.currentTimeMillis();
+        if (now - lastAuthSweepAt < AUTH_SWEEP_MIN_INTERVAL_MS) return;
+        lastAuthSweepAt = now;
+        FAILURES.forEach((ip, rec) -> {
+            synchronized (rec) {
+                if (now - rec[1] >= (long) LOCK_MINUTES * 60_000L) {
+                    FAILURES.remove(ip, rec);
+                }
+            }
+        });
+        LOCKED_UNTIL.forEach((ip, until) -> {
+            if (until != null && now >= until) {
+                LOCKED_UNTIL.remove(ip, until);
+                FAILURES.remove(ip);
+            }
+        });
+    }
+
+    /** 惰性清理：距上次失败超过重置窗口的记录移除，防止 map 无限增长 */
+    private static void pruneStaleFailures(String ip) {
+        long[] rec = FAILURES.get(ip);
+        if (rec == null) return;
+        synchronized (rec) {
+            if (System.currentTimeMillis() - rec[1] >= (long) LOCK_MINUTES * 60_000L) {
+                FAILURES.remove(ip, rec);
+            }
+        }
+    }
+
     private static void recordFailure(String ip) {
-        int[] c = FAILURES.computeIfAbsent(ip, k -> new int[1]);
-        if (++c[0] >= MAX_FAILURES) {
-            LOCKED_UNTIL.put(ip, System.currentTimeMillis() + LOCK_MINUTES * 60_000L);
-            FAILURES.remove(ip);
+        long now = System.currentTimeMillis();
+        long[] rec = FAILURES.computeIfAbsent(ip, k -> new long[]{0, now});
+        int count;
+        synchronized (rec) {
+            // 距上次失败已超过重置窗口：重新计数
+            if (now - rec[1] >= (long) LOCK_MINUTES * 60_000L) {
+                rec[0] = 0;
+            }
+            rec[0]++;
+            rec[1] = now;
+            count = (int) rec[0];
+        }
+        if (count >= MAX_FAILURES) {
+            LOCKED_UNTIL.put(ip, now + LOCK_MINUTES * 60_000L);
+            FAILURES.remove(ip, rec);
         }
     }
 

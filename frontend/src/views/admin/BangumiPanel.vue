@@ -83,9 +83,9 @@ const importingId = ref(null)
 const cleaning = ref(false)
 const panelKey = ref(0)
 
-// Bangumi 访问令牌：仅存当前浏览器 localStorage
+// Bangumi 访问令牌：仅存当前浏览器会话（sessionStorage），关闭页面即失效，避免长期驻留
 const TOKEN_KEY = 'cx-bgm-token'
-const bgmToken = ref(localStorage.getItem(TOKEN_KEY) || '')
+const bgmToken = ref(sessionStorage.getItem(TOKEN_KEY) || '')
 const syncing = ref(false)
 const syncTip = ref('')
 
@@ -140,7 +140,7 @@ async function syncCollections() {
   syncing.value = true
   syncTip.value = ''
   try {
-    localStorage.setItem(TOKEN_KEY, bgmToken.value)
+    sessionStorage.setItem(TOKEN_KEY, bgmToken.value)
     // 1. 拿用户名
     const meRes = await fetch('https://api.bgm.tv/v0/me', { headers: authHeaders() })
     if (meRes.status === 401) throw new Error('令牌无效或已过期')

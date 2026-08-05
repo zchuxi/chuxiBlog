@@ -25,6 +25,13 @@ public final class Dtos {
                     a.getCategoryId(), a.getCategoryName(), splitTags(a.getTags()),
                     Boolean.TRUE.equals(a.getPinned()), a.getCreatedAt(), a.getUpdatedAt());
         }
+
+        /** 从列表投影构建，避免加载 LONGTEXT content */
+        public static ArticleItem fromLite(com.chuxi.repo.ArticleRepo.ArticleLite a) {
+            return new ArticleItem(a.getId(), a.getTitle(), a.getSummary(), a.getCoverUrl(),
+                    a.getCategoryId(), a.getCategoryName(), splitTags(a.getTags()),
+                    Boolean.TRUE.equals(a.getPinned()), a.getCreatedAt(), a.getUpdatedAt());
+        }
     }
 
     /** 详情视图: /articles/{id} */

@@ -77,7 +77,7 @@
 
 ### CORS 配置
 
-- 允许来源通过环境变量 `APP_CORS_ALLOWED_ORIGINS` 配置，默认 `http://localhost:5173,http://localhost:3000`
+- 允许来源通过环境变量 `APP_CORS_ALLOWED_ORIGINS` 配置（Spring relaxed binding 映射到 `app.cors.allowed-origins`），默认仅 `http://localhost:5173`；本地开发另经 `application-dev.yml` 追加 `http://localhost:3000`
 - 允许方法: `GET, POST, PUT, DELETE, OPTIONS`
 
 ---
@@ -110,11 +110,12 @@ POST /api/auth/login
   "code": 0,
   "message": "ok",
   "data": {
-    "token": "uuid-string",
     "displayName": "admin"
   }
 }
 ```
+
+> 登录成功不返回 token 明文：会话经 `Set-Cookie`（HttpOnly + SameSite=Strict + Path=/api）下发，前端只读 `displayName`。
 
 **失败响应**:
 
@@ -188,7 +189,7 @@ POST /api/auth/password
 
 ```json
 { "code": 400, "message": "旧密码不正确" }
-{ "code": 400, "message": "新密码至少 8 位" }
+{ "code": 400, "message": "新密码至少 16 位" }
 ```
 
 ---
@@ -361,7 +362,7 @@ PUT /api/admin/site-content/{key}
 { "code": 0, "message": "ok", "data": { "id": 1, "contentKey": "home-landing", "contentJson": "...", "updatedAt": "..." } }
 ```
 
-> **受保护 key 黑名单**: `admin-password` — 不可通过此接口修改
+> **受保护 key 黑名单**: `admin-password`、`visitor-secret` — 不可通过此接口修改
 
 ---
 

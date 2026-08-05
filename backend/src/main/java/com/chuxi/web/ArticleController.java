@@ -12,15 +12,18 @@ import com.chuxi.entity.CommentLike;
 import com.chuxi.repo.CommentLikeRepo;
 import com.chuxi.repo.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/front/articles")
@@ -66,7 +69,7 @@ public class ArticleController {
                     Map<String, Object> prev = null;
                     Map<String, Object> next = null;
                     try {
-                        prev = articleRepo.findFirstByStatusNotAndIdLessThanOrderByIdDesc("草稿", a.getId())
+                        prev = articleRepo.findPrevPublished(a.getId(), PageRequest.of(0, 1)).stream().findFirst()
                                 .map(p -> {
                                     Map<String, Object> m = new LinkedHashMap<>();
                                     m.put("id", p.getId());
@@ -74,7 +77,7 @@ public class ArticleController {
                                     return m;
                                 })
                                 .orElse(null);
-                        next = articleRepo.findFirstByStatusNotAndIdGreaterThanOrderByIdAsc("草稿", a.getId())
+                        next = articleRepo.findNextPublished(a.getId(), PageRequest.of(0, 1)).stream().findFirst()
                                 .map(n -> {
                                     Map<String, Object> m = new LinkedHashMap<>();
                                     m.put("id", n.getId());
@@ -97,15 +100,24 @@ public class ArticleController {
 
     @GetMapping("/{id}/comments")
     @Transactional(readOnly = true)
-    public R<List<Dtos.CommentItem>> comments(@PathVariable Long id,
-                                              @RequestHeader(value = "X-Visitor-Id", required = false) String visitorId) {
-        List<Comment> comments = commentRepo.findByArticleIdAndApprovedTrueOrderByCreatedAtDesc(id);
-        if (comments.isEmpty()) return R.ok(List.of());
+    public R<PageData<Dtos.CommentItem>> comments(@PathVariable Long id,
+                                                  @RequestParam(defaultValue = "1") int pageNo,
+                                                  @RequestParam(defaultValue = "20") int pageSize,
+                                                  @RequestHeader(value = "X-Visitor-Id", required = false) String visitorId) {
+        // SEC-002：强制分页并限制最大页大小，评论集合无界增长时单次响应仍固定有界
+        if (pageNo < 1 || pageSize < 1 || pageSize > 50) return R.fail("分页参数无效");
+        var pageable = PageRequest.of(pageNo - 1, pageSize);
+        var page = commentRepo.findByArticleIdAndApprovedTrueOrderByCreatedAtDesc(id, pageable);
+        var comments = page.getContent();
+        if (comments.isEmpty()) return R.ok(new PageData<>(List.of(), page.getTotalElements(), pageNo, pageSize));
         List<Long> commentIds = comments.stream().map(Comment::getId).toList();
-        java.util.Set<Long> likedIds = VisitorIds.isValid(visitorId)
-                ? new java.util.HashSet<>(commentLikeRepo.findCommentIdsByVisitorIdAndCommentIdIn(visitorId, commentIds))
-                : java.util.Set.of();
-        return R.ok(comments.stream().map(c -> Dtos.CommentItem.of(c, likedIds.contains(c.getId()))).toList());
+        // 点赞关系只查询当前页的评论 ID；visitor token 验签后剥离签名，取 rawId 查询
+        String rawId = VisitorIds.resolve(visitorId);
+        Set<Long> likedIds = rawId != null
+                ? new HashSet<>(commentLikeRepo.findCommentIdsByVisitorIdAndCommentIdIn(rawId, commentIds))
+                : Set.of();
+        var items = comments.stream().map(c -> Dtos.CommentItem.of(c, likedIds.contains(c.getId()))).toList();
+        return R.ok(new PageData<>(items, page.getTotalElements(), pageNo, pageSize));
     }
 
     @PostMapping("/{id}/comments")
@@ -139,22 +151,37 @@ public class ArticleController {
     @PostMapping("/comments/{commentId}/likes")
     @Transactional
     public R<Dtos.CommentItem> likeComment(@PathVariable Long commentId,
-                                           @RequestHeader(value = "X-Visitor-Id", required = false) String visitorId) {
-        if (!VisitorIds.isValid(visitorId)) return R.fail("访客标识无效");
+                                           @RequestHeader(value = "X-Visitor-Id", required = false) String visitorId,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response) {
+        // SEC-001：按 IP 限流，防止同一来源无限翻转/放大点赞
+        String ip = clientIpResolver.resolve(request);
+        if (!RateLimiter.tryAcquire("commentLike:" + ip, 60, 10)) {
+            return R.fail("操作过于频繁，请稍后再试");
+        }
+        // fail-closed：匿名身份必须是服务端 HMAC 签发的合法 token，客户端无法自行构造
+        String rawId = VisitorIds.resolve(visitorId);
+        if (rawId == null) {
+            response.setHeader("X-Visitor-Token", VisitorIds.issue(VisitorIds.newRawId()));
+            return R.fail("访客标识无效，请刷新后重试");
+        }
         return commentRepo.findByIdForUpdate(commentId).filter(c -> Boolean.TRUE.equals(c.getApproved())).map(c -> {
             boolean newLiked;
-            if (commentLikeRepo.findByCommentIdAndVisitorId(commentId, visitorId).isPresent()) {
-                commentLikeRepo.deleteByCommentIdAndVisitorId(commentId, visitorId);
+            int delta;
+            if (commentLikeRepo.findByCommentIdAndVisitorId(commentId, rawId).isPresent()) {
+                long deleted = commentLikeRepo.deleteByCommentIdAndVisitorId(commentId, rawId);
                 newLiked = false;
+                // 仅在确实删除到记录时才扣减计数；记录已被其他路径删除时不再扣，避免计数漂移
+                delta = deleted > 0 ? -1 : 0;
             } else {
                 CommentLike like = new CommentLike();
                 like.setCommentId(commentId);
-                like.setVisitorId(visitorId);
+                like.setVisitorId(rawId);
                 like.setCreatedAt(LocalDateTime.now());
                 commentLikeRepo.save(like);
                 newLiked = true;
+                delta = 1;
             }
-            int delta = newLiked ? 1 : -1;
             int newLikeCount = Math.max(0, (c.getLikeCount() == null ? 0 : c.getLikeCount()) + delta);
             c.setLikeCount(newLikeCount);
             commentRepo.save(c);

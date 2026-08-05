@@ -126,6 +126,7 @@ import { computed, onMounted, ref } from 'vue'
 import CxSection from '../components/CxSection.vue'
 import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
+import { ensureVisitorToken } from '../utils/visitorId'
 import '../assets/css/tree-hole.css'
 
 const VARIANTS = ['featured', 'portrait', 'note', 'wide', 'compact', 'balanced']
@@ -195,8 +196,23 @@ function addDanmu(b, initial = false) {
 async function like(d) {
   if (!d.id) return
   try {
-    const updated = await api.likeBarrage(d.id)
-    if (updated) d.likeCount = updated.likeCount
+    // SEC-001：点赞前确保持有服务端签发的匿名身份；身份无效时刷新后重试一次
+    if (!(await ensureVisitorToken())) {
+      console.warn('[点赞] 未获取到匿名身份，已跳过')
+      return
+    }
+    try {
+      const updated = await api.likeBarrage(d.id)
+      if (updated) d.likeCount = updated.likeCount
+    } catch (err) {
+      const msg = (err && err.message) || ''
+      if (msg.includes('访客标识无效')) {
+        const updated = await api.likeBarrage(d.id)
+        if (updated) d.likeCount = updated.likeCount
+      } else {
+        throw err
+      }
+    }
   } catch (e) { console.warn('[点赞] 操作失败:', e) }
 }
 

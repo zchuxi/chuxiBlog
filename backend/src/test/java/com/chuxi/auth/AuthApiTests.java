@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 认证路径行为检查（MockMvc，复用 src/test/resources 的 H2 内存库配置）：
  * 1. 库里没有密码记录时登录被拒绝（不再回退默认口令）；
- * 2. 修改密码时短于 8 位的新密码被拒绝；
+ * 2. 修改密码时短于 16 位的新密码被拒绝；
  * 3. 正确凭据仍可正常登录并取得 HttpOnly 管理 Cookie。
  */
 @SpringBootTest
@@ -70,15 +70,15 @@ class AuthApiTests {
     }
 
     @Test
-    void changePasswordShorterThanEightRejected() throws Exception {
+    void changePasswordShorterThanSixteenRejected() throws Exception {
         Cookie session = login();
         mockMvc.perform(post("/api/auth/password")
                         .cookie(session)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(Map.of("oldPassword", "123456", "newPassword", "1234567"))))
+                        .content(mapper.writeValueAsString(Map.of("oldPassword", "123456", "newPassword", "1234567890abcde"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("新密码至少 8 位"));
+                .andExpect(jsonPath("$.message").value("新密码至少 16 位"));
     }
 
     @Test

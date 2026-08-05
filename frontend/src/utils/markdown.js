@@ -68,6 +68,12 @@ export function renderMarkdown(md) {
     }
   })
   const rawHtml = marked.parse(md || '')
-  const html = DOMPurify.sanitize(rawHtml)
+  // 显式收紧净化策略：仅允许 http/https/mailto/tel 协议与站内相对/锚点链接，
+  // 拒绝 data:/javascript:/blob: 等 URI（DOMPurify 默认放行部分 data: URI），
+  // 防止图床/后台 URL 被利用为存储型内容载体或隐私跟踪
+  const html = DOMPurify.sanitize(rawHtml, {
+    USE_PROFILES: { html: true },
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|#|\/)/i
+  })
   return { html, headings }
 }

@@ -161,12 +161,54 @@ public class MediaController {
             return R.fail("下载失败，HTTP " + code);
         }
         long size = conn.getContentLengthLong();
-        String contentType = conn.getContentType();
-        try (java.io.InputStream in = conn.getInputStream()) {
-            return R.ok(oss.upload(name, in, size, contentType));
+        // 远程 Content-Type 白名单：仅允许图片 MIME，杜绝非图片对象（如 text/html）被透传到 OSS 后以原类型直返浏览器
+        String mediaType = conn.getContentType();
+        if (mediaType != null) {
+            int semi = mediaType.indexOf(';');
+            mediaType = (semi >= 0 ? mediaType.substring(0, semi) : mediaType).trim().toLowerCase();
+        }
+        if (mediaType == null || !ALLOWED_FETCH_TYPES.contains(mediaType)) {
+            conn.disconnect();
+            return R.fail("仅支持图片类型（jpg/png/gif/webp/avif）");
+        }
+        if (size > MAX_FETCH_BYTES) {
+            conn.disconnect();
+            return R.fail("文件超过 25MB 限制");
+        }
+        try (java.io.InputStream in = boundedInput(conn.getInputStream())) {
+            return R.ok(oss.upload(name, in, size, mediaType));
         } finally {
             conn.disconnect();
         }
+    }
+
+    /** fetch 外链取回：仅接受这几种图片 MIME，且单文件 ≤ 25MB */
+    private static final java.util.Set<String> ALLOWED_FETCH_TYPES =
+            java.util.Set.of("image/jpeg", "image/png", "image/gif", "image/webp", "image/avif");
+    private static final long MAX_FETCH_BYTES = 25L * 1024 * 1024;
+
+    /** 限制读取包装：防 chunked / 无 Content-Length 的响应被无限放大下载 */
+    private static java.io.InputStream boundedInput(java.io.InputStream in) {
+        final long[] read = {0};
+        return new java.io.FilterInputStream(in) {
+            @Override
+            public int read() throws java.io.IOException {
+                if (read[0] > MAX_FETCH_BYTES) throw new java.io.IOException("文件超过 25MB 限制");
+                int b = super.read();
+                if (b != -1) read[0]++;
+                return b;
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws java.io.IOException {
+                if (read[0] > MAX_FETCH_BYTES) throw new java.io.IOException("文件超过 25MB 限制");
+                len = (int) Math.min(len, MAX_FETCH_BYTES - read[0]);
+                if (len <= 0) return -1;
+                int n = super.read(b, off, len);
+                if (n > 0) read[0] += n;
+                return n;
+            }
+        };
     }
 
     /** 公开读取（不在 /api/admin 下）：流式响应 + 7 天缓存 */
@@ -255,7 +297,34 @@ public class MediaController {
                     && header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[3] == 'F'
                     && header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P';
         }
-        // 未知类型，放行（保守策略）
+        // BMP: 42 4D
+        if (ct.contains("bmp")) {
+            return header[0] == 'B' && header[1] == 'M';
+        }
+        // WAV: RIFF....WAVE
+        if (ct.contains("wav")) {
+            return header.length >= 12
+                    && header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[3] == 'F'
+                    && header[8] == 'W' && header[9] == 'A' && header[10] == 'V' && header[11] == 'E';
+        }
+        // FLAC: 66 4C 61 43
+        if (ct.contains("flac")) {
+            return header[0] == 'f' && header[1] == 'L' && header[2] == 'a' && header[3] == 'C';
+        }
+        // OGG: 4F 67 67 53
+        if (ct.contains("ogg")) {
+            return header[0] == 'O' && header[1] == 'g' && header[2] == 'g' && header[3] == 'S';
+        }
+        // MP3: ID3 标签（49 44 33）或 MPEG 帧同步（FF Ex）
+        if (ct.contains("mpeg")) {
+            return (header[0] == 'I' && header[1] == 'D' && header[2] == '3')
+                    || ((header[0] & 0xFF) == 0xFF && (header[1] & 0xE0) == 0xE0);
+        }
+        // AAC: ADTS 同步字（FF Fx）
+        if (ct.contains("aac")) {
+            return (header[0] & 0xFF) == 0xFF && (header[1] & 0xF0) == 0xF0;
+        }
+        // 未知类型，放行（保守策略：白名单外的 MIME 已在 upload() 上层拦截，此处仅兜底）
         return true;
     }
 

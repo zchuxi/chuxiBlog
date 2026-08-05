@@ -5,10 +5,12 @@ import com.chuxi.common.InputSanitizer;
 import com.chuxi.common.PageData;
 import com.chuxi.common.R;
 import com.chuxi.common.RateLimiter;
+import com.chuxi.common.VisitorIds;
 import com.chuxi.entity.Barrage;
 import com.chuxi.entity.FriendLink;
 import com.chuxi.repo.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -112,9 +114,32 @@ public class SectionController {
         return R.ok(barrageRepo.save(b));
     }
 
+    /** 匿名访客身份签发：返回服务端 HMAC 签名的 visitor token（IP 限流，防止批量伪造匿名主体） */
+    @GetMapping("/api/front/visitor/token")
+    public R<Map<String, String>> visitorToken(HttpServletRequest request) {
+        String ip = clientIpResolver.resolve(request);
+        if (!RateLimiter.tryAcquire("visitor:" + ip, 60, 30)) {
+            return R.fail("请求过于频繁，请稍后再试");
+        }
+        String rawId = VisitorIds.newRawId();
+        return R.ok(Map.of("token", VisitorIds.issue(rawId)));
+    }
+
     @PostMapping("/api/front/tree-hole/barrages/{id}/likes")
     @Transactional
-    public R<Barrage> likeBarrage(@PathVariable Long id) {
+    public R<Barrage> likeBarrage(@PathVariable Long id,
+                                  @RequestHeader(value = "X-Visitor-Id", required = false) String visitorId,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response) {
+        String ip = clientIpResolver.resolve(request);
+        if (!RateLimiter.tryAcquire("barrageLike:" + ip, 60, 10)) {
+            return R.fail("操作过于频繁，请稍后再试");
+        }
+        // fail-closed：匿名身份必须是服务端签发的合法 token，客户端无法自行构造
+        if (VisitorIds.resolve(visitorId) == null) {
+            response.setHeader("X-Visitor-Token", VisitorIds.issue(VisitorIds.newRawId()));
+            return R.fail("访客标识无效，请刷新后重试");
+        }
         return barrageRepo.findById(id).map(b -> {
             boolean liked = Boolean.TRUE.equals(b.getLiked());
             boolean newLiked = !liked;
@@ -161,8 +186,8 @@ public class SectionController {
 
     @GetMapping("/api/front/friend-links")
     @Transactional(readOnly = true)
-    public List<FriendLink> friendLinks() {
-        return friendLinkRepo.findByVisibleTrueOrderBySortIndexAsc();
+    public R<List<FriendLink>> friendLinks() {
+        return R.ok(friendLinkRepo.findByVisibleTrueOrderBySortIndexAsc());
     }
 
 }

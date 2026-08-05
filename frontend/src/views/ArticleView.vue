@@ -139,17 +139,17 @@
                   <span>Comments</span>
                 </div>
                 <h2 class="article-comments-header-title">评论区</h2>
-                <p class="article-comments-header-copy">登录后可评论、回复与点赞。</p>
+                <p class="article-comments-header-copy">欢迎留下你的想法，游客可直接评论。</p>
               </div>
-              <div class="article-comments-header-count">{{ comments.length }} 条主评论 / {{ comments.length }} 条全部评论</div>
+              <div class="article-comments-header-count">{{ commentTotal }} 条主评论<span v-if="comments.length < commentTotal">（已加载 {{ comments.length }} 条）</span></div>
             </header>
             <form class="article-comments-composer" @submit.prevent="submitComment">
               <div class="article-comments-composer-head">
-                <div class="article-comments-composer-user">
+                  <div class="article-comments-composer-user">
                   <div class="article-comments-composer-avatar"><span>游</span></div>
                   <div class="article-comments-composer-user-meta">
                     <strong class="article-comments-composer-user-name">游客模式</strong>
-                    <span class="article-comments-composer-user-hint">登录后发送的评论会显示在这里。</span>
+                    <span class="article-comments-composer-user-hint">发表评论后将以「游客」身份显示。</span>
                   </div>
                 </div>
               </div>
@@ -159,7 +159,7 @@
                     v-model="commentDraft"
                     class="cx-input__inner cx-input__textarea"
                     maxlength="500"
-                    placeholder="登录后才能参与评论与点赞"
+                    placeholder="说点什么吧…（游客可直接评论）"
                   ></textarea>
                 </div>
               </div>
@@ -173,7 +173,7 @@
                       </button>
                     </div>
                   </div>
-                  <span class="article-comments-composer-toolbar-hint">二级评论已开启，可直接回复主评论或回复楼中楼。</span>
+                  <span class="article-comments-composer-toolbar-hint">支持点赞与楼中楼回复（演示站点未开放，可正常发表）。</span>
                 </div>
                 <div class="article-comments-composer-toolbar-right">
                   <span class="article-comments-composer-count">{{ commentDraft.length }}/500</span>
@@ -216,6 +216,15 @@
                 </div>
               </article>
             </div>
+            <button
+              v-if="comments.length < commentTotal"
+              type="button"
+              class="article-comments-load-more"
+              :disabled="commentLoadingMore"
+              @click="loadMoreComments"
+            >
+              {{ commentLoadingMore ? '加载中…' : '加载更多评论' }}
+            </button>
           </div>
         </div>
       </section>
@@ -230,6 +239,7 @@ import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 import { renderMarkdown } from '../utils/markdown'
 import { coverOf } from '../utils/display'
+import { ensureVisitorToken } from '../utils/visitorId'
 import '../assets/css/article.css'
 import '../assets/css/preview.css'
 
@@ -240,6 +250,32 @@ const article = ref(null)
 const prevArticle = ref(null)
 const nextArticle = ref(null)
 const comments = ref([])
+const commentTotal = ref(0)
+const commentPage = ref(1)
+const commentLoadingMore = ref(false)
+
+async function loadComments(page = 1) {
+  try {
+    const data = await api.articleComments(articleId.value, page, 20)
+    const records = (data && data.records) || []
+    commentPage.value = page
+    commentTotal.value = Number((data && data.total) || 0)
+    comments.value = page === 1 ? records : [...comments.value, ...records]
+  } catch (e) {
+    console.warn('[评论] 加载失败:', e)
+    if (page === 1) { comments.value = []; commentTotal.value = 0 }
+  }
+}
+
+async function loadMoreComments() {
+  if (commentLoadingMore.value) return
+  commentLoadingMore.value = true
+  try {
+    await loadComments(commentPage.value + 1)
+  } finally {
+    commentLoadingMore.value = false
+  }
+}
 const renderedHtml = ref('')
 const headings = ref([])
 const activeHeading = ref('')
@@ -277,8 +313,8 @@ async function load() {
     injectJsonLd()
   } catch (e) { console.warn('[文章] 加载失败:', e) }
   try {
-    comments.value = await api.articleComments(articleId.value) || []
-  } catch (e) { console.warn('[评论] 加载失败:', e); comments.value = [] }
+    await loadComments(1)
+  } catch (e) { console.warn('[评论] 加载失败:', e) }
 }
 
 function observeHeadings() {
@@ -306,7 +342,7 @@ async function submitComment() {
   try {
     await api.addComment(articleId.value, { content, nickname: '游客' })
     commentDraft.value = ''
-    comments.value = await api.articleComments(articleId.value) || []
+    await loadComments(1)
     commentSuccess.value = true
     clearTimeout(commentCooldownTimer)
     commentCooldownTimer = setTimeout(() => {
@@ -321,8 +357,24 @@ async function submitComment() {
 
 async function likeComment(c) {
   try {
-    const updated = await api.likeComment(c.id)
-    if (updated) Object.assign(c, updated)
+    // SEC-001：点赞前确保持有服务端签发的匿名身份；身份无效时刷新后重试一次
+    if (!(await ensureVisitorToken())) {
+      console.warn('[点赞] 未获取到匿名身份，已跳过')
+      return
+    }
+    try {
+      const updated = await api.likeComment(c.id)
+      if (updated) Object.assign(c, updated)
+    } catch (err) {
+      const msg = (err && err.message) || ''
+      if (msg.includes('访客标识无效')) {
+        // 拦截器已把响应头下发的 token 存入本地，重试一次
+        const updated = await api.likeComment(c.id)
+        if (updated) Object.assign(c, updated)
+      } else {
+        throw err
+      }
+    }
   } catch (e) { console.warn('[点赞] 操作失败:', e) }
 }
 

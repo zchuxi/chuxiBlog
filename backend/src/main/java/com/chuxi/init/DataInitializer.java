@@ -1,5 +1,6 @@
 package com.chuxi.init;
 
+import com.chuxi.common.VisitorIds;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.chuxi.entity.*;
@@ -12,6 +13,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 
 /** 幂等种子数据：对应表为空时才导入 */
@@ -63,6 +67,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        ensureVisitorSecret();
         seed("articles.json", articleRepo, new TypeReference<List<Article>>() {});
         seed("home-carousels.json", homeCarouselRepo, new TypeReference<List<HomeCarousel>>() {});
         seed("collapse-cards.json", collapseCardRepo, new TypeReference<List<CollapseCard>>() {});
@@ -77,6 +82,33 @@ public class DataInitializer implements CommandLineRunner {
         seed("musics.json", musicRepo, new TypeReference<List<Music>>() {});
         seed("bangumi-records.json", bangumiRecordRepo, new TypeReference<List<BangumiRecord>>() {});
         seed("site-contents.json", siteContentRepo, new TypeReference<List<SiteContent>>() {});
+    }
+
+    /**
+     * visitor 签名密钥：持久化到 site_content（key=visitor-secret），重启不失效。
+     * 客户端无法自行构造合法访客标识，只能通过签发接口获取。
+     */
+    private void ensureVisitorSecret() {
+        try {
+            final String KEY = "visitor-secret";
+            String hex = siteContentRepo.findByContentKey(KEY)
+                    .map(SiteContent::getContentJson)
+                    .orElse(null);
+            if (hex == null || hex.length() < 32) {
+                byte[] buf = new byte[32];
+                new SecureRandom().nextBytes(buf);
+                hex = HexFormat.of().formatHex(buf);
+                SiteContent sc = new SiteContent();
+                sc.setContentKey(KEY);
+                sc.setContentJson(hex);
+                sc.setUpdatedAt(LocalDateTime.now());
+                siteContentRepo.save(sc);
+                log.info("已生成并持久化 visitor 签名密钥");
+            }
+            VisitorIds.init(HexFormat.of().parseHex(hex));
+        } catch (Exception e) {
+            log.error("visitor 签名密钥初始化失败：{}", e.getMessage());
+        }
     }
 
     private <T> void seed(String file, JpaRepository<T, Long> repo, TypeReference<List<T>> type) {

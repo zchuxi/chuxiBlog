@@ -7,6 +7,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +57,8 @@ public class TokenStore {
             log.info("Token 签发成功：username={}, expiresAt={}", username, now.plusDays(TOKEN_EXPIRE_DAYS));
         } catch (Exception e) {
             log.error("Token 持久化失败：username={}", username, e);
+            // fail-closed：签发失败必须让登录失败，否则下发的是库中不存在的假会话
+            throw new IllegalStateException("Token 持久化失败，登录未完成", e);
         }
         return token;
     }
@@ -127,7 +130,31 @@ public class TokenStore {
         log.info("Token 已注销：key={}", key);
     }
 
-    /** 清理所有过期 token（可被定时任务或手动调用） */
+    /** 吊销指定用户的所有 token（如修改密码后），使已签发会话全部失效 */
+    @Transactional
+    public void invalidateAllForUser(String username) {
+        if (username == null || username.isBlank()) return;
+        List<SiteContent> tokenRecords = siteContentRepo.findByContentKeyStartingWith(TOKEN_KEY_PREFIX);
+        int revoked = 0;
+        for (SiteContent sc : tokenRecords) {
+            try {
+                Map<?, ?> data = mapper.readValue(sc.getContentJson(), Map.class);
+                String u = Optional.ofNullable(data.get("username")).map(String::valueOf).orElse(null);
+                if (username.equals(u)) {
+                    siteContentRepo.delete(sc);
+                    revoked++;
+                }
+            } catch (Exception e) {
+                log.warn("吊销 token 时解析失败，跳过：key={}", sc.getContentKey(), e);
+            }
+        }
+        if (revoked > 0) {
+            log.info("已吊销用户 {} 的 {} 个 token", username, revoked);
+        }
+    }
+
+    /** 清理所有过期 token：每天 03:30 定时执行（同时保留惰性清理与手动调用入口） */
+    @Scheduled(cron = "0 30 3 * * ?")
     @Transactional
     public void cleanExpiredTokens() {
         List<SiteContent> tokenRecords = siteContentRepo.findByContentKeyStartingWith(TOKEN_KEY_PREFIX);

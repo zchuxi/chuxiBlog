@@ -24,7 +24,7 @@ public class SiteContentController {
     static final String VIEWS_KEY = "site-views";
 
     /** 敏感 key 黑名单：禁止通过管理端接口直接写入 */
-    private static final Set<String> PROTECTED_KEYS = Set.of("admin-password");
+    private static final Set<String> PROTECTED_KEYS = Set.of("admin-password", "visitor-secret");
 
     /** 公开可读的文案 key 白名单：其余（如 admin-password）一律不对外暴露 */
     private static final java.util.Set<String> PUBLIC_KEYS =
