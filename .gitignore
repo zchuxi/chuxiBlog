@@ -35,6 +35,9 @@ avatar.png
 # 验收截图归档（本地留存，不入库）
 docs/screenshots/
 
+# 安全审计报告与发布评审产物（含未修复项清单，公开远端不宜暴露，本地留存）
+deliverables/
+
 # 阿里云 OSS 密钥（本地环境变量脚本，绝不入仓）
 oss-keys.bat
 
