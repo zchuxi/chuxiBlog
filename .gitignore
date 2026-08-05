@@ -26,6 +26,7 @@ avatar.png
 # Claude 会话内部文件
 .claude/
 .qoder/
+.reasonix/
 
 # AI 助手临时截图/裁图产物
 .qoder-*.png
@@ -52,3 +53,13 @@ scripts/bangumi-calendar.local.json
 
 # graphify 知识图谱产物（本地生成，6MB+，用 graphify update . 重建）
 graphify-out/
+
+# 环境变量与私钥（预防性：防止误提交敏感文件）
+.env
+*.env
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+*.p12
+*.jks
