@@ -2,7 +2,6 @@ package com.chuxi.web;
 
 import com.chuxi.common.PageData;
 import com.chuxi.common.R;
-import com.chuxi.entity.Article;
 import com.chuxi.repo.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +36,9 @@ public class HomeController {
     public R<Map<String, Object>> landing() {
         var carousels = carouselRepo.findVisibleOrderBySortIndexDesc();
         var cards = collapseCardRepo.findAllByOrderBySortIndexDesc();
-        var published = latestArticles();
-        var articles = published.stream().limit(6).map(Dtos.ArticleItem::of).toList();
+        // 列表投影：不加载 LONGTEXT 正文，避免每次 landing 全量载入
+        var published = articleRepo.findPublishedLite();
+        var articles = published.stream().limit(6).map(Dtos.ArticleItem::fromLite).toList();
         long categoryCount = published.stream()
                 .flatMap(a -> java.util.stream.Stream.of(a.getCategoryName(), a.getArchiveCategory()))
                 .filter(c -> c != null && !c.isBlank())
@@ -70,10 +70,5 @@ public class HomeController {
     @GetMapping("/team-members")
     public R<List<?>> teamMembers() {
         return R.ok(teamMemberRepo.findAll());
-    }
-
-    /** 已发布文章：置顶优先，其余按 updatedAt 倒序 */
-    private List<Article> latestArticles() {
-        return articleRepo.findAllPublished();
     }
 }

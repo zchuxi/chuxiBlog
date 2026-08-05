@@ -20,7 +20,8 @@ public class RssController {
 
     @GetMapping(value = "/rss", produces = "application/atom+xml;charset=UTF-8")
     public String atom() {
-        List<Article> articles = articleRepo.findAllPublished();
+        // 按发布时间倒序取最新 20 篇；不能复用 findAllPublished（置顶优先排序会让置顶旧文霸榜）
+        List<Article> articles = articleRepo.findAllPublishedOrderByPublishedAtDesc();
         List<Article> latest = articles.stream().limit(20).toList();
 
         StringBuilder xml = new StringBuilder();
