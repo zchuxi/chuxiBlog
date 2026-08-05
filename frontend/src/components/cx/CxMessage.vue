@@ -1,11 +1,13 @@
 <template>
-  <div class="cx-message-container">
-    <transition-group name="cx-message-slide">
-      <div v-for="m in messages" :key="m.id" class="cx-message-item" :class="`cx-message-${m.type}`">
-        <span>{{ m.text }}</span>
-      </div>
-    </transition-group>
-  </div>
+  <Teleport to="body">
+    <div class="cx-message-container">
+      <transition-group name="cx-message-slide">
+        <div v-for="m in messages" :key="m.id" class="cx-message-item" :class="`cx-message-${m.type}`">
+          <span>{{ m.text }}</span>
+        </div>
+      </transition-group>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>

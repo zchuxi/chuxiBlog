@@ -44,10 +44,16 @@ const VIEW_W = 1000
 const VIEW_H = 6
 const trackRef = ref(null)
 const progress = ref(0) // 0..1
+let scroller = null // 实际滚动容器：布局里的 .app-shell-main（本站点 window 不滚动）
+
+function findScroller() {
+  return document.querySelector('.app-shell-main') || document.scrollingElement || document.documentElement
+}
 
 function updateProgress() {
-  const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
-  progress.value = Math.min(1, Math.max(0, window.scrollY / max))
+  const el = scroller || findScroller()
+  const max = Math.max(1, el.scrollHeight - el.clientHeight)
+  progress.value = Math.min(1, Math.max(0, el.scrollTop / max))
 }
 
 let rafId = 0
@@ -56,15 +62,21 @@ function onScroll() {
   rafId = requestAnimationFrame(() => { rafId = 0; updateProgress() })
 }
 
+function onResize() {
+  scroller = findScroller()
+  onScroll()
+}
+
 onMounted(() => {
+  scroller = findScroller()
   updateProgress()
-  window.addEventListener('scroll', onScroll, { passive: true })
-  window.addEventListener('resize', onScroll, { passive: true })
+  scroller.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onScroll)
-  window.removeEventListener('resize', onScroll)
+  if (scroller) scroller.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onResize)
   if (rafId) cancelAnimationFrame(rafId)
 })
 
