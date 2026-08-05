@@ -5,9 +5,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -31,10 +36,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(R.fail(message));
     }
 
-    // 处理非法参数异常
+    // 客户端输入错误（JSON 解析失败 / 路径变量类型不匹配 / 缺参 / 媒体类型不支持 / 绑定错误）：
+    // 属调用方问题，返回 400 而非 500，避免错误监控被客户端噪音污染
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class,
+            HttpMediaTypeNotSupportedException.class,
+            ServletRequestBindingException.class
+    })
+    public ResponseEntity<R<Void>> handleClientError(Exception e) {
+        log.warn("客户端请求不合法：{}", e.getMessage());
+        return ResponseEntity.badRequest().body(R.fail("请求参数不合法"));
+    }
+
+    // 处理非法参数异常：只回通用消息，异常细节仅入日志，避免内部信息外泄
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<R<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(R.fail(e.getMessage()));
+        log.warn("非法参数：{}", e.getMessage());
+        return ResponseEntity.badRequest().body(R.fail("请求参数不合法"));
     }
 
     // 处理实体未找到异常

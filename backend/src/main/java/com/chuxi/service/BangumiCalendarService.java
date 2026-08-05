@@ -71,14 +71,22 @@ public class BangumiCalendarService {
         long now = System.currentTimeMillis();
         // 1) 内存缓存
         if (calendarCache != null && (now - calendarCacheTime) < CALENDAR_TTL) {
-            return parseSafe(calendarCache);
+            JsonNode n = parseSafe(calendarCache);
+            if (n != null) return n;
+            log.warn("Bangumi calendar in-memory cache invalid, falling through to next layer");
         }
         // 2) 磁盘缓存（api.bgm.tv 被墙时由本机脚本预置）
         String disk = readDiskCache();
         if (disk != null) {
-            calendarCache = disk;
-            calendarCacheTime = now;
-            return parseSafe(disk);
+            JsonNode n = parseSafe(disk);
+            if (n == null) {
+                log.warn("Bangumi calendar disk cache invalid, falling through to live fetch");
+            } else {
+                // 解析成功才落内存缓存，避免损坏的磁盘文件挤掉内存中过期的旧好数据
+                calendarCache = disk;
+                calendarCacheTime = now;
+                return n;
+            }
         }
         // 3) 直连兜底（仅完全无缓存时）
         try {
@@ -92,12 +100,17 @@ public class BangumiCalendarService {
             }
             HttpResponse<String> resp = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() == 200) {
-                calendarCache = resp.body();
-                calendarCacheTime = now;
-                persistDiskCache(calendarCache);
-                return parseSafe(calendarCache);
+                JsonNode n = parseSafe(resp.body());
+                if (n != null) {
+                    calendarCache = resp.body();
+                    calendarCacheTime = now;
+                    persistDiskCache(calendarCache);
+                    return n;
+                }
+                log.warn("Bangumi calendar live response invalid (unparseable body)");
+            } else {
+                log.warn("Bangumi calendar API returned status {}", resp.statusCode());
             }
-            log.warn("Bangumi calendar API returned status {}", resp.statusCode());
         } catch (Exception e) {
             log.warn("Bangumi calendar live fetch failed: {} (will serve cached data)", e.getMessage());
         }
