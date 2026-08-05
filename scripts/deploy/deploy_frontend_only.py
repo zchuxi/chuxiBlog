@@ -34,23 +34,42 @@ try:
     sftp.close()
     print("      done")
 
-    print("[2/3] Extracting to /opt/chuxi/dist on server")
+    print("[2/3] Extracting & atomically switching /opt/chuxi/dist")
+    # 与 deploy_upload.py 同口径：先解压到临时目录并校验顶层目录，再整体原子切换；
+    # 任一环节失败即中止，线上现役 dist 绝不被提前删除
     cmds = [
-        "rm -rf /opt/chuxi/dist",
-        "mkdir -p /opt/chuxi/dist",
-        "tar xzf /tmp/dist.tgz -C /opt/chuxi/",
-        "echo OK",
-        "ls /opt/chuxi/dist/assets | wc -l",
+        "rm -rf /tmp/dist-extract",
+        "mkdir -p /tmp/dist-extract",
+        "tar xzf /tmp/dist.tgz -C /tmp/dist-extract",
+        "test -d /tmp/dist-extract/dist || exit 1",
+        "ts=$(date +%Y%m%d%H%M%S)",
+        "mv /opt/chuxi/dist /opt/chuxi/dist.old.$ts",
+        # 第二个 mv 失败时自动回滚旧版本并中止，绝不让线上缺目录
+        "mv /tmp/dist-extract/dist /opt/chuxi/dist || { mv /opt/chuxi/dist.old.$ts /opt/chuxi/dist; exit 1; }",
+        "echo SWITCHED_TS=$ts",
+        # 新包无 assets/ 时不应误判失败：只做统计展示，失败不影响切换结果判定
+        "ls /opt/chuxi/dist/assets 2>/dev/null | wc -l || true",
     ]
     full = " && ".join(cmds)
-    stdin, stdout, stderr = client.exec_command(full, timeout=60)
+    stdin, stdout, stderr = client.exec_command(full, timeout=120)
     out = stdout.read().decode(errors="replace").strip()
     err = stderr.read().decode(errors="replace").strip()
     if err:
         print(f"      [stderr] {err}")
     print(f"      {out}")
+    if "SWITCHED_TS=" not in out:
+        print("      [ERROR] dist switch failed; previous dist preserved under /opt/chuxi/dist.old.*", file=sys.stderr)
+        sys.exit(1)
 
-    print("[3/3] No backend restart needed (frontend-only change)")
+    print("[3/3] Health check (home page should return 200)")
+    stdin2, stdout2, stderr2 = client.exec_command(
+        "curl -sL -o /dev/null -w '%{http_code}' http://127.0.0.1/ 2>/dev/null || echo FAIL",
+        timeout=30)
+    code = stdout2.read().decode(errors="replace").strip()
+    print(f"      HTTP {code}")
+    if code != "200":
+        print("      [ERROR] site not returning 200; rollback: mv /opt/chuxi/dist.old.<ts> /opt/chuxi/dist", file=sys.stderr)
+        sys.exit(1)
     print("      nginx serves /opt/chuxi/dist directly; reload page to pick up new assets.")
 finally:
     client.close()

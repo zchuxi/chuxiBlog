@@ -5,7 +5,12 @@ if not exist "%~dp0.git\hooks\pre-commit" (
   echo [hint] 未安装 pre-commit 钩子，请运行 scripts\install-git-hooks.bat
 )
 cd /d "%~dp0backend"
-set DB_PASSWORD=1234
+rem ===== 数据库口令 =====
+rem 优先读用户级环境变量 DB_PASSWORD（与 OSS AK/SK 同口径，不落盘不入仓）；
+rem 未设置时交互输入，仅当前会话有效
+if "%DB_PASSWORD%"=="" (
+  set /p DB_PASSWORD="请输入数据库口令（DB_PASSWORD，用于本地 blog_db）："
+)
 set SERVER_PORT=8081
 rem ===== 阿里云 OSS（媒体存储）=====
 rem AK/SK 存于 Windows 用户级环境变量 APP_OSS_ACCESS_KEY_ID / APP_OSS_ACCESS_KEY_SECRET，
