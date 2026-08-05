@@ -5,8 +5,9 @@
       <!-- 第一屏：落地页 -->
       <section class="home-landing">
         <div class="home-landing__copy">
-          <h1 class="home-landing__title">{{ landingCopy.title }}</h1>
-          <p class="home-landing__subtitle">{{ landingCopy.subtitle }}</p>
+          <!-- 主标题取定位语（subtitle），品牌名由顶栏承担，避免同屏重复；title 保留为 SEO 文本 -->
+          <h1 class="home-landing__title" :title="landingCopy.title">{{ landingCopy.subtitle }}</h1>
+          <p class="home-landing__tagline">{{ landingCopy.title }}</p>
           <div class="home-landing__welcome">
             <p v-for="(w, wi) in landingCopy.welcome" :key="wi">{{ w }}</p>
           </div>
@@ -70,7 +71,7 @@
             </div>
           </section>
         </aside>
-        <button type="button" class="home-landing__scroll-hint" @click="scrollToSection('.dashboard-highlight')">↓</button>
+        <button type="button" class="home-landing__scroll-hint" aria-label="向下滚动查看内容" @click="scrollToSection('.dashboard-highlight')">↓</button>
       </section>
 
       <!-- 第二屏：HERO 轮播（全宽） -->
@@ -143,9 +144,16 @@
                     :data-fold-index="i"
                     class="fold-box"
                     :class="{ 'is-active': foldActive === i, 'is-hover': foldHover === i }"
+                    tabindex="0"
+                    role="button"
+                    :aria-expanded="foldActive === i"
+                    :aria-label="card.title"
                     @mouseenter="foldHover = i; foldActive = i"
                     @mouseleave="foldHover = -1"
                     @click="foldActive = i"
+                    @focus="foldActive = i"
+                    @keydown.enter.prevent="foldActive = i"
+                    @keydown.space.prevent="foldActive = i"
                   >
                     <div class="fold-graphic-card" :style="{ '--fold-text-color': FOLD_TEXT_COLORS[i % FOLD_TEXT_COLORS.length] }">
                       <div
@@ -265,8 +273,9 @@ import '../assets/css/home.css'
 const router = useRouter()
 
 /* 落地页文案：站点内容可配置，缺失时用默认文案兜底 */
+/* 默认文案：主标题用定位语而非品牌名（品牌名由顶栏承担），避免同屏重复 */
 const DEFAULT_LANDING = {
-  title: '初曦的窝',
+  title: '记录分享 · 工具与番剧的栖息地',
   subtitle: '记录一些好用的工具以及番剧内容',
   welcome: ['欢迎来到我的小站！', '希望这些分享，能给你带来一点启发与温暖。'],
   primaryBtn: '查看最新文章',
@@ -569,6 +578,12 @@ onMounted(async () => {
   min-height: 480px;
   padding: 0 8px;
 }
+
+[data-home-scope] .home-landing__copy,
+[data-home-scope] .home-landing__aside {
+  position: relative;
+  z-index: 1;
+}
 [data-home-scope] .home-landing__copy {
   display: flex;
   flex-direction: column;
@@ -577,18 +592,21 @@ onMounted(async () => {
 }
 [data-home-scope] .home-landing__title {
   margin: 0;
-  font-size: clamp(51px, 6.2vw, 95px);
+  font-size: clamp(42px, 5vw, 72px);
   font-weight: 800;
-  letter-spacing: 2px;
-  line-height: 1.1;
-  color: var(--text-color);
-  text-shadow: 0 4px 24px rgba(63, 119, 181, 0.18);
+  letter-spacing: 1.5px;
+  line-height: 1.12;
+  color: #fff;
+  text-shadow:
+    0 2px 10px rgba(6, 20, 44, 0.55),
+    0 4px 28px rgba(6, 20, 44, 0.32);
 }
-[data-home-scope] .home-landing__subtitle {
-  margin: 2px 0 0;
-  font-size: 21px;
+[data-home-scope] .home-landing__tagline {
+  margin: 4px 0 0;
+  font-size: 17px;
   font-weight: 600;
-  color: color-mix(in srgb, var(--text-color) 82%, transparent);
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 8px rgba(6, 20, 44, 0.4);
 }
 [data-home-scope] .home-landing__welcome {
   display: flex;
@@ -598,7 +616,8 @@ onMounted(async () => {
 [data-home-scope] .home-landing__welcome p {
   margin: 0;
   font-size: 15.5px;
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 6px rgba(6, 20, 44, 0.34);
 }
 [data-home-scope] .home-landing__actions {
   display: flex;
@@ -654,22 +673,24 @@ onMounted(async () => {
   transform: translateY(0) scale(0.98);
 }
 [data-home-scope] .home-landing__btn--primary {
-  /* 玻璃浅底主按钮：主色用 accent 但走"边框+字+内发光"高亮，不铺实色填充 */
-  color: var(--accent-strong);
-  border-color: color-mix(in srgb, var(--accent-solid) 42%, transparent);
-  background: color-mix(in srgb, var(--accent-solid) 14%, rgba(255, 255, 255, 0.18));
+  /* P1-3 主 CTA 实色渐变填充，与次按钮（玻璃拟态）拉开视觉权重 */
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent-solid) 0%, var(--accent-strong) 100%);
   box-shadow:
-    0 6px 18px color-mix(in srgb, var(--accent-solid) 22%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -10px 18px color-mix(in srgb, var(--accent-solid) 8%, transparent);
+    0 10px 26px color-mix(in srgb, var(--accent-solid) 42%, transparent),
+    0 4px 12px color-mix(in srgb, var(--accent-strong) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
 [data-home-scope] .home-landing__btn--primary:hover {
-  color: color-mix(in srgb, var(--accent-strong) 90%, #ffffff);
-  border-color: color-mix(in srgb, var(--accent-solid) 60%, transparent);
-  background-color: color-mix(in srgb, var(--accent-solid) 22%, rgba(255, 255, 255, 0.24));
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-solid) 92%, #ffffff) 0%, color-mix(in srgb, var(--accent-strong) 92%, #ffffff) 100%);
   box-shadow:
-    0 10px 26px color-mix(in srgb, var(--accent-solid) 32%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 14px 32px color-mix(in srgb, var(--accent-solid) 52%, transparent),
+    0 6px 16px color-mix(in srgb, var(--accent-strong) 38%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 [data-home-scope] .home-landing__btn--primary:hover .svg-icon {
   transform: translateX(2px);
@@ -691,18 +712,22 @@ html.dark [data-home-scope] .home-landing__btn:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 html.dark [data-home-scope] .home-landing__btn--primary {
-  color: color-mix(in srgb, var(--accent-solid) 88%, #ffffff);
-  background: color-mix(in srgb, var(--accent-solid) 18%, rgba(255, 255, 255, 0.08));
-  border-color: color-mix(in srgb, var(--accent-solid) 48%, transparent);
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-solid) 82%, #ffffff) 0%, color-mix(in srgb, var(--accent-strong) 82%, #ffffff) 100%);
   box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -10px 18px color-mix(in srgb, var(--accent-solid) 14%, transparent);
+    0 10px 26px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 html.dark [data-home-scope] .home-landing__btn--primary:hover {
   color: #ffffff;
-  background-color: color-mix(in srgb, var(--accent-solid) 28%, rgba(255, 255, 255, 0.1));
-  border-color: color-mix(in srgb, var(--accent-solid) 70%, transparent);
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent-solid) 0%, var(--accent-strong) 100%);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.5),
+    0 6px 16px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
 [data-home-scope] .home-landing__aside {
   display: flex;
@@ -816,11 +841,11 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
   }
   [data-home-scope] .home-landing__copy { padding-left: 0; }
   [data-home-scope] .home-landing__title {
-    font-size: clamp(37px, 9vw, 51px);
+    font-size: clamp(30px, 7vw, 40px);
     letter-spacing: 1px;
     overflow-wrap: anywhere;
   }
-  [data-home-scope] .home-landing__subtitle { font-size: 17.5px; }
+  [data-home-scope] .home-landing__tagline { font-size: 15.5px; }
   [data-home-scope] .home-landing__aside { gap: 16px; }
   [data-home-scope] .home-landing__aside .profile-card,
   [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
@@ -829,7 +854,7 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
   [data-home-scope] .dashboard-highlight__hero .hero-visual { height: auto; }
 }
 @media (max-width: 480px) {
-  [data-home-scope] .home-landing__title { font-size: clamp(33px, 8.6vw, 42px); }
+  [data-home-scope] .home-landing__title { font-size: clamp(27px, 7.5vw, 34px); }
   [data-home-scope] .home-landing__actions {
     flex-direction: column;
     align-items: stretch;

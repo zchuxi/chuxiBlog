@@ -310,6 +310,7 @@ async function loadStories() {
 // —— 滚动/尺寸测量（rAF 节流，无滚轮接管、无吸附） ——
 let scroller = null
 let rafId = 0
+let disposed = false
 
 function findScrollParent(el) {
   let node = el && el.parentElement
@@ -353,6 +354,8 @@ onMounted(async () => {
     parallaxConfig.value = await api.siteContent('parallax-config')
   } catch (e) { console.warn('[视差] 配置加载失败:', e) }
   await nextTick()
+  // 等待期间组件可能已被卸载（快速切路由）：不再挂监听，避免监听器泄漏
+  if (disposed) return
   scroller = findScrollParent(pageRef.value)
   if (scroller instanceof HTMLElement) {
     scroller.addEventListener('scroll', schedule, { passive: true })
@@ -365,6 +368,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   if (rafId) window.cancelAnimationFrame(rafId)
   if (scroller instanceof HTMLElement) {
     scroller.removeEventListener('scroll', schedule)

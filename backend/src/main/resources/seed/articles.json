@@ -57,7 +57,7 @@
     "id": 1,
     "title": "测试文章",
     "summary": "本文深入探讨文章编辑器的核心体验，涵盖光标定位、输入延迟及预览同步等关键细节。针对技术写作场景，分析了代码块渲染性能与移动端兼容策略。同时强调目录导航在后期修改中的提效作用，旨在通过优化交互稳定性与多端适配，全面提升长文本创作的流畅度与阅读质量。",
-    "coverUrl": "https://ai.lin-xin.top/public/blog/dev/article/748cb5ea063949db8a9f261df2cf2f41.png",
+    "coverUrl": "/image/bg/Landscape/12.webp",
     "categoryId": 111,
     "categoryName": "测试文章",
     "tags": "测试",

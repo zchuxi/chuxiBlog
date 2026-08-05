@@ -121,7 +121,7 @@ export const resourceSchemas = [
   {
     key: 'parallax-stories',
     label: '视差故事',
-    columns: ['id', 'title', 'align', 'sortIndex'],
+    columns: ['id', 'title', 'imageUrl', 'align', 'sortIndex'],
     fields: [
       { name: 'id', label: 'ID', type: 'number' },
       { name: 'title', label: '标题', type: 'text' },

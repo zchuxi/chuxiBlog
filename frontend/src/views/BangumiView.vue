@@ -17,8 +17,16 @@
         </div>
       </section>
 
-      <!-- 状态筛选 chips + 每日放送入口 -->
-      <div class="bangumi-filter">
+      <!-- 工具栏：限宽搜索框 + 状态筛选 chips 同排，避免搜索框独占整行 -->
+      <div class="bangumi-toolbar">
+        <div class="bangumi-search">
+          <span class="bangumi-search-icon"><SvgIcon name="common-search" size="16px" /></span>
+          <input v-model="keyword" class="bangumi-search-input" type="text" placeholder="搜索番剧名 / 简介" />
+          <button v-if="keyword" type="button" class="bangumi-search-clear" aria-label="清空搜索" @click="keyword = ''">✕</button>
+        </div>
+
+        <!-- 状态筛选 chips + 每日放送入口 -->
+        <div class="bangumi-filter">
         <button
           v-for="s in FILTERS"
           :key="s"
@@ -30,6 +38,7 @@
           {{ s }}
         </button>
         <RouterLink class="bangumi-chip bangumi-calendar-link" to="/calendar">每日放送 →</RouterLink>
+        </div>
       </div>
 
       <!-- 去重提示：与参考站一致，同一 bgm 条目只展示一条 -->
@@ -40,7 +49,7 @@
       <!-- 列表 -->
       <div v-if="loading" class="bangumi-state">追番小本本翻页中…</div>
       <div v-else-if="filtered.length === 0" class="bangumi-state">
-        {{ bangumiConfig?.emptyText || DEFAULT_BANGUMI.emptyText }}
+        {{ searchActive ? `未找到与「${keyword.trim()}」匹配的番剧` : (bangumiConfig?.emptyText || DEFAULT_BANGUMI.emptyText) }}
       </div>
       <div v-else class="bangumi-grid">
         <article
@@ -112,6 +121,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import SvgIcon from '../components/SvgIcon.vue'
 import { api } from '../api'
 
 const DEFAULT_BANGUMI = { title: '番剧记录', subtitle: '追番进度与收藏一览，记录每一段屏幕里的故事。', emptyText: '这里还空空的，快去收录第一部番剧吧。' }
@@ -124,6 +134,7 @@ const router = useRouter()
 const records = ref([])
 const loading = ref(true)
 const activeFilter = ref('全部')
+const keyword = ref('')
 // 加载失败的封面 id 集合，回退到渐变占位
 const broken = ref(new Set())
 
@@ -143,9 +154,19 @@ const deduped = computed(() => {
 })
 const hiddenCount = computed(() => records.value.length - deduped.value.length)
 
-const filtered = computed(() =>
-  activeFilter.value === '全部' ? deduped.value : deduped.value.filter(r => normStatus(r.status) === activeFilter.value)
-)
+const filtered = computed(() => {
+  const byStatus = activeFilter.value === '全部'
+    ? deduped.value
+    : deduped.value.filter(r => normStatus(r.status) === activeFilter.value)
+  const kw = keyword.value.trim().toLowerCase()
+  if (!kw) return byStatus
+  return byStatus.filter(r =>
+    [r.nameCn, r.name, r.platform, r.summary]
+      .some(v => String(v || '').toLowerCase().includes(kw))
+  )
+})
+
+const searchActive = computed(() => keyword.value.trim() !== '')
 
 // 前端分页：每页 10 部（两排）；切筛选回第一页，数据变少时钉回合法页
 const PAGE_SIZE = 10
@@ -173,6 +194,9 @@ function gotoPage(p) {
 }
 
 watch(activeFilter, () => {
+  pageNo.value = 1
+})
+watch(keyword, () => {
   pageNo.value = 1
 })
 watch(totalPages, () => {
@@ -321,9 +345,66 @@ html.dark .bangumi-bar {
   background: rgba(148, 163, 184, 0.18);
 }
 
-/* 筛选 chips：收进一条半透明岛屿条，与参考站的胶囊筛选栏对齐 */
+/* 工具栏：搜索框与筛选条同排，窄屏自动换行 */
+.bangumi-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 搜索框：限宽不占整行，与筛选岛同风格 */
+.bangumi-search {
+  display: flex;
+  flex: 0 1 320px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--nested-outer-card-bg);
+  box-shadow: var(--nested-outer-card-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.bangumi-search-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--accent-text);
+  opacity: 0.75;
+}
+.bangumi-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 15px;
+}
+.bangumi-search-input::placeholder {
+  color: color-mix(in srgb, var(--text-color) 45%, transparent);
+}
+.bangumi-search-clear {
+  flex: none;
+  border: none;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: 14px;
+  padding: 2px 6px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.bangumi-search-clear:hover {
+  opacity: 1;
+}
+
+/* 筛选 chips：收进一条半透明岛屿条，与参考站的胶囊筛选栏对齐；与搜索框同排时占剩余宽度 */
 .bangumi-filter {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;

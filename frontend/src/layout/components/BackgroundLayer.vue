@@ -22,6 +22,18 @@ const bgLayers = ref([settings.selectedLandscapeImage, ''])
 const activeBgLayer = ref(0)
 let bgTimer = null
 
+// ── P1-5 背景图预加载：切换前先 new Image() 预热，避免 30s 轮换时白屏闪烁 ──
+const imageCache = new Set()
+let preloadTimer = null
+
+function preloadImage(url) {
+  if (!url || imageCache.has(url)) return
+  imageCache.add(url)
+  const img = new Image()
+  img.decoding = 'async'
+  img.src = url
+}
+
 function isPortrait() {
   return window.innerHeight > window.innerWidth
 }
@@ -31,6 +43,7 @@ function currentPool() {
 }
 
 function swapBackground(img) {
+  preloadImage(img)
   const next = activeBgLayer.value === 0 ? 1 : 0
   bgLayers.value[next] = img
   activeBgLayer.value = next
@@ -52,19 +65,41 @@ function stopBgCarousel() {
   if (bgTimer) { clearInterval(bgTimer); bgTimer = null }
 }
 
+// 空闲时预加载轮换池，避免首次切图等待网络
+function scheduleIdlePreload() {
+  clearTimeout(preloadTimer)
+  preloadTimer = setTimeout(() => {
+    const pool = currentPool()
+    for (const img of pool) {
+      if (imageCache.size >= 4) break // 首轮只预热 4 张，控制带宽
+      preloadImage(img)
+    }
+  }, 4000)
+}
+
+function stopIdlePreload() {
+  clearTimeout(preloadTimer)
+  preloadTimer = null
+}
+
 watch(() => settings.backgroundCarouselEnabled, startBgCarousel)
 watch(() => settings.backgroundImageEnabled, startBgCarousel)
 
 onMounted(() => {
+  // 首张当前图直接进入缓存标记，避免与轮换池重复预加载
+  if (settings.selectedLandscapeImage) imageCache.add(settings.selectedLandscapeImage)
   startBgCarousel()
+  scheduleIdlePreload()
   settings.loadRemoteGallery().then(() => {
     const img = isPortrait() ? settings.selectedVerticalImage : settings.selectedLandscapeImage
     if (img && bgLayers.value[activeBgLayer.value] !== img) swapBackground(img)
+    scheduleIdlePreload()
   })
 })
 
 onBeforeUnmount(() => {
   stopBgCarousel()
+  stopIdlePreload()
 })
 
 defineExpose({ swapBackground })

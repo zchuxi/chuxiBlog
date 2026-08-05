@@ -26,7 +26,7 @@
     <div class="app-shell-body">
       <div class="app-shell-body__content-col">
         <div class="app-shell-main-wrap">
-          <section class="app-shell-main">
+          <section class="app-shell-main" tabindex="0" aria-label="页面内容">
             <RouterView v-slot="{ Component }">
               <transition name="content-route" mode="out-in">
                 <component :is="Component" />
@@ -302,7 +302,7 @@ const authPanel = ref('login')
 const pawProgress = ref(0)
 const pawEnabled = ref(true)
 const topbarSolid = ref(false)
-const PAW_SCROLL_THRESHOLD = 1600
+const PAW_SCROLL_THRESHOLD = 2400
 
 function togglePaw() {
   pawEnabled.value = !pawEnabled.value
@@ -334,7 +334,10 @@ function onAuthKeydown(e) {
   if (authOpen.value) authOpen.value = false
 }
 
-/* ---------- live2d ---------- */
+/* ---------- live2d（P1-5 延迟加载：首屏不拉脚本，idle 或首次交互后再初始化）---------- */
+let live2dReady = false
+let live2dInitTimer = null
+
 function loadLive2dScript() {
   return new Promise((resolve, reject) => {
     if (window.loadlive2d) { resolve(); return }
@@ -347,6 +350,8 @@ function loadLive2dScript() {
 }
 
 async function initLive2d() {
+  if (live2dReady) return
+  live2dReady = true
   try {
     await loadLive2dScript()
     if (window.loadlive2d) {
@@ -355,13 +360,33 @@ async function initLive2d() {
   } catch (e) { console.warn('[Live2D] 加载失败:', e) }
 }
 
+function cancelLive2dInit() {
+  clearTimeout(live2dInitTimer)
+  live2dInitTimer = null
+  window.removeEventListener('pointerdown', initLive2dOnce)
+}
+
+function scheduleLive2dInit() {
+  if (!settings.live2dEnabled || live2dReady) return
+  cancelLive2dInit()
+  // 首屏空闲 3.5s 后再初始化；页面全程可见时用 requestIdleCallback 兜底
+  live2dInitTimer = setTimeout(initLive2d, 3500)
+  window.addEventListener('pointerdown', initLive2dOnce, { once: true })
+}
+
+function initLive2dOnce() {
+  // 兜底：开关已关闭或已初始化时不再拉起脚本
+  if (!settings.live2dEnabled || live2dReady) return
+  initLive2d()
+}
+
 function reloadLive2d() {
   if (window.loadlive2d) {
     window.loadlive2d('live2d-canvas', '/live2d/model/mashiro/shifuku.model.json')
   }
 }
 
-watch(() => settings.live2dEnabled, val => { if (val) nextTick(initLive2d) })
+watch(() => settings.live2dEnabled, val => { val ? scheduleLive2dInit() : cancelLive2dInit() })
 
 /* ---------- 猫爪回顶：滚动监听 ---------- */
 function scrollMainToTop() {
@@ -392,11 +417,12 @@ onMounted(() => {
   loadAppearanceSettings()
   nextTick(bindPawScroll)
   window.addEventListener('keydown', onAuthKeydown)
-  if (settings.live2dEnabled) initLive2d()
+  if (settings.live2dEnabled) scheduleLive2dInit()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onAuthKeydown)
+  cancelLive2dInit()
   if (pawScrollEl) pawScrollEl.removeEventListener('scroll', onMainScroll)
 })
 </script>
@@ -430,6 +456,16 @@ onBeforeUnmount(() => {
 
 .app-shell .app-shell-main {
   padding-top: 82px;
+}
+
+/* P2-2 滚动容器可聚焦（键盘滚动可达），聚焦时用弱化描边替代默认 outline，避免突兀 */
+.app-shell .app-shell-main:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-solid) 55%, transparent);
+  outline-offset: -2px;
+  border-radius: 20px;
+}
+.app-shell .app-shell-main:focus {
+  outline: none;
 }
 
 .layout-right-sidebar .layout-right-sidebar__inner {
@@ -497,8 +533,8 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 .login-dialog__mask {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 10%, rgba(157, 180, 255, 0.28), transparent 55%),
-    radial-gradient(circle at 85% 90%, rgba(217, 161, 239, 0.24), transparent 55%),
+  background: radial-gradient(circle at 20% 10%, var(--glow-left), transparent 55%),
+    radial-gradient(circle at 85% 90%, var(--glow-right), transparent 55%),
     rgba(78, 96, 148, 0.32);
   backdrop-filter: blur(10px) saturate(1.15);
   -webkit-backdrop-filter: blur(10px) saturate(1.15);
@@ -511,12 +547,11 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   min-height: 500px;
   border-radius: 28px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--nested-outer-card-bg);
   backdrop-filter: blur(24px) saturate(1.2);
   -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 28px 68px rgba(88, 111, 214, 0.28), 0 6px 18px rgba(88, 111, 214, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--nested-outer-card-border);
+  box-shadow: var(--nested-outer-card-shadow);
 }
 
 .login-dialog__close {
@@ -531,14 +566,14 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   justify-content: center;
   border: none;
   border-radius: 999px;
-  background: rgba(95, 149, 207, 0.12);
-  color: #3f77b5;
+  background: var(--accent-glow);
+  color: var(--accent-strong);
   cursor: pointer;
   transition: background 0.22s ease, color 0.22s ease;
 }
 
 .login-dialog__close-icon { display: inline-flex; transition: transform 0.28s ease; }
-.login-dialog__close:hover { background: rgba(95, 149, 207, 0.22); }
+.login-dialog__close:hover { background: color-mix(in srgb, var(--accent-glow) 180%, transparent); }
 .login-dialog__close:hover .login-dialog__close-icon { transform: rotate(90deg) scale(1.08); }
 
 .login-dialog__side {
@@ -550,7 +585,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   align-items: center;
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(165deg, #9ec6ea 0%, #86b3e0 52%, #8fd4dd 100%);
+  background: linear-gradient(165deg, color-mix(in srgb, var(--accent-solid) 65%, white) 0%, color-mix(in srgb, var(--accent-solid) 85%, white) 52%, color-mix(in srgb, var(--accent-strong) 55%, white) 100%);
 }
 
 .login-dialog__side-body {
@@ -594,7 +629,7 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 
 .login-dialog__side-btn:hover {
   background: rgba(255, 255, 255, 0.92);
-  color: #4a7cb8;
+  color: var(--accent-strong);
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(58, 100, 150, 0.32);
 }
@@ -612,39 +647,39 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 
 .login-dialog__main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 40px 44px; }
 .login-dialog__panel { width: 100%; max-width: 330px; margin: 0 auto; display: flex; flex-direction: column; }
-.login-dialog__title { margin: 0; text-align: center; font-size: 29px; letter-spacing: 3px; color: #3d4668; }
-.login-dialog__subtitle { margin: 8px 0 20px; text-align: center; font-size: 14.5px; color: #93a0c4; }
+.login-dialog__title { margin: 0; text-align: center; font-size: 29px; letter-spacing: 3px; color: var(--text-color); }
+.login-dialog__subtitle { margin: 8px 0 20px; text-align: center; font-size: 14.5px; color: color-mix(in srgb, var(--text-color) 45%, var(--accent-solid)); }
 
 .login-dialog__mode-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
 .login-dialog__mode-btn {
   height: 34px; border-radius: 12px; border: 1.5px solid transparent;
-  background: rgba(95, 149, 207, 0.1); color: #6b7aa8; font: inherit; font-size: 14.5px;
+  background: var(--accent-glow); color: color-mix(in srgb, var(--text-color) 55%, var(--accent-solid)); font: inherit; font-size: 14.5px;
   cursor: pointer; transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
 }
-.login-dialog__mode-btn.is-active { background: rgba(255, 255, 255, 0.95); border-color: rgba(95, 149, 207, 0.55); color: #3f77b5; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(95, 149, 207, 0.22); }
-.login-dialog__mode-btn:not(.is-active):hover { background: rgba(95, 149, 207, 0.18); color: #3f77b5; }
+.login-dialog__mode-btn.is-active { background: var(--card-bg); border-color: var(--accent-border); color: var(--accent-strong); transform: translateY(-1px); box-shadow: 0 6px 14px var(--accent-glow); }
+.login-dialog__mode-btn:not(.is-active):hover { background: color-mix(in srgb, var(--accent-glow) 180%, transparent); color: var(--accent-strong); }
 
-.login-dialog__label { margin: 12px 0 6px; font-size: 14.5px; color: #6b7aa8; }
-.login-dialog__input { width: 100%; height: 42px; padding: 0 14px; border-radius: 14px; border: 1.5px solid rgba(130, 150, 220, 0.35); background: rgba(255, 255, 255, 0.75); color: #3d4668; font: inherit; font-size: 15.5px; outline: none; transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease, background 0.24s ease; }
-.login-dialog__input::placeholder { color: #a9b4d4; }
-.login-dialog__input:hover { border-color: rgba(95, 149, 207, 0.55); }
-.login-dialog__input:focus { border-color: #6d9bd6; background: #fff; box-shadow: 0 0 0 4px rgba(95, 149, 207, 0.18), 0 6px 16px rgba(95, 149, 207, 0.16); transform: translateY(-1px); }
+.login-dialog__label { margin: 12px 0 6px; font-size: 14.5px; color: color-mix(in srgb, var(--text-color) 55%, var(--accent-solid)); }
+.login-dialog__input { width: 100%; height: 42px; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text-color); font: inherit; font-size: 15.5px; outline: none; transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease, background 0.24s ease; }
+.login-dialog__input::placeholder { color: color-mix(in srgb, var(--text-color) 35%, var(--accent-solid)); }
+.login-dialog__input:hover { border-color: var(--accent-border); }
+.login-dialog__input:focus { border-color: var(--accent-solid); background: var(--card-bg); box-shadow: 0 0 0 4px var(--accent-glow), 0 6px 16px var(--accent-glow); transform: translateY(-1px); }
 
 .login-dialog__code-row { display: flex; gap: 10px; }
 .login-dialog__code-row .login-dialog__input { flex: 1; min-width: 0; }
-.login-dialog__code-btn { flex-shrink: 0; padding: 0 14px; border-radius: 14px; border: 1.5px solid rgba(95, 149, 207, 0.5); background: transparent; color: #3f77b5; font: inherit; font-size: 14.5px; cursor: pointer; transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease; }
-.login-dialog__code-btn:hover { background: rgba(95, 149, 207, 0.14); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(95, 149, 207, 0.18); }
+.login-dialog__code-btn { flex-shrink: 0; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--accent-border); background: transparent; color: var(--accent-strong); font: inherit; font-size: 14.5px; cursor: pointer; transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease; }
+.login-dialog__code-btn:hover { background: var(--accent-glow); transform: translateY(-1px); box-shadow: 0 6px 14px var(--accent-glow); }
 
 .login-dialog__aux { margin-top: 10px; text-align: right; }
-.login-dialog__link { padding: 0; border: none; background: none; color: #6d9bd6; font: inherit; font-size: 14.5px; cursor: pointer; transition: color 0.2s ease; }
-.login-dialog__link:hover { color: #3f77b5; text-decoration: underline; }
+.login-dialog__link { padding: 0; border: none; background: none; color: var(--accent-solid); font: inherit; font-size: 14.5px; cursor: pointer; transition: color 0.2s ease; }
+.login-dialog__link:hover { color: var(--accent-strong); text-decoration: underline; }
 
-.login-dialog__submit { margin-top: 16px; height: 44px; border: none; border-radius: 999px; background: linear-gradient(135deg, #6d9bd6 0%, #67b7cf 100%); color: #fff; font: inherit; font-size: 16.5px; letter-spacing: 6px; text-indent: 6px; cursor: pointer; box-shadow: 0 12px 26px rgba(95, 149, 207, 0.38); transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease; }
-.login-dialog__submit:hover { transform: translateY(-2px); box-shadow: 0 16px 32px rgba(95, 149, 207, 0.46); filter: brightness(1.04); }
-.login-dialog__submit:active { transform: translateY(0) scale(0.98); box-shadow: 0 8px 18px rgba(95, 149, 207, 0.32); }
+.login-dialog__submit { margin-top: 16px; height: 44px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--accent-solid) 0%, color-mix(in srgb, var(--accent-solid) 60%, var(--accent-strong)) 100%); color: #fff; font: inherit; font-size: 16.5px; letter-spacing: 6px; text-indent: 6px; cursor: pointer; box-shadow: 0 12px 26px var(--accent-glow); transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease; }
+.login-dialog__submit:hover { transform: translateY(-2px); box-shadow: 0 16px 32px var(--accent-glow); filter: brightness(1.04); }
+.login-dialog__submit:active { transform: translateY(0) scale(0.98); box-shadow: 0 8px 18px var(--accent-glow); }
 
-.login-dialog__tip { margin: 14px 0 0; text-align: center; font-size: 13px; color: #93a0c4; }
-.login-dialog__switch-hint { margin: 8px 0 0; text-align: center; font-size: 14.5px; color: #6b7aa8; }
+.login-dialog__tip { margin: 14px 0 0; text-align: center; font-size: 13px; color: color-mix(in srgb, var(--text-color) 45%, var(--accent-solid)); }
+.login-dialog__switch-hint { margin: 8px 0 0; text-align: center; font-size: 14.5px; color: color-mix(in srgb, var(--text-color) 55%, var(--accent-solid)); }
 
 .login-dialog-fade-enter-active { transition: opacity 0.3s ease; }
 .login-dialog-fade-enter-active .login-dialog__card { transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; }
@@ -663,25 +698,8 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 @keyframes login-dialog-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.12); } }
 
 /* 登录弹窗暗色模式 */
-html.dark .login-dialog__mask { background: radial-gradient(circle at 20% 10%, rgba(70, 120, 180, 0.2), transparent 55%), radial-gradient(circle at 85% 90%, rgba(80, 150, 180, 0.16), transparent 55%), rgba(10, 14, 28, 0.55); }
-html.dark .login-dialog__card { background: rgba(32, 38, 62, 0.9); border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 28px 68px rgba(0, 0, 0, 0.5), 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
-html.dark .login-dialog__close { background: rgba(95, 149, 207, 0.16); color: #a8cdf0; }
-html.dark .login-dialog__close:hover { background: rgba(95, 149, 207, 0.3); }
+html.dark .login-dialog__mask { background: radial-gradient(circle at 20% 10%, var(--glow-left), transparent 55%), radial-gradient(circle at 85% 90%, var(--glow-right), transparent 55%), rgba(10, 14, 28, 0.55); }
 html.dark .login-dialog__side { background: linear-gradient(165deg, #274a75 0%, #2f5d88 55%, #2f7a8a 100%); }
-html.dark .login-dialog__title { color: #e8ecff; }
-html.dark .login-dialog__subtitle, html.dark .login-dialog__tip { color: #8d97bd; }
-html.dark .login-dialog__label, html.dark .login-dialog__switch-hint { color: #aab4d8; }
-html.dark .login-dialog__mode-btn { background: rgba(255, 255, 255, 0.06); color: #aab4d8; }
-html.dark .login-dialog__mode-btn.is-active { background: rgba(95, 149, 207, 0.22); border-color: rgba(127, 176, 221, 0.6); color: #bcd9f2; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3); }
-html.dark .login-dialog__mode-btn:not(.is-active):hover { background: rgba(255, 255, 255, 0.1); color: #bcd9f2; }
-html.dark .login-dialog__input { border-color: rgba(127, 176, 221, 0.28); background: rgba(18, 22, 40, 0.65); color: #e8ecff; }
-html.dark .login-dialog__input::placeholder { color: #6b7599; }
-html.dark .login-dialog__input:hover { border-color: rgba(127, 176, 221, 0.5); }
-html.dark .login-dialog__input:focus { border-color: #7fb0dd; background: rgba(18, 22, 40, 0.9); box-shadow: 0 0 0 4px rgba(127, 176, 221, 0.16), 0 6px 16px rgba(0, 0, 0, 0.3); }
-html.dark .login-dialog__code-btn { border-color: rgba(127, 176, 221, 0.45); color: #a8cdf0; }
-html.dark .login-dialog__code-btn:hover { background: rgba(127, 176, 221, 0.14); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3); }
-html.dark .login-dialog__link { color: #a8cdf0; }
-html.dark .login-dialog__link:hover { color: #bcd9f2; }
 html.dark .login-dialog__submit { background: linear-gradient(135deg, #4f86c6 0%, #67b7cf 100%); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42); }
 html.dark .login-dialog__submit:hover { box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5); }
 

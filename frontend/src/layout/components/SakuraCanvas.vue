@@ -42,21 +42,26 @@ function startSakura() {
   if (!petals.length) {
     petals = Array.from({ length: 24 }, () => spawnPetal(canvas, true))
   }
+  // P1-5 帧率节流：隔帧渲染（≈30fps），页面不可见时暂停，降低主线程占用
+  let frame = 0
   const tick = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    for (const p of petals) {
-      p.y += p.vy
-      p.x += p.vx + Math.sin(p.phase += p.sway) * 0.6
-      p.rot += p.vr
-      if (p.y > canvas.height + 40) Object.assign(p, spawnPetal(canvas, false))
-      ctx.save()
-      ctx.translate(p.x, p.y)
-      ctx.rotate(p.rot)
-      ctx.globalAlpha = p.alpha
-      ctx.drawImage(petalImg, -p.size / 2, -p.size / 2, p.size, p.size)
-      ctx.restore()
+    frame += 1
+    if (frame % 2 === 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      for (const p of petals) {
+        p.y += p.vy
+        p.x += p.vx + Math.sin(p.phase += p.sway) * 0.6
+        p.rot += p.vr
+        if (p.y > canvas.height + 40) Object.assign(p, spawnPetal(canvas, false))
+        ctx.save()
+        ctx.translate(p.x, p.y)
+        ctx.rotate(p.rot)
+        ctx.globalAlpha = p.alpha
+        ctx.drawImage(petalImg, -p.size / 2, -p.size / 2, p.size, p.size)
+        ctx.restore()
+      }
     }
-    sakuraRaf = requestAnimationFrame(tick)
+    sakuraRaf = document.hidden ? null : requestAnimationFrame(tick)
   }
   cancelAnimationFrame(sakuraRaf)
   tick()
@@ -71,6 +76,11 @@ function onResize() {
   if (settings.sakuraEnabled) startSakura()
 }
 
+function onVisibilityChange() {
+  if (document.hidden) stopSakura()
+  else if (settings.sakuraEnabled) nextTick(startSakura)
+}
+
 watch(() => settings.sakuraEnabled, val => {
   if (val) nextTick(startSakura)
   else stopSakura()
@@ -78,11 +88,13 @@ watch(() => settings.sakuraEnabled, val => {
 
 onMounted(() => {
   window.addEventListener('resize', onResize)
+  document.addEventListener('visibilitychange', onVisibilityChange)
   if (settings.sakuraEnabled) nextTick(startSakura)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
   stopSakura()
 })
 </script>

@@ -8,7 +8,18 @@
     <template v-else>
       <!-- 统计卡网格 -->
       <div class="dash-stats">
-        <div v-for="card in statCards" :key="card.label" class="dash-stat">
+        <div
+          v-for="card in statCards"
+          :key="card.label"
+          class="dash-stat"
+          :class="{ 'is-clickable': !!card.go }"
+          :role="card.go ? 'button' : undefined"
+          :tabindex="card.go ? 0 : -1"
+          :title="card.go ? `前往「${card.label}」` : undefined"
+          @click="card.go && emit('go', card.go)"
+          @keydown.enter.prevent="card.go && emit('go', card.go)"
+          @keydown.space.prevent="card.go && emit('go', card.go)"
+        >
           <span class="dash-stat-icon"><SvgIcon :name="card.icon" size="20px" /></span>
           <div class="dash-stat-info">
             <p class="dash-stat-num">{{ card.value }}</p>
@@ -80,17 +91,18 @@ onMounted(load)
 
 const num = key => Number(data.value[key]) || 0
 
+// 每张统计卡映射到对应的管理面板 key（go 为 null 表示仅展示不跳转）
 const statCards = computed(() => [
-  { label: '已发布文章', value: num('articleCount'), icon: 'common-articlePages', sub: `草稿 ${num('draftCount')} 篇` },
-  { label: '站点分类', value: num('categoryCount'), icon: 'common-archive' },
-  { label: '标签数量', value: num('tagCount'), icon: 'common-icons' },
-  { label: '总浏览量', value: num('viewCount'), icon: 'common-web' },
-  { label: '番剧收录', value: num('bangumiCount'), icon: 'common-cat' },
-  { label: '工具站点', value: num('toolCount'), icon: 'common-tool' },
-  { label: '音乐曲目', value: num('musicCount'), icon: 'common-music' },
-  { label: '首屏场景', value: num('carouselCount'), icon: 'common-component' },
-  { label: '内容卡片', value: num('collapseCardCount'), icon: 'common-menu' },
-  { label: '时间线', value: num('timelineCount'), icon: 'common-timeline' }
+  { label: '已发布文章', value: num('articleCount'), icon: 'common-articlePages', go: 'articles', sub: `草稿 ${num('draftCount')} 篇` },
+  { label: '站点分类', value: num('categoryCount'), icon: 'common-archive', go: 'archive-categories' },
+  { label: '标签数量', value: num('tagCount'), icon: 'common-icons', go: 'articles' },
+  { label: '总浏览量', value: num('viewCount'), icon: 'common-web', go: null },
+  { label: '番剧收录', value: num('bangumiCount'), icon: 'common-cat', go: 'bangumi-records' },
+  { label: '工具站点', value: num('toolCount'), icon: 'common-tool', go: 'tool-sites' },
+  { label: '音乐曲目', value: num('musicCount'), icon: 'common-music', go: 'musics' },
+  { label: '首屏场景', value: num('carouselCount'), icon: 'common-component', go: 'scenes' },
+  { label: '内容卡片', value: num('collapseCardCount'), icon: 'common-menu', go: 'collapse-cards' },
+  { label: '时间线', value: num('timelineCount'), icon: 'common-timeline', go: 'timeline-events' }
 ])
 
 const quickActions = [
@@ -135,6 +147,21 @@ function barWidth(count) {
   border: 1px solid var(--adm-border-soft);
   border-radius: 20px;
   box-shadow: var(--adm-shadow);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+.dash-stat.is-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+.dash-stat.is-clickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--adm-accent-soft);
+  background-color: color-mix(in srgb, var(--adm-accent-soft) 38%, var(--adm-card));
+  box-shadow: var(--adm-shadow), 0 8px 20px var(--adm-accent-soft);
+}
+.dash-stat.is-clickable:focus-visible {
+  outline: 2px solid var(--adm-accent);
+  outline-offset: 2px;
 }
 
 .dash-stat-icon {

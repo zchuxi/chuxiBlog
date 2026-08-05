@@ -1,8 +1,16 @@
 <template>
   <header class="app-shell-top" :class="{ 'is-solid': solid }">
     <div class="shell-brand">
-      <span title="返回首页" @click="router.push('/index')">{{ siteName }}</span>
-      <nav ref="navRef" class="shell-nav" @mouseleave="hoverPath = ''">
+      <span
+        title="返回首页"
+        role="link"
+        tabindex="0"
+        aria-label="返回首页"
+        @click="router.push('/index')"
+        @keydown.enter.prevent="router.push('/index')"
+        @keydown.space.prevent="router.push('/index')"
+      >{{ siteName }}</span>
+      <nav ref="navRef" class="shell-nav" aria-label="主导航" @mouseleave="hoverPath = ''">
         <span class="nav-indicator" :style="indicatorStyle"></span>
         <span class="nav-underline" :style="underlineStyle"></span>
         <RouterLink
@@ -21,7 +29,7 @@
       </nav>
       <div class="cx-popover-wrapper">
         <div class="cx-popover-trigger">
-          <button type="button" class="shell-action-btn shell-nav-menu" @click="mobileNavOpen = !mobileNavOpen">
+          <button type="button" class="shell-action-btn shell-nav-menu" aria-label="导航菜单" :aria-expanded="mobileNavOpen ? 'true' : 'false'" @click="mobileNavOpen = !mobileNavOpen">
             <SvgIcon name="common-menu" class="action-icon" />
           </button>
         </div>
@@ -41,20 +49,17 @@
       </div>
     </div>
     <div class="shell-actions">
-      <button type="button" class="shell-action-btn is-search" @click="$emit('open-search')">
+      <button type="button" class="shell-action-btn is-search" aria-label="搜索文章" @click="$emit('open-search')">
         <SvgIcon name="common-search" class="action-icon" />
       </button>
-      <button type="button" class="shell-action-btn is-theme" @click="$emit('toggle-theme')">
+      <button type="button" class="shell-action-btn is-theme" aria-label="切换主题" @click="$emit('toggle-theme')">
         <SvgIcon :name="settings.isDark ? 'common-sun' : 'common-moon'" class="action-icon" />
       </button>
-      <button type="button" class="shell-action-btn is-ai" @click="$emit('toggle-ai')">
-        <SvgIcon name="common-ai" class="action-icon" />
-      </button>
-      <button type="button" class="shell-action-btn is-music" @click="$emit('toggle-music')">
+      <button type="button" class="shell-action-btn is-music" aria-label="音乐播放器" @click="$emit('toggle-music')">
         <SvgIcon name="common-music" class="action-icon" />
       </button>
       <div class="shell-action-cat-wrap">
-        <button type="button" class="shell-action-btn is-cat" @click="$emit('paw-toggle')">
+        <button type="button" class="shell-action-btn is-cat" aria-label="返回顶部" @click="$emit('paw-toggle')">
           <SvgIcon name="common-cat" class="action-icon" />
         </button>
         <transition name="paw-rope">
@@ -68,30 +73,31 @@
           </div>
         </transition>
       </div>
-      <button
-        type="button"
-        class="shell-action-btn is-setting"
-        :class="{ 'is-active': settingOpen }"
-        :aria-pressed="settingOpen"
-        :title="settingOpen ? '关闭设置' : '打开设置'"
-        @click="$emit(settingOpen ? 'close-settings' : 'open-settings')"
-      >
-        <SvgIcon name="common-setting" class="action-icon" />
-      </button>
       <div class="cx-popover-wrapper">
         <div class="cx-popover-trigger">
-          <button type="button" class="shell-action-btn is-person" @click="personMenuOpen = !personMenuOpen">
-            <SvgIcon name="common-person" class="action-icon" />
+          <button
+            type="button"
+            class="shell-action-btn is-setting"
+            :class="{ 'is-active': settingMenuOpen }"
+            :aria-pressed="settingMenuOpen"
+            :title="settingMenuOpen ? '关闭菜单' : '设置 / 账号'"
+            @click="settingMenuOpen = !settingMenuOpen"
+          >
+            <SvgIcon name="common-setting" class="action-icon" />
           </button>
         </div>
         <transition name="cx-popover-fade">
-          <div v-if="personMenuOpen" class="cx-popover login-person-popover">
+          <div v-if="settingMenuOpen" class="cx-popover login-person-popover">
+            <div class="cx-popover-item" @click="openSettings">
+              <span class="cx-popover-item__icon"><SvgIcon name="common-setting" size="16px" /></span>
+              <span class="cx-popover-item__content">偏好设置</span>
+            </div>
             <div class="cx-popover-item" @click="openAuth">
               <span class="cx-popover-item__icon"><SvgIcon name="common-person" size="16px" /></span>
               <span class="cx-popover-item__content">登录 / 注册</span>
             </div>
             <div class="cx-popover-item" @click="goAdmin">
-              <span class="cx-popover-item__icon"><SvgIcon name="common-setting" size="16px" /></span>
+              <span class="cx-popover-item__icon"><SvgIcon name="common-archive" size="16px" /></span>
               <span class="cx-popover-item__content">后台管理</span>
             </div>
           </div>
@@ -115,7 +121,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['open-search', 'toggle-theme', 'toggle-ai', 'toggle-music', 'open-settings', 'close-settings', 'open-auth', 'go-admin', 'paw-toggle', 'scroll-to-top'])
-
 const MIN_ROPE_HEIGHT = 24
 const MAX_ROPE_HEIGHT = 120
 
@@ -144,7 +149,7 @@ const indicatorStyle = ref({})
 const underlineStyle = ref({})
 const hoverPath = ref('')
 const mobileNavOpen = ref(false)
-const personMenuOpen = ref(false)
+const settingMenuOpen = ref(false)
 
 function isNavActive(path) {
   if (path === '/index') return route.path === '/index' || route.path.startsWith('/article')
@@ -193,13 +198,18 @@ function goNav(path) {
   router.push(path)
 }
 
+function openSettings() {
+  settingMenuOpen.value = false
+  emit('open-settings')
+}
+
 function openAuth() {
-  personMenuOpen.value = false
+  settingMenuOpen.value = false
   emit('open-auth')
 }
 
 function goAdmin() {
-  personMenuOpen.value = false
+  settingMenuOpen.value = false
   emit('go-admin')
 }
 
@@ -220,11 +230,17 @@ defineExpose({ updateIndicator })
 </script>
 
 <style scoped>
-/* ========== 顶栏账号菜单 ========== */
+/* ========== 顶栏设置/账号菜单 ========== */
 .cx-popover.login-person-popover {
   min-width: 168px;
   margin-top: 46px;
   margin-left: -168px;
+}
+/* 设置按钮在顶栏最右侧（猫爪之后），菜单右缘对齐按钮右缘 */
+.cx-popover-wrapper:last-child .cx-popover.login-person-popover {
+  right: 0;
+  left: auto;
+  margin-left: 0;
 }
 
 /* ========== 品牌区 ========== */
@@ -233,6 +249,12 @@ defineExpose({ updateIndicator })
   flex: none;
   cursor: pointer;
   transition: color 0.2s ease;
+  outline: none;
+}
+.shell-brand > span:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-solid) 55%, transparent);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 .shell-brand > span:hover {

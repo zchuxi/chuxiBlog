@@ -152,9 +152,10 @@ const cropTarget = ref(null)
 const fetching = ref(false)
 const toast = inject('adminToast', () => {})
 
-// 任何 HTTP 图都可裁：站内 /api/uploads/ 直接打开；外链（如 OSS）先让后端取回转本地副本再裁
+// 站内图（/api/uploads/）与外链 http(s) 图均可裁：站内直接打开，外链先让后端取回转本地副本再裁
 const canCrop = computed(
-  () => typeof props.modelValue === 'string' && /^https?:\/\//.test(props.modelValue)
+  () => typeof props.modelValue === 'string'
+    && (props.modelValue.startsWith('/api/uploads/') || /^https?:\/\//.test(props.modelValue))
 )
 
 async function openCrop() {
