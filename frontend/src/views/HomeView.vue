@@ -5,9 +5,9 @@
       <!-- 第一屏：落地页 -->
       <section class="home-landing">
         <div class="home-landing__copy">
-          <!-- 主标题取定位语（subtitle），品牌名由顶栏承担，避免同屏重复；title 保留为 SEO 文本 -->
-          <h1 class="home-landing__title" :title="landingCopy.title">{{ landingCopy.subtitle }}</h1>
-          <p class="home-landing__tagline">{{ landingCopy.title }}</p>
+          <!-- 主标题=后台「主标题」字段，副标题=后台「副标题」字段：前台位置与后台标签一一对应 -->
+          <h1 class="home-landing__title">{{ landingCopy.title }}</h1>
+          <p class="home-landing__tagline">{{ landingCopy.subtitle }}</p>
           <div class="home-landing__welcome">
             <p v-for="(w, wi) in landingCopy.welcome" :key="wi">{{ w }}</p>
           </div>
@@ -273,9 +273,9 @@ import '../assets/css/home.css'
 const router = useRouter()
 
 /* 落地页文案：站点内容可配置，缺失时用默认文案兜底 */
-/* 默认文案：主标题用定位语而非品牌名（品牌名由顶栏承担），避免同屏重复 */
+/* title 渲染为 h1 主标题、subtitle 渲染为其下副标题，与后台「首页内容」字段标签保持一致 */
 const DEFAULT_LANDING = {
-  title: '记录分享 · 工具与番剧的栖息地',
+  title: '初曦的窝',
   subtitle: '记录一些好用的工具以及番剧内容',
   welcome: ['欢迎来到我的小站！', '希望这些分享，能给你带来一点启发与温暖。'],
   primaryBtn: '查看最新文章',
@@ -592,19 +592,22 @@ onMounted(async () => {
 }
 [data-home-scope] .home-landing__title {
   margin: 0;
-  font-size: clamp(42px, 5vw, 72px);
+  /* 主标题多为短品牌名，可用大字号；投影保留以压住繁忙背景 */
+  font-size: clamp(48px, 6vw, 88px);
   font-weight: 800;
-  letter-spacing: 1.5px;
-  line-height: 1.12;
+  letter-spacing: 2px;
+  line-height: 1.1;
   color: #fff;
   text-shadow:
     0 2px 10px rgba(6, 20, 44, 0.55),
     0 4px 28px rgba(6, 20, 44, 0.32);
 }
 [data-home-scope] .home-landing__tagline {
-  margin: 4px 0 0;
-  font-size: 17px;
+  margin: 6px 0 0;
+  /* 副标题承载较长定位语，20px 保证可读又不与主标题抢焦点 */
+  font-size: 20px;
   font-weight: 600;
+  line-height: 1.45;
   color: rgba(255, 255, 255, 0.9);
   text-shadow: 0 1px 8px rgba(6, 20, 44, 0.4);
 }
@@ -841,11 +844,11 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
   }
   [data-home-scope] .home-landing__copy { padding-left: 0; }
   [data-home-scope] .home-landing__title {
-    font-size: clamp(30px, 7vw, 40px);
+    font-size: clamp(34px, 8vw, 46px);
     letter-spacing: 1px;
     overflow-wrap: anywhere;
   }
-  [data-home-scope] .home-landing__tagline { font-size: 15.5px; }
+  [data-home-scope] .home-landing__tagline { font-size: 16.5px; }
   [data-home-scope] .home-landing__aside { gap: 16px; }
   [data-home-scope] .home-landing__aside .profile-card,
   [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
@@ -854,7 +857,8 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
   [data-home-scope] .dashboard-highlight__hero .hero-visual { height: auto; }
 }
 @media (max-width: 480px) {
-  [data-home-scope] .home-landing__title { font-size: clamp(27px, 7.5vw, 34px); }
+  [data-home-scope] .home-landing__title { font-size: clamp(30px, 8.5vw, 38px); }
+  [data-home-scope] .home-landing__tagline { font-size: 15.5px; }
   [data-home-scope] .home-landing__actions {
     flex-direction: column;
     align-items: stretch;
