@@ -274,8 +274,6 @@ onMounted(async () => {
   border-radius: 28px;
   background: var(--nested-outer-card-bg);
   box-shadow: var(--nested-outer-card-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-hero-eyebrow {
   font-size: 13px;
@@ -364,8 +362,6 @@ html.dark .bangumi-bar {
   border-radius: 999px;
   background: var(--nested-outer-card-bg);
   box-shadow: var(--nested-outer-card-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-search-icon {
   display: inline-flex;
@@ -413,8 +409,6 @@ html.dark .bangumi-bar {
   border-radius: 999px;
   background: var(--nested-outer-card-bg);
   box-shadow: var(--nested-outer-card-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   /* 翻页回滚时给悬浮顶栏留位 */
   scroll-margin-top: 86px;
 }
@@ -458,8 +452,6 @@ html.dark .bangumi-bar {
   border-radius: 999px;
   background: var(--nested-outer-card-bg);
   box-shadow: var(--nested-outer-card-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-pager .bangumi-chip:disabled {
   opacity: 0.4;

@@ -467,8 +467,6 @@ watch(
   border-radius: 28px;
   background: var(--nested-outer-card-bg);
   box-shadow: var(--nested-outer-card-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-detail-cover-box {
   flex-shrink: 0;
@@ -648,8 +646,6 @@ html.dark .bangumi-detail-bar {
   border-radius: 26px;
   background: var(--nested-outer-card-bg);
   box-shadow: var(--nested-outer-card-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 .bangumi-detail-island-title {
   margin-bottom: 16px;
