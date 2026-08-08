@@ -27,7 +27,7 @@
           <span class="nav-link__label">{{ item.label }}</span>
         </RouterLink>
       </nav>
-      <div class="cx-popover-wrapper">
+      <div ref="navWrapRef" class="cx-popover-wrapper">
         <div class="cx-popover-trigger">
           <button type="button" class="shell-action-btn shell-nav-menu" aria-label="导航菜单" :aria-expanded="mobileNavOpen ? 'true' : 'false'" @click="mobileNavOpen = !mobileNavOpen">
             <SvgIcon name="common-menu" class="action-icon" />
@@ -73,7 +73,7 @@
           </div>
         </transition>
       </div>
-      <div class="cx-popover-wrapper">
+      <div ref="setWrapRef" class="cx-popover-wrapper">
         <div class="cx-popover-trigger">
           <button
             type="button"
@@ -150,6 +150,8 @@ const underlineStyle = ref({})
 const hoverPath = ref('')
 const mobileNavOpen = ref(false)
 const settingMenuOpen = ref(false)
+const navWrapRef = ref(null)
+const setWrapRef = ref(null)
 
 function isNavActive(path) {
   if (path === '/index') return route.path === '/index' || route.path.startsWith('/article')
@@ -217,13 +219,42 @@ function onResize() {
   updateIndicator()
 }
 
+/* 点击浮层外关闭：各菜单只在「点到自己 wrapper 之外」时收起，
+   因此点触发按钮本身仍由按钮的 @click 负责 toggle，不会开一下又立刻被关。
+   用 pointerdown 而非 click，避免 click 在某些浏览器上被内部元素吞掉。 */
+function onDocPointerDown(e) {
+  const t = e.target
+  if (mobileNavOpen.value && navWrapRef.value && !navWrapRef.value.contains(t)) {
+    mobileNavOpen.value = false
+  }
+  if (settingMenuOpen.value && setWrapRef.value && !setWrapRef.value.contains(t)) {
+    settingMenuOpen.value = false
+  }
+}
+
+function onDocKeydown(e) {
+  if (e.key !== 'Escape') return
+  mobileNavOpen.value = false
+  settingMenuOpen.value = false
+}
+
+// 路由切换时收起，防止跳页后菜单残留
+watch(() => route.path, () => {
+  mobileNavOpen.value = false
+  settingMenuOpen.value = false
+})
+
 onMounted(() => {
   nextTick(updateIndicator)
   window.addEventListener('resize', onResize)
+  document.addEventListener('pointerdown', onDocPointerDown)
+  document.addEventListener('keydown', onDocKeydown)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
+  document.removeEventListener('pointerdown', onDocPointerDown)
+  document.removeEventListener('keydown', onDocKeydown)
 })
 
 defineExpose({ updateIndicator })
@@ -241,6 +272,13 @@ defineExpose({ updateIndicator })
   right: 0;
   left: auto;
   margin-left: 0;
+}
+
+/* 移动端导航菜单：popover 为 fixed 且未设 top，会停在静态位置（与顶栏同一行），
+   导致首行被右侧操作图标压住（实测重叠 122×40px）。下移到顶栏底边之下：
+   静态 top 16px + 56px = 72px，顶栏底边 64px，留 8px 间隙。 */
+.cx-popover.top-nav-mobile-popover {
+  margin-top: 56px;
 }
 
 /* ========== 品牌区 ========== */
