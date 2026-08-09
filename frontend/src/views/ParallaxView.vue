@@ -187,7 +187,17 @@ const isMobile = computed(() => viewportWidth.value <= 640)
 // 减弱动效偏好：视差位移由 JS 写入行内样式，CSS 的 prefers-reduced-motion 块管不到，需在此拦掉
 const reduceMotion = ref(false)
 const depthScale = computed(() => (motionScale.value < 0.4 ? 0.78 : motionScale.value < 0.7 ? 0.88 : 1))
-const transitionDuration = computed(() => (isMobile.value || motionScale.value < 0.6 ? '0ms' : '180ms'))
+/**
+ * 位移过渡时长：CSS 用它在两次 scroll 采样之间补间。
+ * 桌面 scroll 事件密集，180ms 足够连成滑动；移动端触摸惯性滚动的事件
+ * 稀疏且不均匀，0ms 会让每次采样直接跳变（这正是"移动端没有变换效果"的
+ * 主因——观感是一格一格顿跳而非连续位移），故给更长的补间窗口。
+ */
+const transitionDuration = computed(() => {
+  if (reduceMotion.value) return '0ms'
+  if (isMobile.value) return '260ms'
+  return motionScale.value < 0.6 ? '120ms' : '180ms'
+})
 
 const pageStyle = computed(() => ({
   '--parallax-container-height': `${containerHeight.value || viewportHeight.value}px`,
