@@ -585,7 +585,13 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   align-items: center;
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(165deg, color-mix(in srgb, var(--accent-solid) 65%, white) 0%, color-mix(in srgb, var(--accent-solid) 85%, white) 52%, color-mix(in srgb, var(--accent-strong) 55%, white) 100%);
+  /* 由 accent 令牌带 alpha 推导：混白会得到全不透明实色，与外层玻璃卡片割裂 */
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--accent-strong) 88%, transparent) 0%,
+    color-mix(in srgb, var(--accent-strong) 94%, transparent) 52%,
+    color-mix(in srgb, var(--accent-text) 88%, transparent) 100%
+  );
 }
 
 .login-dialog__side-body {
@@ -699,7 +705,15 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 
 /* 登录弹窗暗色模式 */
 html.dark .login-dialog__mask { background: radial-gradient(circle at 20% 10%, var(--glow-left), transparent 55%), radial-gradient(circle at 85% 90%, var(--glow-right), transparent 55%), rgba(10, 14, 28, 0.55); }
-html.dark .login-dialog__side { background: linear-gradient(165deg, #274a75 0%, #2f5d88 55%, #2f7a8a 100%); }
+/* 暗色同样改为令牌推导：原先三段硬编码 hex 是全不透明的 */
+html.dark .login-dialog__side {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--accent-strong) 72%, transparent) 0%,
+    color-mix(in srgb, var(--accent-solid) 80%, transparent) 55%,
+    color-mix(in srgb, var(--accent-strong) 88%, transparent) 100%
+  );
+}
 html.dark .login-dialog__submit { background: linear-gradient(135deg, #4f86c6 0%, #67b7cf 100%); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42); }
 html.dark .login-dialog__submit:hover { box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5); }
 
