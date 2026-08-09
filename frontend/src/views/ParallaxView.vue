@@ -21,11 +21,11 @@
                 <span class="parallax-viewport-curtain-top"></span>
                 <span class="parallax-viewport-curtain-bottom"></span>
               </div>
-              <div v-if="!isMobile" class="parallax-viewport-atmosphere">
-                <span class="parallax-viewport-beam"></span>
+              <div class="parallax-viewport-atmosphere">
+                <span v-if="!isMobile" class="parallax-viewport-beam"></span>
                 <span class="parallax-viewport-orb parallax-viewport-orb-primary"></span>
                 <span class="parallax-viewport-orb parallax-viewport-orb-secondary"></span>
-                <span class="parallax-viewport-grid"></span>
+                <span v-if="!isMobile" class="parallax-viewport-grid"></span>
               </div>
               <div v-if="!isMobile" class="parallax-viewport-frame">
                 <span class="parallax-viewport-frame-line parallax-viewport-frame-line-top"></span>
@@ -66,11 +66,11 @@
                 <span class="parallax-viewport-curtain-top"></span>
                 <span class="parallax-viewport-curtain-bottom"></span>
               </div>
-              <div v-if="!isMobile" class="parallax-viewport-atmosphere">
-                <span class="parallax-viewport-beam"></span>
+              <div class="parallax-viewport-atmosphere">
+                <span v-if="!isMobile" class="parallax-viewport-beam"></span>
                 <span class="parallax-viewport-orb parallax-viewport-orb-primary"></span>
                 <span class="parallax-viewport-orb parallax-viewport-orb-secondary"></span>
-                <span class="parallax-viewport-grid"></span>
+                <span v-if="!isMobile" class="parallax-viewport-grid"></span>
               </div>
               <div v-if="!isMobile" class="parallax-viewport-frame">
                 <span class="parallax-viewport-frame-line parallax-viewport-frame-line-top"></span>
@@ -105,11 +105,11 @@
                 <span class="parallax-viewport-curtain-top"></span>
                 <span class="parallax-viewport-curtain-bottom"></span>
               </div>
-              <div v-if="!isMobile" class="parallax-viewport-atmosphere">
-                <span class="parallax-viewport-beam"></span>
+              <div class="parallax-viewport-atmosphere">
+                <span v-if="!isMobile" class="parallax-viewport-beam"></span>
                 <span class="parallax-viewport-orb parallax-viewport-orb-primary"></span>
                 <span class="parallax-viewport-orb parallax-viewport-orb-secondary"></span>
-                <span class="parallax-viewport-grid"></span>
+                <span v-if="!isMobile" class="parallax-viewport-grid"></span>
               </div>
               <div v-if="!isMobile" class="parallax-viewport-frame">
                 <span class="parallax-viewport-frame-line parallax-viewport-frame-line-top"></span>
@@ -184,6 +184,8 @@ const motionScale = computed(() => {
 })
 const motionResistance = computed(() => 0.4 + motionScale.value * 0.6)
 const isMobile = computed(() => viewportWidth.value <= 640)
+// 减弱动效偏好：视差位移由 JS 写入行内样式，CSS 的 prefers-reduced-motion 块管不到，需在此拦掉
+const reduceMotion = ref(false)
 const depthScale = computed(() => (motionScale.value < 0.4 ? 0.78 : motionScale.value < 0.7 ? 0.88 : 1))
 const transitionDuration = computed(() => (isMobile.value || motionScale.value < 0.6 ? '0ms' : '180ms'))
 
@@ -208,21 +210,44 @@ function metrics(i) {
   return { positionDelta, focusProgress, depthProgress, drift }
 }
 
+/** 减弱动效时的静态取值：位移/缩放全部归零，仅留一层可读的遮罩 */
+const STATIC_VIEWPORT_STYLE = {
+  '--parallax-bg-transform': 'none',
+  '--parallax-content-transform': 'none',
+  '--parallax-overlay-opacity': '0.28',
+  '--parallax-glow-opacity': '0',
+  '--parallax-glow-scale': '1',
+  '--parallax-beam-offset': '0%',
+  '--parallax-beam-opacity': '0',
+  '--parallax-orbit-transform': 'none',
+  '--parallax-grid-opacity': '0',
+  '--parallax-content-opacity': '1',
+  '--parallax-curtain-offset': '0%',
+  '--parallax-curtain-opacity': '0',
+  '--parallax-frame-opacity': '0',
+  '--parallax-frame-shift': '0px',
+  '--parallax-highlight-opacity': '0',
+  '--parallax-drift': '0px'
+}
+
 function viewportStyle(i) {
+  if (reduceMotion.value) return STATIC_VIEWPORT_STYLE
   const { positionDelta: t, focusProgress: l, depthProgress: o, drift } = metrics(i)
   if (isMobile.value) {
-    // 移动端只保留轻量位移，装饰层全部关闭
+    // 移动端：只用 transform/opacity（走合成器，不触发重排/重绘），
+    // 位移幅度比桌面收窄但足以形成纵深；大面积叠加层（beam/grid/curtain/frame）仍关闭。
     return {
-      '--parallax-bg-transform': `translate3d(0, ${t * -4}%, 0) scale(${1.04 + l * 0.04})`,
-      '--parallax-content-transform': `translate3d(0, ${t * -16}px, 0) scale(${0.98 + l * 0.02})`,
-      '--parallax-overlay-opacity': `${Math.min(0.52, 0.2 + o * 0.24)}`,
-      '--parallax-glow-opacity': '0',
-      '--parallax-glow-scale': '1',
+      '--parallax-bg-transform': `translate3d(0, ${t * -9}%, 0) scale(${1.05 + l * 0.07})`,
+      '--parallax-content-transform': `translate3d(0, ${t * -26}px, 0) scale(${0.965 + l * 0.035})`,
+      '--parallax-overlay-opacity': `${Math.min(0.56, 0.16 + o * 0.34)}`,
+      // 两个 orb 为 radial-gradient + transform/opacity，合成成本低，移动端保留（透明度降一档）
+      '--parallax-glow-opacity': `${0.08 + l * 0.3}`,
+      '--parallax-glow-scale': `${0.94 + l * 0.16}`,
+      '--parallax-orbit-transform': `translate3d(${t * 7}%, ${t * -5}%, 0)`,
       '--parallax-beam-offset': '0%',
       '--parallax-beam-opacity': '0',
-      '--parallax-orbit-transform': 'translate3d(0, 0, 0)',
       '--parallax-grid-opacity': '0',
-      '--parallax-content-opacity': `${0.72 + l * 0.28}`,
+      '--parallax-content-opacity': `${0.5 + l * 0.5}`,
       '--parallax-curtain-offset': '0%',
       '--parallax-curtain-opacity': '0',
       '--parallax-frame-opacity': '0',
@@ -256,10 +281,13 @@ function viewportStyle(i) {
 
 // 内容区动效强度与漂移量（移动端固定接近 1 / 不漂移）
 function motionLevel(i) {
+  if (reduceMotion.value) return 1
   const { focusProgress } = metrics(i)
-  return isMobile.value ? 0.82 + focusProgress * 0.18 : 1 - (1 - focusProgress) * motionResistance.value
+  // 移动端区间由 0.82~1 放宽到 0.62~1：卡片升起量随之从约 9px 增到约 20px，进入焦点时纵深可感
+  return isMobile.value ? 0.62 + focusProgress * 0.38 : 1 - (1 - focusProgress) * motionResistance.value
 }
 function driftFor(i) {
+  if (reduceMotion.value) return 0
   return isMobile.value ? 0 : metrics(i).drift * motionScale.value
 }
 
@@ -348,7 +376,18 @@ function schedule() {
   })
 }
 
+let motionQuery = null
+function onMotionPrefChange(e) {
+  reduceMotion.value = e.matches
+}
+
 onMounted(async () => {
+  // 监听 prefers-reduced-motion：用户中途改系统设置也能即时生效
+  if (typeof window.matchMedia === 'function') {
+    motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    reduceMotion.value = motionQuery.matches
+    motionQuery.addEventListener('change', onMotionPrefChange)
+  }
   await loadStories()
   try {
     parallaxConfig.value = await api.siteContent('parallax-config')
@@ -369,6 +408,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   disposed = true
+  if (motionQuery) motionQuery.removeEventListener('change', onMotionPrefChange)
   if (rafId) window.cancelAnimationFrame(rafId)
   if (scroller instanceof HTMLElement) {
     scroller.removeEventListener('scroll', schedule)
