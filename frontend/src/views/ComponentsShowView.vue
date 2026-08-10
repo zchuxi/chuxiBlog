@@ -113,6 +113,45 @@
           </div>
         </section>
 
+        <!-- CX-date-picker -->
+        <section id="demo-date-picker" class="demo-panel">
+          <header class="demo-panel-header">
+            <SvgIcon name="common-icons" size="18px" />
+            <span>CX-date-picker 示例</span>
+          </header>
+          <p class="demo-panel-description">自绘日历弹层，替代原生 date / datetime-local（原生弹层由浏览器绘制，不受站点主题与暗色模式控制）。周一为首列，取值格式与后端 LocalDateTime 契约一致。</p>
+          <div class="demo-panel-body">
+            <div class="radio-demo-stack">
+              <div class="demo-card">
+                <span class="demo-card__label">日期 + 时间</span>
+                <div class="demo-card__control">
+                  <CxDatePicker v-model="datetimeValue" type="datetime" />
+                </div>
+              </div>
+              <div class="demo-card">
+                <span class="demo-card__label">取值</span>
+                <strong class="demo-card__value">{{ datetimeValue || '（空）' }}</strong>
+              </div>
+              <div class="demo-card">
+                <span class="demo-card__label">仅日期</span>
+                <div class="demo-card__control">
+                  <CxDatePicker v-model="dateOnlyValue" type="date" />
+                </div>
+              </div>
+              <div class="demo-card">
+                <span class="demo-card__label">取值</span>
+                <strong class="demo-card__value">{{ dateOnlyValue || '（空）' }}</strong>
+              </div>
+              <div class="demo-card">
+                <span class="demo-card__label">禁用态</span>
+                <div class="demo-card__control">
+                  <CxDatePicker :model-value="'2026-03-17T10:20:30'" type="datetime" disabled />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- CX-radio -->
         <section id="demo-radio" class="demo-panel">
           <header class="demo-panel-header">
@@ -271,7 +310,7 @@ import { ref } from 'vue'
 import '../assets/css/components-show.css'
 import SvgIcon from '../components/SvgIcon.vue'
 import CxSection from '../components/CxSection.vue'
-import { CxButton, CxTag, CxSwitch, CxRadio, CxRadioGroup, CxMessage, CxPopover } from '../components/cx'
+import { CxButton, CxTag, CxSwitch, CxRadio, CxRadioGroup, CxMessage, CxPopover, CxDatePicker } from '../components/cx'
 
 const menus = [
   { id: 'demo-button', name: 'CX-button', desc: '按钮组件' },
@@ -307,6 +346,9 @@ const radioOptions = [
   { label: '待审核', value: 'review' },
   { label: '已发布', value: 'published' }
 ]
+const datetimeValue = ref('2026-03-17T10:20:30')
+const dateOnlyValue = ref('2026-03-17')
+
 const radioValue = ref('review')
 
 /* switch */

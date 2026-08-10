@@ -33,23 +33,20 @@
       @input="emit('update:modelValue', $event.target.value)"
     />
 
-    <!-- 日期时间 / 日期：原生日历弹层，color-scheme 跟随明暗主题（admin.css） -->
-    <input
+    <!-- 日期时间 / 日期：自绘日历（原生弹层不受站点主题控制，且在管理端弹窗内会溢出） -->
+    <CxDatePicker
       v-else-if="field.type === 'datetime'"
-      class="admin-input"
-      type="datetime-local"
-      step="1"
-      :value="dateValue"
+      type="datetime"
+      :model-value="dateValue"
       :disabled="disabled"
-      @input="emit('update:modelValue', $event.target.value)"
+      @update:model-value="emit('update:modelValue', $event)"
     />
-    <input
+    <CxDatePicker
       v-else-if="field.type === 'date'"
-      class="admin-input"
       type="date"
-      :value="dateValue"
+      :model-value="dateValue"
       :disabled="disabled"
-      @input="emit('update:modelValue', $event.target.value)"
+      @update:model-value="emit('update:modelValue', $event)"
     />
 
     <!-- 下拉选择（自绘面板，主题一致） -->
@@ -132,6 +129,7 @@ import { computed, inject, ref } from 'vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 import AdminSelect from './AdminSelect.vue'
+import CxDatePicker from '../../components/cx/CxDatePicker.vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({

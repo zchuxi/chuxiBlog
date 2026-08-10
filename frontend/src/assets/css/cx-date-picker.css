@@ -1,0 +1,243 @@
+/* CX 日期/时间选择器：取站点令牌，明暗随 html.dark 自动切换 */
+
+.cx-date-picker {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+}
+
+/* ---------- 触发器：与 .admin-input 对齐外观 ---------- */
+.cx-date-picker__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+.cx-date-picker__field:hover:not(:disabled) { border-color: var(--accent-border); }
+.cx-date-picker__field:focus-visible {
+  outline: none;
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.cx-date-picker.is-open .cx-date-picker__field {
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.cx-date-picker.is-disabled .cx-date-picker__field {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cx-date-picker__value { flex: 1; min-width: 0; }
+.cx-date-picker__placeholder {
+  flex: 1;
+  min-width: 0;
+  color: color-mix(in srgb, var(--text-color) 42%, transparent);
+}
+.cx-date-picker__icon {
+  flex: none;
+  color: var(--accent-text);
+  opacity: 0.7;
+}
+
+/* ---------- 弹层 ---------- */
+.cx-date-picker__panel {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: min(94vw, 420px);
+  padding: 14px;
+  border: 1px solid var(--nested-outer-card-border);
+  border-radius: 18px;
+  background: var(--popover-bg);
+  box-shadow: var(--nested-outer-card-shadow);
+}
+/* 贴近右边界时改为右对齐，避免在管理端弹窗里溢出 */
+.cx-date-picker--align-right .cx-date-picker__panel { left: auto; right: 0; }
+
+.cx-date-picker__body { display: flex; gap: 12px; }
+
+.cx-date-picker-fade-enter-active,
+.cx-date-picker-fade-leave-active { transition: opacity 0.16s ease, transform 0.16s ease; }
+.cx-date-picker-fade-enter-from,
+.cx-date-picker-fade-leave-to { opacity: 0; transform: translateY(-4px); }
+
+/* ---------- 日历 ---------- */
+.cx-date-picker__calendar { flex: none; }
+
+.cx-date-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.cx-date-picker__month {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.cx-date-picker__nav { display: flex; gap: 4px; }
+.cx-date-picker__nav button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.cx-date-picker__nav button:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent-border);
+}
+
+.cx-date-picker__week,
+.cx-date-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 32px);
+  gap: 2px;
+}
+.cx-date-picker__week {
+  margin-bottom: 4px;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--text-color) 52%, transparent);
+}
+.cx-date-picker__week span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
+.cx-date-picker__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+.cx-date-picker__day:hover { background: var(--accent-glow); }
+/* 非本月日期压暗但仍可点（点了会翻到那个月） */
+.cx-date-picker__day.is-outside { color: color-mix(in srgb, var(--text-color) 32%, transparent); }
+.cx-date-picker__day.is-today { border-color: var(--accent-border); }
+.cx-date-picker__day.is-active {
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
+  color: #fff;
+  font-weight: 600;
+}
+.cx-date-picker__day.is-active:hover { background: var(--accent-strong); }
+
+/* ---------- 时分秒列 ---------- */
+.cx-date-picker__time {
+  display: flex;
+  gap: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--nested-inner-card-border);
+}
+.cx-date-picker__time-col {
+  /* 高度对齐日历（周头 + 6 行日格），超出滚动 */
+  height: 226px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.cx-date-picker__time-col button {
+  display: block;
+  width: 44px;
+  padding: 5px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.cx-date-picker__time-col button:hover { background: var(--accent-glow); }
+.cx-date-picker__time-col button.is-active {
+  background: var(--accent-solid);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ---------- 页脚 ---------- */
+.cx-date-picker__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--nested-inner-card-border);
+}
+.cx-date-picker__foot-right { display: flex; align-items: center; gap: 8px; }
+.cx-date-picker__link {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent-strong);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.cx-date-picker__link:hover { background: var(--accent-glow); }
+.cx-date-picker__confirm {
+  padding: 5px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-solid);
+  color: #fff;
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.cx-date-picker__confirm:hover { background: var(--accent-strong); transform: translateY(-1px); }
+.cx-date-picker__confirm:active { transform: translateY(0); }
+
+/* ---------- 窄屏：时间列改横排，避免弹层超出视口 ---------- */
+@media (max-width: 560px) {
+  .cx-date-picker__panel { max-width: calc(100vw - 32px); }
+  .cx-date-picker__body { flex-direction: column; }
+  .cx-date-picker__week,
+  .cx-date-picker__grid { grid-template-columns: repeat(7, 1fr); }
+  .cx-date-picker__calendar { width: 100%; }
+  .cx-date-picker__time {
+    padding-left: 0;
+    padding-top: 10px;
+    border-left: none;
+    border-top: 1px solid var(--nested-inner-card-border);
+  }
+  .cx-date-picker__time-col { height: 132px; flex: 1; }
+  .cx-date-picker__time-col button { width: 100%; }
+}
