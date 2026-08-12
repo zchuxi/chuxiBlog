@@ -24,7 +24,27 @@
           <path d="M2 4.5h12M2 8h12M2 11.5h12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
         </svg>
       </button>
+      <button
+        v-if="canCrop"
+        type="button"
+        class="admin-btn admin-btn-ghost adm-img-select-btn"
+        :disabled="fetching"
+        :title="fetching ? '取回中…' : (ratio ? '按展示比例裁切' : '裁切')"
+        @click="openCrop"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M5 1.5v8.5a1 1 0 0 0 1 1H15M1.5 5H10a1 1 0 0 1 1 1v8.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
     </div>
+
+    <CropDialog
+      v-if="cropTarget"
+      :item="cropTarget"
+      :ratio="ratio"
+      @close="cropTarget = null"
+      @saved="onCropped"
+    />
 
     <teleport to="body">
       <transition name="adm-select-fade">
@@ -52,14 +72,59 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { mediaApi } from '../../api/admin'
+import CropDialog from './CropDialog.vue'
 
-defineProps({
+const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: '/favicon.png' }
+  placeholder: { type: String, default: '/favicon.png' },
+  // 预设裁切比例（宽/高），如头像 1；0 表示自由裁切
+  ratio: { type: Number, default: 0 }
 })
 const emit = defineEmits(['update:modelValue'])
+
+const toast = inject('adminToast', () => {})
+const cropTarget = ref(null)
+// 取回外链中的 loading：拉远端图转副本期间防止重复点「裁切」
+const fetching = ref(false)
+
+// 站内图（/api/uploads/）与外链 http(s) 图均可裁：站内直接打开，外链先让后端取回转本地副本再裁
+const canCrop = computed(
+  () => typeof props.modelValue === 'string'
+    && (props.modelValue.startsWith('/api/uploads/') || /^https?:\/\//.test(props.modelValue))
+)
+
+async function openCrop() {
+  const raw = props.modelValue
+  const name = decodeURIComponent((raw.split('?')[0].split('/').pop() || ''))
+  if (!name) return
+  if (raw.startsWith('/api/uploads/')) {
+    cropTarget.value = { name, url: raw }
+    return
+  }
+  // 外链：canvas 跨域会被污染无法直接裁，先让后端下载到站内并回填
+  fetching.value = true
+  try {
+    const data = await mediaApi.fetch(raw)
+    if (data && data.url) {
+      emit('update:modelValue', data.url)
+      cropTarget.value = { name: data.name || name, url: data.url }
+    }
+  } catch (err) {
+    toast((err && err.message) || '取回失败，请稍后重试', 'error')
+  } finally {
+    fetching.value = false
+  }
+}
+
+// 裁切保存为新图后直接回填字段
+function onCropped(data) {
+  if (data && data.url) {
+    emit('update:modelValue', data.url)
+    toast('裁切完成，已回填新图')
+  }
+}
 
 const inputRef = ref(null)
 const triggerRef = ref(null)

@@ -34,6 +34,14 @@
             <img :src="url" alt="背景" loading="lazy" />
             <span class="bgl-item-name" :title="url">{{ shortName(url) }}</span>
             <button type="button" class="bgl-item-remove" title="移除" @click="removeAt(group.key, i)">×</button>
+            <button
+              v-if="croppable(url)"
+              type="button"
+              class="bgl-item-crop"
+              :disabled="fetchingKey === group.key + ':' + i"
+              :title="group.key === 'vertical' ? '按竖屏 9:16 裁切' : '按横屏 16:9 裁切'"
+              @click="openCrop(group.key, i)"
+            >{{ fetchingKey === group.key + ':' + i ? '…' : '裁切' }}</button>
           </div>
         </div>
 
@@ -61,6 +69,14 @@
 
     <input ref="fileRef" type="file" accept="image/*" hidden @change="onUpload" />
     <MediaPicker :model-value="!!pickerKey" @update:model-value="v => !v && (pickerKey = '')" @select="onPicked" />
+    <!-- 背景图裁切：横屏组预设 16:9，竖屏组预设 9:16，与前台全屏展示对齐 -->
+    <CropDialog
+      v-if="cropTarget"
+      :item="cropTarget.item"
+      :ratio="cropTarget.key === 'vertical' ? 9 / 16 : 16 / 9"
+      @close="cropTarget = null"
+      @saved="onCropped"
+    />
   </section>
 </template>
 
@@ -69,6 +85,7 @@ import { inject, reactive, ref, onMounted } from 'vue'
 import { siteContentApi, mediaApi } from '../../api/admin'
 import { DEFAULT_LANDSCAPE, DEFAULT_VERTICAL } from '../../stores/settings'
 import MediaPicker from './MediaPicker.vue'
+import CropDialog from './CropDialog.vue'
 
 const CONTENT_KEY = 'background-gallery'
 
@@ -89,6 +106,47 @@ const uploadingKey = ref('')
 const pickerKey = ref('')
 const fileRef = ref(null)
 let uploadTarget = ''
+
+// 裁切目标：{ key, index, item: { name, url } }；fetchingKey 记录正在取回外链的项
+const cropTarget = ref(null)
+const fetchingKey = ref('')
+
+// 站内图（/api/uploads/）与外链 http(s) 图均可裁；本地静态资源（/image/…）不入库故不可裁
+function croppable(url) {
+  return typeof url === 'string' && (url.startsWith('/api/uploads/') || /^https?:\/\//.test(url))
+}
+
+async function openCrop(key, index) {
+  const raw = form[key][index]
+  const name = decodeURIComponent((String(raw).split('?')[0].split('/').pop() || ''))
+  if (!name) return
+  if (raw.startsWith('/api/uploads/')) {
+    cropTarget.value = { key, index, item: { name, url: raw } }
+    return
+  }
+  // 外链：canvas 跨域会被污染无法直接裁，先让后端下载到站内并替换列表项
+  fetchingKey.value = key + ':' + index
+  try {
+    const data = await mediaApi.fetch(raw)
+    if (data && data.url) {
+      form[key].splice(index, 1, data.url)
+      cropTarget.value = { key, index, item: { name: data.name || name, url: data.url } }
+    }
+  } catch (err) {
+    toast((err && err.message) || '取回失败，请稍后重试', 'error')
+  } finally {
+    fetchingKey.value = ''
+  }
+}
+
+// 裁切保存为新图后替换列表中的原图
+function onCropped(data) {
+  if (cropTarget.value && data && data.url) {
+    form[cropTarget.value.key].splice(cropTarget.value.index, 1, data.url)
+    toast('裁切完成，已替换为新图')
+  }
+  cropTarget.value = null
+}
 
 function shortName(url) {
   return decodeURIComponent(String(url).split('/').pop() || url)
@@ -270,6 +328,31 @@ onMounted(load)
 }
 .bgl-item-remove:hover {
   background: rgba(209, 67, 67, 0.9);
+}
+.bgl-item-crop {
+  position: absolute;
+  top: 6px;
+  right: 32px;
+  height: 22px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.18s ease;
+}
+.bgl-item:hover .bgl-item-crop {
+  opacity: 1;
+}
+.bgl-item-crop:hover {
+  background: rgba(63, 119, 181, 0.9);
+}
+.bgl-item-crop:disabled {
+  cursor: wait;
 }
 .bgl-add-row {
   display: flex;

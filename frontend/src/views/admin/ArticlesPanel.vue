@@ -139,6 +139,9 @@
                 {{ uploading ? '上传中…' : '上传图片' }}
               </button>
               <button class="admin-btn admin-btn-ghost" type="button" @click="pickerOpen = true">从图库选择</button>
+              <button v-if="canCrop" class="admin-btn admin-btn-ghost" type="button" :disabled="fetching" @click="openCrop">
+                {{ fetching ? '取回中…' : '裁切' }}
+              </button>
             </div>
           </div>
 
@@ -180,6 +183,14 @@
     </template>
 
     <MediaPicker v-model="pickerOpen" @select="url => (form.coverUrl = url)" />
+    <!-- 封面裁切：前台封面以 16:10 横版展示（首页文章卡 / 文章页头图），预设该比例 -->
+    <CropDialog
+      v-if="cropTarget"
+      :item="cropTarget"
+      :ratio="16 / 10"
+      @close="cropTarget = null"
+      @saved="onCropped"
+    />
     <input ref="fileEl" type="file" accept="image/*" style="display: none" @change="onUploadFile" />
   </section>
 </template>
@@ -190,6 +201,7 @@ import { adminApi, mediaApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
 import MediaPicker from './MediaPicker.vue'
+import CropDialog from './CropDialog.vue'
 import AdminSelect from './AdminSelect.vue'
 
 const props = defineProps({
@@ -224,6 +236,46 @@ let carry = {}
 const pickerOpen = ref(false)
 const uploading = ref(false)
 const fileEl = ref(null)
+const cropTarget = ref(null)
+// 取回外链中的 loading：拉远端图转副本期间防止重复点「裁切」
+const fetching = ref(false)
+
+// 站内图（/api/uploads/）与外链 http(s) 图均可裁：站内直接打开，外链先让后端取回转本地副本再裁
+const canCrop = computed(
+  () => typeof form.value.coverUrl === 'string'
+    && (form.value.coverUrl.startsWith('/api/uploads/') || /^https?:\/\//.test(form.value.coverUrl))
+)
+
+async function openCrop() {
+  const raw = form.value.coverUrl
+  const name = decodeURIComponent((raw.split('?')[0].split('/').pop() || ''))
+  if (!name) return
+  if (raw.startsWith('/api/uploads/')) {
+    cropTarget.value = { name, url: raw }
+    return
+  }
+  // 外链：canvas 跨域会被污染无法直接裁，先让后端下载到站内并回填
+  fetching.value = true
+  try {
+    const data = await mediaApi.fetch(raw)
+    if (data && data.url) {
+      form.value.coverUrl = data.url
+      cropTarget.value = { name: data.name || name, url: data.url }
+    }
+  } catch (err) {
+    toast((err && err.message) || '取回失败，请稍后重试', 'error')
+  } finally {
+    fetching.value = false
+  }
+}
+
+// 裁切保存为新图后直接回填封面字段
+function onCropped(data) {
+  if (data && data.url) {
+    form.value.coverUrl = data.url
+    toast('裁切完成，已回填新图')
+  }
+}
 
 // ---- 工具 ----
 

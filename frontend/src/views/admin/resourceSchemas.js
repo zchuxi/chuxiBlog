@@ -22,7 +22,7 @@ export const resourceSchemas = [
       { name: 'publishedAt', label: '发布时间', type: 'datetime' },
       { name: 'readingTime', label: '阅读时长', type: 'text' },
       { name: 'mood', label: '心情语', type: 'textarea' },
-      { name: 'coverUrl', label: '封面图', type: 'image' },
+      { name: 'coverUrl', label: '封面图', type: 'image', ratio: 16 / 10 },
       { name: 'categoryId', label: '栏目 ID', type: 'number' },
       { name: 'categoryName', label: '栏目名', type: 'text' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
@@ -57,7 +57,7 @@ export const resourceSchemas = [
       { name: 'title', label: '标题', type: 'text' },
       { name: 'description', label: '描述', type: 'textarea' },
       { name: 'content', label: '内容', type: 'textarea' },
-      { name: 'imageUrl', label: '图片', type: 'image' },
+      { name: 'imageUrl', label: '图片（横版 3:2）', type: 'image', ratio: 3 / 2 },
       { name: 'sortIndex', label: '排序值', type: 'number' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
@@ -99,7 +99,7 @@ export const resourceSchemas = [
       { name: 'id', label: 'ID', type: 'number' },
       { name: 'title', label: '标题', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
-      { name: 'imageUrl', label: '图片', type: 'image' },
+      { name: 'imageUrl', label: '图片（横版 3:2）', type: 'image', ratio: 3 / 2 },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
     ]
@@ -112,7 +112,7 @@ export const resourceSchemas = [
       { name: 'id', label: 'ID', type: 'number' },
       { name: 'title', label: '标题', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
-      { name: 'imageUrl', label: '图片', type: 'image' },
+      { name: 'imageUrl', label: '图片（横版 3:2）', type: 'image', ratio: 3 / 2 },
       { name: 'timelineDate', label: '事件日期', type: 'date' },
       { name: 'createdAt', label: '创建时间', type: 'datetime' },
       { name: 'updatedAt', label: '更新时间', type: 'datetime' }
@@ -128,7 +128,7 @@ export const resourceSchemas = [
       { name: 'description', label: '描述', type: 'textarea' },
       { name: 'note', label: '旁白', type: 'textarea' },
       { name: 'align', label: '对齐（left/bottom/right）', type: 'text' },
-      { name: 'imageUrl', label: '图片', type: 'image' },
+      { name: 'imageUrl', label: '图片（全屏横版 16:9）', type: 'image', ratio: 16 / 9 },
       { name: 'sortIndex', label: '排序值', type: 'number' }
     ]
   },
@@ -144,7 +144,7 @@ export const resourceSchemas = [
       { name: 'categoryId', label: '分类 ID', type: 'number' },
       { name: 'category', label: '分类名', type: 'text' },
       { name: 'iconUrl', label: '图标', type: 'image', ratio: 1 },
-      { name: 'imageUrl', label: '展示图（详情页）', type: 'image' },
+      { name: 'imageUrl', label: '展示图（详情页，横版 2:1）', type: 'image', ratio: 2 / 1 },
       { name: 'tags', label: '标签', type: 'tags' },
       { name: 'highlight', label: '亮点', type: 'text' },
       { name: 'featured', label: '是否推荐', type: 'boolean', batch: true },

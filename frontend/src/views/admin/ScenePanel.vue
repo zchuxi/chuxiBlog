@@ -110,7 +110,9 @@
                     {{ uploading ? '上传中…' : '上传图片' }}
                   </button>
                   <button class="admin-btn admin-btn-ghost" type="button" @click="pickerOpen = true">从图库选择</button>
-                  <button v-if="canCrop" class="admin-btn admin-btn-ghost" type="button" @click="cropOpen = true">重新裁切</button>
+                  <button v-if="canCrop" class="admin-btn admin-btn-ghost" type="button" :disabled="fetching" @click="openCrop">
+                    {{ fetching ? '取回中…' : '裁切' }}
+                  </button>
                 </div>
               </div>
               <div class="scene-form-grid">
@@ -144,7 +146,7 @@
       v-if="cropOpen && cropItem"
       :item="cropItem"
       :ratio="16 / 10"
-      @close="cropOpen = false"
+      @close="closeCrop"
       @saved="onCropSaved"
     />
     <input ref="fileEl" type="file" accept="image/*" style="display: none" @change="onUploadFile" />
@@ -179,13 +181,43 @@ const fileEl = ref(null)
 
 const allSelected = computed(() => rows.value.length > 0 && selectedIds.value.length === rows.value.length)
 
-// 仅站内图库图片（/api/uploads/ 开头）支持重新裁切
-const canCrop = computed(() => typeof form.value.imageUrl === 'string' && form.value.imageUrl.startsWith('/api/uploads/'))
-const cropItem = computed(() => {
-  if (!canCrop.value) return null
-  const name = decodeURIComponent(form.value.imageUrl.split('/').pop() || '')
-  return name ? { name, url: form.value.imageUrl } : null
-})
+// 站内图（/api/uploads/）与外链 http(s) 图均可裁：站内直接打开，外链先让后端取回转本地副本再裁
+const fetching = ref(false)
+const cropItem = ref(null)
+const canCrop = computed(
+  () => typeof form.value.imageUrl === 'string'
+    && (form.value.imageUrl.startsWith('/api/uploads/') || /^https?:\/\//.test(form.value.imageUrl))
+)
+
+async function openCrop() {
+  const raw = form.value.imageUrl
+  const name = decodeURIComponent((raw.split('?')[0].split('/').pop() || ''))
+  if (!name) return
+  if (raw.startsWith('/api/uploads/')) {
+    cropItem.value = { name, url: raw }
+    cropOpen.value = true
+    return
+  }
+  // 外链：canvas 跨域会被污染无法直接裁，先让后端下载到站内并回填
+  fetching.value = true
+  try {
+    const data = await mediaApi.fetch(raw)
+    if (data && data.url) {
+      form.value.imageUrl = data.url
+      cropItem.value = { name: data.name || name, url: data.url }
+      cropOpen.value = true
+    }
+  } catch (err) {
+    handleError(err, '取回失败，请稍后重试')
+  } finally {
+    fetching.value = false
+  }
+}
+
+function closeCrop() {
+  cropOpen.value = false
+  cropItem.value = null
+}
 
 function emptyForm() {
   return {
@@ -408,7 +440,7 @@ function onPickImage(url) {
 
 // CropDialog 的 saved 事件带回新图 { name, url }，直接回填表单
 function onCropSaved(data) {
-  cropOpen.value = false
+  closeCrop()
   if (data && data.url) {
     form.value.imageUrl = data.url
     toast('裁切完成，已替换为新图')

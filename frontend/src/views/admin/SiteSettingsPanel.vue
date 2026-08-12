@@ -31,12 +31,12 @@
           </div>
           <div class="admin-field">
             <label class="admin-field-label">Favicon 地址</label>
-            <ImageSelect v-model="form.faviconUrl" placeholder="/favicon.png" />
+            <ImageSelect v-model="form.faviconUrl" placeholder="/favicon.png" :ratio="1" />
           </div>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">关于页头像</label>
-          <ImageSelect v-model="form.avatarUrl" placeholder="请输入或选择关于页头像图片地址" />
+          <ImageSelect v-model="form.avatarUrl" placeholder="请输入或选择关于页头像图片地址" :ratio="1" />
         </div>
       </div>
 
