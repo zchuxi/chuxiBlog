@@ -132,3 +132,19 @@ test('高字段量通用资源配置分组、说明和业务必填元数据', ()
     assert.ok(schema.fields.some(field => field.required === true), `[${key}] 至少应标记一个业务必填字段`)
   }
 })
+
+test('高频媒体与标签字段提供具体编辑说明', () => {
+  const targets = [
+    ['tool-sites', 'iconUrl'],
+    ['tool-sites', 'imageUrl'],
+    ['called-texts', 'tag'],
+    ['called-texts', 'imageUrl'],
+    ['musics', 'coverUrl']
+  ]
+  for (const [schemaKey, fieldName] of targets) {
+    const schema = resourceSchemas.find(item => item.key === schemaKey)
+    const field = schema?.fields.find(item => item.name === fieldName)
+    assert.ok(field, `缺少目标字段：${schemaKey}.${fieldName}`)
+    assert.ok(isNonEmptyString(field.tip), `[${schemaKey}.${fieldName}] tip 必须为非空字符串`)
+  }
+})
