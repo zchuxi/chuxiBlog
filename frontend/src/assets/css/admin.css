@@ -20,8 +20,11 @@
   --adm-input-border: rgba(63, 119, 181, 0.3);
   --adm-danger: #c0564f;
   --adm-danger-soft: rgba(192, 86, 79, 0.12);
+  --adm-error-bg: rgba(192, 86, 79, 0.1);
   --adm-success: #4caf87;
   --adm-success-ink: #2e7d5b;
+  --adm-focus-ring: 0 0 0 3px rgba(63, 119, 181, 0.2);
+  --adm-sticky-bg: rgba(255, 255, 255, 0.96);
   --adm-shadow: 0 12px 32px rgba(63, 119, 181, 0.12);
   --adm-shadow-lg: 0 20px 48px rgba(63, 119, 181, 0.18);
   --adm-mask: rgba(20, 30, 48, 0.42);
@@ -44,8 +47,11 @@ html.dark {
   --adm-input-border: rgba(255, 255, 255, 0.13);
   --adm-danger: #d98d8d;
   --adm-danger-soft: rgba(217, 141, 141, 0.14);
+  --adm-error-bg: rgba(217, 141, 141, 0.12);
   --adm-success: #4caf87;
   --adm-success-ink: #7fd0ac;
+  --adm-focus-ring: 0 0 0 3px rgba(141, 184, 232, 0.22);
+  --adm-sticky-bg: rgba(26, 34, 48, 0.96);
   --adm-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
   --adm-shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.5);
   --adm-mask: rgba(4, 8, 15, 0.64);
@@ -55,8 +61,9 @@ html.dark {
   min-height: 100vh;
   background: var(--adm-bg-grad);
   color: var(--adm-text);
-  font-family: var(--font-family-cute, "Comic Sans MS", cursive, sans-serif);
-  font-size: 16.5px;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 /* ---------- 通用按钮 / 链接 ---------- */
@@ -68,7 +75,7 @@ html.dark {
   background-color: var(--adm-accent);
   color: #fff;
   font-family: inherit;
-  font-size: 16.5px;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
@@ -106,7 +113,7 @@ html.dark {
   padding: 3px 8px;
   color: var(--adm-accent-ink);
   font-family: inherit;
-  font-size: 15.5px;
+  font-size: 14px;
   cursor: pointer;
   border-radius: 8px;
 }
@@ -133,7 +140,7 @@ html.dark {
   background-color: var(--adm-input-bg);
   color: var(--adm-text);
   font-family: inherit;
-  font-size: 16.5px;
+  font-size: 15px;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -141,7 +148,7 @@ html.dark {
 
 .admin-input:focus {
   border-color: var(--adm-accent);
-  box-shadow: 0 0 0 3px var(--adm-accent-soft);
+  box-shadow: var(--adm-focus-ring);
 }
 
 .admin-input:disabled {
@@ -186,7 +193,7 @@ html.dark .admin-input[type='datetime-local'] {
 .admin-input[type='date']:focus,
 .admin-input[type='datetime-local']:focus {
   border-color: var(--adm-accent);
-  box-shadow: 0 0 0 3px var(--adm-accent-soft);
+  box-shadow: var(--adm-focus-ring);
 }
 
 /* 悬停：边框变亮，提示可交互 */
@@ -236,7 +243,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-input[type='date']::-webkit-datetime-edit,
 .admin-input[type='datetime-local']::-webkit-datetime-edit {
   font-family: inherit;
-  font-size: 15.5px;
+  font-size: 15px;
   color: var(--adm-text);
   letter-spacing: 0.03em;
 }
@@ -295,12 +302,12 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   resize: vertical;
   min-height: 72px;
   line-height: 1.6;
-  font-size: 16.5px;
+  font-size: 15px;
 }
 
 .admin-md {
   min-height: 50vh;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.7;
 }
 
@@ -313,7 +320,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-field-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--adm-text-dim);
 }
 
@@ -428,7 +435,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-login-sub {
   margin: 8px 0 26px;
   text-align: center;
-  font-size: 15.5px;
+  font-size: 15px;
   color: var(--adm-text-dim);
 }
 
@@ -535,7 +542,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   background: none;
   text-align: left;
   font-family: inherit;
-  font-size: 16.5px;
+  font-size: 15px;
   color: var(--adm-text-dim);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -657,7 +664,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-state {
   padding: 48px 16px;
   text-align: center;
-  font-size: 16.5px;
+  font-size: 15px;
   color: var(--adm-text-faint);
 }
 
@@ -668,13 +675,13 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .admin-table th {
   padding: 12px 14px;
   text-align: left;
-  font-size: 15.5px;
+  font-size: 14px;
   color: var(--adm-accent-ink);
   background-color: var(--adm-card-2);
   white-space: nowrap;
@@ -1691,7 +1698,15 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 .admin-audio-preview { flex: 1; min-width: 200px; height: 36px; }
 
 @media (max-width: 900px) {
-  .admin-modal, .admin-modal.wide { width: calc(100vw - 24px); max-height: calc(100vh - 24px); }
+  .admin-modal,
+  .admin-modal.wide {
+    inset: 0;
+    width: 100vw;
+    max-width: none;
+    max-height: 100dvh;
+    border-radius: 0;
+    transform: none;
+  }
   .admin-form-grid { grid-template-columns: minmax(0, 1fr); }
   .admin-img-field { grid-template-columns: 84px minmax(0, 1fr); }
   .admin-img-thumb { width: 84px; height: 84px; }
@@ -1805,7 +1820,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 
 .admin-check:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--adm-accent-soft);
+  box-shadow: var(--adm-focus-ring);
 }
 
 /* 选中：主题色底 + 白勾（border 画 L 形旋转 45°） */
@@ -1915,5 +1930,11 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
     flex: 1 1 130px;
     min-width: 0;
   }
+}
+
+/* 统一键盘焦点：放在所有交互态规则之后，确保 hover 与 focus-visible 同时存在时仍显示焦点环。 */
+.admin-root :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--adm-focus-ring);
 }
 
