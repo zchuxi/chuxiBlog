@@ -3,6 +3,11 @@
     <button
       type="button"
       class="cx-date-picker__field"
+      :id="id"
+      :name="name"
+      :aria-invalid="ariaInvalid"
+      :aria-describedby="ariaDescribedby"
+      :aria-required="ariaRequired"
       :disabled="disabled"
       :aria-expanded="open ? 'true' : 'false'"
       aria-haspopup="dialog"
@@ -100,7 +105,12 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   type: { type: String, default: 'datetime' },   // 'date' | 'datetime'
   disabled: Boolean,
-  placeholder: { type: String, default: '' }
+  placeholder: { type: String, default: '' },
+  id: { type: String, default: undefined },
+  name: { type: String, default: undefined },
+  ariaInvalid: { type: [Boolean, String], default: undefined },
+  ariaDescribedby: { type: String, default: undefined },
+  ariaRequired: { type: [Boolean, String], default: undefined }
 })
 const emit = defineEmits(['update:modelValue'])
 

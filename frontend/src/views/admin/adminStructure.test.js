@@ -147,3 +147,27 @@ test('字段分组使用一级边界且适配小屏，不创建嵌套卡片阴�
   assert.match(css, /\.admin-field-error/)
   assert.match(css, /\.admin-field-required/)
 })
+
+test('自绘选择与日期控件把无障碍属性绑定到真实触发按钮', async () => {
+  const sources = [
+    await read('./AdminSelect.vue'),
+    await read('../../components/cx/CxDatePicker.vue')
+  ]
+  for (const source of sources) {
+    assert.match(source, /ariaInvalid/)
+    assert.match(source, /ariaDescribedby/)
+    assert.match(source, /ariaRequired/)
+    const trigger = source.match(/<button[\s\S]*?>/)?.[0] || ''
+    assert.match(trigger, /:id="id"/)
+    assert.match(trigger, /:name="name"/)
+    assert.match(trigger, /:aria-invalid="ariaInvalid"/)
+    assert.match(trigger, /:aria-describedby="ariaDescribedby"/)
+    assert.match(trigger, /:aria-required="ariaRequired"/)
+  }
+})
+
+test('后台自绘字段触发按钮呈现错误边框并保留焦点环', async () => {
+  const css = await read('../../assets/css/admin.css')
+  assert.match(css, /\.adm-select-trigger[\s\S]*\.cx-date-picker__field[\s\S]*\[aria-invalid='true'\][\s\S]*border-color:\s*var\(--adm-danger\)/)
+  assert.match(css, /\[aria-invalid='true'\]:focus-visible[\s\S]*box-shadow:\s*var\(--adm-focus-ring\)/)
+})

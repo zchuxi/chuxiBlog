@@ -350,6 +350,15 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   border-color: var(--adm-danger);
 }
 
+.admin-field :where(.adm-select-trigger, .cx-date-picker__field)[aria-invalid='true'] {
+  border-color: var(--adm-danger);
+}
+
+.admin-field :where(.adm-select-trigger, .cx-date-picker__field)[aria-invalid='true']:focus-visible {
+  border-color: var(--adm-danger);
+  box-shadow: var(--adm-focus-ring);
+}
+
 .admin-img-preview {
   display: block;
   margin-top: 8px;

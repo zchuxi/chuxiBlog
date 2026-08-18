@@ -4,6 +4,11 @@
       ref="triggerRef"
       type="button"
       class="admin-input adm-select-trigger"
+      :id="id"
+      :name="name"
+      :aria-invalid="ariaInvalid"
+      :aria-describedby="ariaDescribedby"
+      :aria-required="ariaRequired"
       :disabled="disabled"
       @click="toggle"
       @keydown="onKeydown"
@@ -51,7 +56,12 @@ const props = defineProps({
   // 选项：字符串数组，或 { label, value } 对象数组
   options: { type: Array, default: () => [] },
   placeholder: { type: String, default: '请选择…' },
-  disabled: { type: Boolean, default: false }
+  disabled: { type: Boolean, default: false },
+  id: { type: String, default: undefined },
+  name: { type: String, default: undefined },
+  ariaInvalid: { type: [Boolean, String], default: undefined },
+  ariaDescribedby: { type: String, default: undefined },
+  ariaRequired: { type: [Boolean, String], default: undefined }
 })
 const emit = defineEmits(['update:modelValue', 'change'])
 
