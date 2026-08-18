@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { menuGroups } from './adminMenu.js'
 
 const read = relative => readFile(new URL(relative, import.meta.url), 'utf8')
 
@@ -51,4 +52,31 @@ test('小屏编辑弹窗使用全屏安全尺寸', async () => {
   assert.ok(modalMedia, '未找到 900px 下的编辑弹窗规则')
   const modalIndex = modalMedia.indexOf('.admin-modal')
   assert.match(extractBlock(modalMedia, modalIndex), /inset:\s*0/)
+})
+
+test('AdminView 使用菜单单一信息源渲染搜索和当前模块上下文', async () => {
+  const source = await read('./AdminView.vue')
+  assert.match(source, /import\s+\{\s*menuGroups\s*\}\s+from\s+'\.\/adminMenu'/)
+  assert.match(source, /v-model\.trim="menuQuery"/)
+  assert.match(source, /filteredMenuGroups/)
+  assert.match(source, /currentMenu\.label/)
+  assert.match(source, /currentMenu\.description/)
+  assert.match(source, /没有匹配的后台模块/)
+  assert.match(source, /class="admin-nav-empty"\s+role="status"\s+aria-live="polite"/)
+})
+
+test('后台菜单元数据完整且 key 唯一', () => {
+  const items = menuGroups.flatMap(group => group.items)
+  assert.equal(items.length, 25)
+  assert.equal(new Set(items.map(item => item.key)).size, items.length)
+  assert.ok(items.every(item => item.description.trim().length > 0))
+})
+
+test('侧栏搜索只由外层 focus-within 绘制焦点环', async () => {
+  const css = await read('../../assets/css/admin.css')
+  const generalSelector = '.admin-root :is(button, a, input, textarea, select, [tabindex]):focus-visible'
+  const exemptionSelector = '.admin-root .admin-nav-search input:focus-visible'
+  const exemptionIndex = css.lastIndexOf(exemptionSelector)
+  assert.ok(exemptionIndex > css.lastIndexOf(generalSelector))
+  assert.match(extractBlock(css, exemptionIndex), /box-shadow:\s*none/)
 })

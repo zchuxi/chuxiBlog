@@ -502,6 +502,67 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   flex-shrink: 0;
 }
 
+.admin-root .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-nav-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  margin: 12px 12px 0;
+  padding: 0 11px;
+  border: 1px solid var(--adm-input-border);
+  border-radius: 10px;
+  background: var(--adm-input-bg);
+  color: var(--adm-text-faint);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-nav-search:focus-within {
+  border-color: var(--adm-accent);
+  box-shadow: var(--adm-focus-ring);
+  color: var(--adm-accent-ink);
+}
+
+.admin-nav-search .svg-icon {
+  flex-shrink: 0;
+}
+
+.admin-nav-search input {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--adm-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-nav-search input::placeholder {
+  color: var(--adm-text-faint);
+}
+
+.admin-nav-empty {
+  margin: 18px 16px 0;
+  color: var(--adm-text-faint);
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .admin-nav {
   flex: 1;
   overflow-y: auto;
@@ -1936,5 +1997,10 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 .admin-root :is(button, a, input, textarea, select, [tabindex]):focus-visible {
   outline: none;
   box-shadow: var(--adm-focus-ring);
+}
+
+/* 搜索框的焦点环由外层 focus-within 统一绘制，避免内外双环。 */
+.admin-root .admin-nav-search input:focus-visible {
+  box-shadow: none;
 }
 

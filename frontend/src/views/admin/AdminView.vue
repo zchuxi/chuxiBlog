@@ -31,8 +31,21 @@
           <span class="admin-brand-dot"></span>
           初曦后台
         </RouterLink>
+        <label class="admin-nav-search">
+          <span class="sr-only">搜索后台模块</span>
+          <SvgIcon name="common-search" size="15px" />
+          <input v-model.trim="menuQuery" type="search" placeholder="搜索后台模块" />
+        </label>
+        <p
+          v-if="filteredMenuGroups.length === 0"
+          class="admin-nav-empty"
+          role="status"
+          aria-live="polite"
+        >
+          没有匹配的后台模块
+        </p>
         <nav class="admin-nav">
-          <div v-for="group in menuGroups" :key="group.title || 'main'" class="admin-nav-group">
+          <div v-for="group in filteredMenuGroups" :key="group.title || 'main'" class="admin-nav-group">
             <p v-if="group.title" class="admin-nav-group-title">{{ group.title }}</p>
             <button
               v-for="item in group.items"
@@ -78,8 +91,8 @@
               <SvgIcon name="common-menu" size="20px" />
             </button>
             <div>
-              <p class="admin-topbar-title">管理后台</p>
-              <p class="admin-topbar-sub">欢迎回来，站长</p>
+              <p class="admin-topbar-title">{{ currentMenu.label }}</p>
+              <p class="admin-topbar-sub">{{ currentMenu.description }}</p>
             </div>
           </div>
           <img class="admin-avatar" src="/favicon.png" alt="站长头像" />
@@ -123,6 +136,8 @@ import { RouterLink } from 'vue-router'
 import { login, logout as logoutApi, me } from '../../api/admin'
 import { useSettingsStore } from '../../stores/settings'
 import resourceSchemas from './resourceSchemas'
+import { filterMenuGroups } from './adminUi'
+import { menuGroups } from './adminMenu'
 import SvgIcon from '../../components/SvgIcon.vue'
 import ResourcePanel from './ResourcePanel.vue'
 import MediaPanel from './MediaPanel.vue'
@@ -147,55 +162,6 @@ const SITE_CONTENT_KEYS = {
   'site-about': 'about'
 }
 
-// 分组侧栏菜单
-const menuGroups = [
-  {
-    title: '',
-    items: [
-      { key: 'dashboard', label: '概览', icon: 'common-home' },
-      { key: 'articles', label: '文章管理', icon: 'common-articlePages' },
-      { key: 'archive-categories', label: '分类管理', icon: 'common-archive' },
-      { key: 'comments', label: '评论审核', icon: 'common-chat' },
-      { key: 'timeline-events', label: '时间线', icon: 'common-timeline' },
-      { key: 'timeline-carousels', label: '时间线轮播', icon: 'common-history' },
-      { key: 'barrages', label: '树洞弹幕', icon: 'common-send' },
-      { key: 'called-texts', label: '疗愈文本', icon: 'common-paw' },
-      { key: 'parallax-stories', label: '视差故事', icon: 'common-parallax' }
-    ]
-  },
-  {
-    title: '首页内容',
-    items: [
-      { key: 'site-home-landing', label: '首页内容', icon: 'common-home' },
-      { key: 'scenes', label: '首屏场景', icon: 'common-component' },
-      { key: 'collapse-cards', label: '内容卡片', icon: 'common-menu' },
-      { key: 'team-members', label: '个人介绍', icon: 'common-person' },
-      { key: 'site-archive-hero', label: '归档页', icon: 'common-tree' },
-      { key: 'site-about', label: '关于页', icon: 'common-cat' },
-      { key: 'friend-links', label: '友情链接', icon: 'common-web' }
-    ]
-  },
-  {
-    title: '资源',
-    items: [
-      { key: 'media', label: '图片管理', icon: 'common-icons' },
-      { key: 'background-gallery', label: '背景图库', icon: 'common-parallax' },
-      { key: 'musics', label: '音乐管理', icon: 'common-music' },
-      { key: 'tool-sites', label: '工具站点', icon: 'common-tool' },
-      { key: 'bangumi-records', label: '番剧管理', icon: 'common-open' }
-    ]
-  },
-  {
-    title: '系统设置',
-    items: [
-      { key: 'site-settings', label: '站点设置', icon: 'common-setting' },
-      { key: 'appearance-settings', label: '外观设置', icon: 'common-component' },
-      { key: 'nav-menu', label: '导航菜单', icon: 'common-menu' },
-      { key: 'page-content', label: '页面文案', icon: 'common-articlePages' }
-    ]
-  }
-]
-
 const logged = ref(false)
 const loggingIn = ref(false)
 const loginError = ref('')
@@ -205,6 +171,12 @@ const loginForm = reactive({ username: '', password: '' })
 
 const currentKey = ref('dashboard')
 const currentSchema = computed(() => resourceSchemas.find(s => s.key === currentKey.value))
+const menuQuery = ref('')
+const filteredMenuGroups = computed(() => filterMenuGroups(menuGroups, menuQuery.value))
+const allMenuItems = menuGroups.flatMap(group => group.items)
+const currentMenu = computed(() =>
+  allMenuItems.find(item => item.key === currentKey.value) || allMenuItems[0]
+)
 
 // 移动端（≤900px）侧栏抽屉开关：选中菜单/点遮罩后收起
 const sidebarOpen = ref(false)
