@@ -17,6 +17,7 @@
       :aria-label="field.label"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
+      :aria-required="field.required ? 'true' : undefined"
       :disabled="disabled"
       @click="emit('update:modelValue', !modelValue)"
     >
@@ -58,21 +59,25 @@
     <CxDatePicker
       v-else-if="field.type === 'datetime'"
       :id="inputId"
+      :name="field.name"
       type="datetime"
       :model-value="dateValue"
       :disabled="disabled"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
+      :aria-required="field.required ? 'true' : undefined"
       @update:model-value="emit('update:modelValue', $event)"
     />
     <CxDatePicker
       v-else-if="field.type === 'date'"
       :id="inputId"
+      :name="field.name"
       type="date"
       :model-value="dateValue"
       :disabled="disabled"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
+      :aria-required="field.required ? 'true' : undefined"
       @update:model-value="emit('update:modelValue', $event)"
     />
 
@@ -80,11 +85,13 @@
     <AdminSelect
       v-else-if="field.type === 'select'"
       :id="inputId"
+      :name="field.name"
       :model-value="modelValue"
       :options="field.options || []"
       :disabled="disabled"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
+      :aria-required="field.required ? 'true' : undefined"
       @update:model-value="v => emit('update:modelValue', v)"
     />
 

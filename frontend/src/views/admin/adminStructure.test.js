@@ -171,3 +171,20 @@ test('后台自绘字段触发按钮呈现错误边框并保留焦点环', async
   assert.match(css, /\.adm-select-trigger[\s\S]*\.cx-date-picker__field[\s\S]*\[aria-invalid='true'\][\s\S]*border-color:\s*var\(--adm-danger\)/)
   assert.match(css, /\[aria-invalid='true'\]:focus-visible[\s\S]*box-shadow:\s*var\(--adm-focus-ring\)/)
 })
+
+test('字段调用端向自绘控件与布尔开关传递名称和必填语义', async () => {
+  const field = await read('./FieldInput.vue')
+  const datePickers = Array.from(field.matchAll(/<CxDatePicker[\s\S]*?\/>/g), match => match[0])
+  assert.equal(datePickers.length, 2)
+  for (const picker of datePickers) {
+    assert.match(picker, /:name="field\.name"/)
+    assert.match(picker, /:aria-required="field\.required \? 'true' : undefined"/)
+  }
+
+  const select = field.match(/<AdminSelect[\s\S]*?\/>/)?.[0] || ''
+  assert.match(select, /:name="field\.name"/)
+  assert.match(select, /:aria-required="field\.required \? 'true' : undefined"/)
+
+  const booleanSwitch = field.match(/<!-- 布尔开关 -->[\s\S]*?<button[\s\S]*?>/)?.[0] || ''
+  assert.match(booleanSwitch, /:aria-required="field\.required \? 'true' : undefined"/)
+})
