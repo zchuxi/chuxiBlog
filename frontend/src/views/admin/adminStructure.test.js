@@ -197,5 +197,37 @@ test('通用编辑弹窗保护未保存内容并支持快捷保存', async () =>
   assert.match(source, /event\.(ctrlKey|metaKey)/)
   assert.match(source, /event\.key\.toLowerCase\(\) === 's'/)
   assert.match(source, /saveError/)
-  assert.match(source, /role="alert"/)
+  assert.match(source, /:role="saveError \? 'alert' : 'status'"/)
+  assert.match(source, /:disabled="saving \|\| \(field\.name === 'id' && editingId != null\)"/)
+})
+
+test('编辑器让已打开的子弹层独占 Escape 和 Ctrl+S', async () => {
+  const panel = await read('./ResourcePanel.vue')
+  const select = await read('./AdminSelect.vue')
+  const datePicker = await read('../../components/cx/CxDatePicker.vue')
+  const mediaPicker = await read('./MediaPicker.vue')
+  const cropDialog = await read('./CropDialog.vue')
+  assert.match(panel, /hasOpenEditorOverlay\(\)/)
+  assert.match(panel, /if \(hasOpenEditorOverlay\(\) &&/)
+  assert.match(select, /stopPropagation\(\)/)
+  assert.match(datePicker, /stopPropagation\(\)/)
+  assert.match(mediaPicker, /addEventListener\('keydown'/)
+  assert.match(cropDialog, /addEventListener\('keydown'/)
+})
+
+test('保存完成后保留保存期间产生的新修改', async () => {
+  const source = await read('./ResourcePanel.vue')
+  assert.match(source, /submittedSnapshot/)
+  assert.match(source, /createFormSnapshot\(form\.value, props\.schema\.fields\)/)
+  assert.match(source, /submittedSnapshot[\s\S]*drawerOpen\.value = false/)
+  assert.match(source, /initialSnapshot\.value = submittedSnapshot/)
+})
+
+test('后台菜单切换经过资源编辑器关闭守卫', async () => {
+  const panel = await read('./ResourcePanel.vue')
+  const view = await read('./AdminView.vue')
+  assert.match(panel, /defineExpose\(\{\s*requestClose\s*\}\)/)
+  assert.match(view, /ref\(null\)/)
+  assert.match(view, /requestClose/)
+  assert.match(view, /if \(!canLeaveCurrentPanel\(\)\) return/)
 })
