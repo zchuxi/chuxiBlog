@@ -2,8 +2,29 @@
   <section class="admin-panel">
     <!-- 顶部工具栏 -->
     <header class="admin-toolbar">
-      <h2 class="admin-toolbar-title">{{ schema.label }}</h2>
+      <div class="admin-toolbar-heading">
+        <h2 class="admin-toolbar-title">{{ schema.label }}</h2>
+        <p class="admin-toolbar-meta">
+          {{ searchQuery ? `找到 ${filteredRows.length} / ${rows.length} 条` : `共 ${rows.length} 条记录` }}
+        </p>
+      </div>
       <div class="admin-toolbar-actions">
+        <div class="admin-list-search">
+          <label class="sr-only" :for="`resource-search-${schema.key}`">搜索{{ schema.label }}</label>
+          <input
+            :id="`resource-search-${schema.key}`"
+            v-model.trim="searchQuery"
+            class="admin-input"
+            type="search"
+            placeholder="搜索当前列表"
+          />
+          <button
+            v-if="searchQuery"
+            type="button"
+            aria-label="清空搜索"
+            @click="searchQuery = ''"
+          >×</button>
+        </div>
         <button class="admin-btn admin-btn-ghost" :disabled="loading" @click="load">刷新</button>
         <button class="admin-btn" @click="openCreate">新建</button>
       </div>
@@ -11,7 +32,7 @@
 
     <!-- 批量操作条：选中行后浮现 -->
     <transition name="admin-fade">
-      <div v-if="selected.size" class="admin-batch-bar">
+      <div v-if="selected.size && !loadError" class="admin-batch-bar">
         <span class="admin-batch-count">已选 {{ selected.size }} 条</span>
         <template v-for="field in batchFields" :key="field.name">
           <AdminSelect
@@ -50,8 +71,17 @@
 
     <!-- 数据表格 -->
     <div class="admin-table-card">
-      <div v-if="loading" class="admin-state">加载中…</div>
+      <div v-if="loading" class="admin-state" aria-live="polite">加载中…</div>
+      <div v-else-if="loadError" class="admin-state admin-state-error" role="alert">
+        <strong>列表加载失败</strong>
+        <span>{{ loadError }}</span>
+        <button type="button" class="admin-btn admin-btn-ghost" @click="load">重新加载</button>
+      </div>
       <div v-else-if="rows.length === 0" class="admin-state">暂无数据，点击右上角「新建」添加一条吧</div>
+      <div v-else-if="filteredRows.length === 0" class="admin-state">
+        没有找到匹配“{{ searchQuery }}”的记录
+        <button type="button" class="admin-link" @click="searchQuery = ''">清空搜索</button>
+      </div>
       <div v-else class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -100,8 +130,8 @@
         </table>
       </div>
       <!-- 分页栏：前端切页，仅多于一页时展示翻页按钮 -->
-      <div v-if="!loading && rows.length > 0" class="admin-pager">
-        <span class="admin-pager-info">共 {{ rows.length }} 条 · 第 {{ pageNo }}/{{ totalPages }} 页</span>
+      <div v-if="!loading && !loadError && filteredRows.length > 0" class="admin-pager">
+        <span class="admin-pager-info">共 {{ filteredRows.length }} 条 · 第 {{ pageNo }}/{{ totalPages }} 页</span>
         <div v-if="totalPages > 1" class="admin-pager-btns">
           <button class="admin-pager-btn" :disabled="pageNo === 1" @click="gotoPage(pageNo - 1)">上一页</button>
           <template v-for="(item, i) in pageItems" :key="i">
@@ -165,6 +195,7 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
 import AdminSelect from './AdminSelect.vue'
+import { filterResourceRows } from './adminUi'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
 const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image', 'audio'])
@@ -183,6 +214,8 @@ const onUnauthorized = inject('adminUnauthorized')
 
 const rows = ref([])
 const loading = ref(false)
+const loadError = ref('')
+const searchQuery = ref('')
 const drawerOpen = ref(false)
 const saving = ref(false)
 const editingId = ref(null)
@@ -190,13 +223,15 @@ const form = ref({})
 // 多选：选中行 id 集合；批量操作进行中标记
 const selected = ref(new Set())
 const batching = ref(false)
+let latestRequestId = 0
 
 // 前端分页：list 接口返回全量，这里切页展示
 const pageNo = ref(1)
 const pageSize = ref(10)
-const totalPages = computed(() => Math.max(1, Math.ceil(rows.value.length / pageSize.value)))
+const filteredRows = computed(() => filterResourceRows(rows.value, columns.value, searchQuery.value))
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / pageSize.value)))
 const pagedRows = computed(() =>
-  rows.value.slice((pageNo.value - 1) * pageSize.value, pageNo.value * pageSize.value)
+  filteredRows.value.slice((pageNo.value - 1) * pageSize.value, pageNo.value * pageSize.value)
 )
 // 页码列表：总页数多时用省略号收敛（首页 + 当前页邻域 + 尾页）
 const pageItems = computed(() => {
@@ -220,6 +255,9 @@ watch([totalPages], () => {
   if (pageNo.value > totalPages.value) pageNo.value = totalPages.value
 })
 watch(pageSize, () => {
+  pageNo.value = 1
+})
+watch(searchQuery, () => {
   pageNo.value = 1
 })
 
@@ -248,14 +286,24 @@ function handleError(err, fallback) {
 }
 
 async function load() {
+  const requestId = ++latestRequestId
   loading.value = true
+  loadError.value = ''
+  selected.value = new Set()
   try {
-    rows.value = (await api.value.list()) || []
+    const nextRows = (await api.value.list()) || []
+    if (requestId !== latestRequestId) return
+    rows.value = nextRows
     selected.value = new Set()
   } catch (err) {
+    if (requestId !== latestRequestId) return
+    selected.value = new Set()
+    if (!(err && err.unauthorized)) {
+      loadError.value = (err && err.message) || '加载失败，请稍后重试'
+    }
     handleError(err, '加载失败')
   } finally {
-    loading.value = false
+    if (requestId === latestRequestId) loading.value = false
   }
 }
 
@@ -427,6 +475,8 @@ watch(
   () => {
     drawerOpen.value = false
     rows.value = []
+    searchQuery.value = ''
+    selected.value = new Set()
     pageNo.value = 1
     load()
   }

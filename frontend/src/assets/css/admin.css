@@ -709,9 +709,62 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   color: var(--adm-text);
 }
 
+.admin-toolbar-heading {
+  min-width: 0;
+}
+
+.admin-toolbar-meta {
+  margin: 3px 0 0;
+  color: var(--adm-text-faint);
+  font-size: 14px;
+}
+
 .admin-toolbar-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.admin-list-search {
+  display: flex;
+  align-items: center;
+  width: min(280px, 34vw);
+  min-width: 190px;
+  border: 1px solid var(--adm-input-border);
+  border-radius: 12px;
+  background-color: var(--adm-input-bg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-list-search:focus-within {
+  border-color: var(--adm-accent);
+  box-shadow: var(--adm-focus-ring);
+}
+
+.admin-list-search .admin-input {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-list-search button {
+  flex: 0 0 auto;
+  margin-right: 7px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--adm-text-faint);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-list-search button:hover {
+  background-color: var(--adm-accent-soft);
+  color: var(--adm-accent-ink);
 }
 
 .admin-table-card {
@@ -729,8 +782,27 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   color: var(--adm-text-faint);
 }
 
+.admin-state-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 8px;
+  border-radius: 14px;
+  background-color: var(--adm-error-bg);
+  color: var(--adm-danger);
+}
+
+.admin-state-error .admin-btn {
+  margin-top: 4px;
+}
+
 .admin-table-wrap {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(68dvh, 720px);
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
 }
 
 .admin-table {
@@ -740,11 +812,14 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 }
 
 .admin-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   padding: 12px 14px;
   text-align: left;
   font-size: 14px;
   color: var(--adm-accent-ink);
-  background-color: var(--adm-card-2);
+  background: var(--adm-sticky-bg);
   white-space: nowrap;
 }
 
@@ -1389,7 +1464,14 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   }
 
   .admin-toolbar-actions {
+    width: 100%;
     flex-wrap: wrap;
+  }
+
+  .admin-list-search {
+    flex: 1 1 220px;
+    width: auto;
+    min-width: 0;
   }
 
   /* 表格保持横向滑动可用 */
@@ -2000,7 +2082,8 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 }
 
 /* 搜索框的焦点环由外层 focus-within 统一绘制，避免内外双环。 */
-.admin-root .admin-nav-search input:focus-visible {
+.admin-root .admin-nav-search input:focus-visible,
+.admin-root .admin-list-search input:focus-visible {
   box-shadow: none;
 }
 

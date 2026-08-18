@@ -80,3 +80,46 @@ test('侧栏搜索只由外层 focus-within 绘制焦点环', async () => {
   assert.ok(exemptionIndex > css.lastIndexOf(generalSelector))
   assert.match(extractBlock(css, exemptionIndex), /box-shadow:\s*none/)
 })
+
+test('ResourcePanel 区分加载失败、空数据和搜索无结果', async () => {
+  const source = await read('./ResourcePanel.vue')
+  assert.match(source, /v-model\.trim="searchQuery"/)
+  assert.match(source, /filteredRows/)
+  assert.match(source, /loadError/)
+  assert.match(source, /重新加载/)
+  assert.match(source, /没有找到匹配/)
+  assert.match(source, /aria-label="清空搜索"/)
+})
+
+test('通用表格具有吸顶表头和固定操作列', async () => {
+  const css = await read('../../assets/css/admin.css')
+  assert.match(css, /\.admin-table th[\s\S]*position:\s*sticky/)
+  assert.match(css, /\.admin-col-ops[\s\S]*position:\s*sticky/)
+})
+
+test('ResourcePanel 仅接受最新加载请求并在失败时禁用批量操作', async () => {
+  const source = await read('./ResourcePanel.vue')
+  assert.match(source, /requestId/)
+  assert.match(source, /latestRequest|requestId\.value\s*===\s*request/)
+  assert.match(source, /selected\.value\s*=\s*new Set\(\)/)
+  assert.match(source, /selected\.size\s*&&\s*!loadError|loadError[\s\S]*selected\.size/)
+})
+
+test('切换资源模块时清空搜索和选中状态', async () => {
+  const source = await read('./ResourcePanel.vue')
+  const schemaWatcher = source.slice(source.lastIndexOf('watch('))
+  assert.match(schemaWatcher, /searchQuery\.value\s*=\s*''/)
+  assert.match(schemaWatcher, /selected\.value\s*=\s*new Set\(\)/)
+})
+
+test('表格滚动容器承担纵向滚动并设置可控高度', async () => {
+  const css = await read('../../assets/css/admin.css')
+  const wrapIndex = css.indexOf('.admin-table-wrap')
+  assert.ok(wrapIndex >= 0, '未找到表格滚动容器规则')
+  const wrapBlock = extractBlock(css, wrapIndex)
+  assert.match(wrapBlock, /overflow-y:\s*(auto|scroll)/)
+  assert.match(wrapBlock, /(?:max-height|height):\s*[^;]+/)
+  assert.match(wrapBlock, /overscroll-behavior-x:\s*contain/)
+  assert.match(wrapBlock, /overscroll-behavior-y:\s*auto/)
+  assert.doesNotMatch(wrapBlock, /overscroll-behavior:\s*contain/)
+})
