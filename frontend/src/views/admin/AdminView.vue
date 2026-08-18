@@ -113,7 +113,12 @@
           <NavMenuPanel v-else-if="currentKey === 'nav-menu'" />
           <PageContentPanel v-else-if="currentKey === 'page-content'" />
           <BangumiPanel v-else-if="currentKey === 'bangumi-records'" />
-          <ResourcePanel v-else-if="currentSchema" :key="currentKey" :schema="currentSchema" />
+          <ResourcePanel
+            v-else-if="currentSchema"
+            :key="currentKey"
+            ref="resourcePanelRef"
+            :schema="currentSchema"
+          />
         </main>
       </div>
     </div>
@@ -183,14 +188,25 @@ const sidebarOpen = ref(false)
 
 // 仪表盘「写新文章」→ 切到文章面板并携带新建意图（ArticlesPanel 可选 prop initialCreate）
 const articlesInitialCreate = ref(false)
+const resourcePanelRef = ref(null)
+
+function canLeaveCurrentPanel() {
+  return resourcePanelRef.value?.requestClose?.() !== false
+}
 
 function selectMenu(key) {
+  if (key === currentKey.value) {
+    sidebarOpen.value = false
+    return
+  }
+  if (!canLeaveCurrentPanel()) return
   articlesInitialCreate.value = false
   currentKey.value = key
   sidebarOpen.value = false
 }
 
 function handleGo(key, extra) {
+  if (key !== currentKey.value && !canLeaveCurrentPanel()) return
   articlesInitialCreate.value = !!(key === 'articles' && extra && extra.create)
   currentKey.value = key
 }

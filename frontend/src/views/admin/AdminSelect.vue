@@ -23,7 +23,14 @@
 
     <teleport to="body">
       <transition name="adm-select-fade">
-        <div v-if="open" ref="panelRef" class="adm-select-panel" :style="panelStyle" role="listbox">
+        <div
+          v-if="open"
+          ref="panelRef"
+          class="adm-select-panel"
+          :style="panelStyle"
+          role="listbox"
+          @keydown="onKeydown"
+        >
           <button
             v-for="(opt, i) in normalized"
             :key="i"
@@ -121,6 +128,13 @@ function pick(opt) {
 }
 
 function onKeydown(e) {
+  const isSaveShortcut = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'
+  if (open.value && (e.key === 'Escape' || isSaveShortcut)) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.key === 'Escape') close()
+    return
+  }
   if (e.key === 'Escape') { close(); return }
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
     e.preventDefault()

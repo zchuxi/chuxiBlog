@@ -164,10 +164,28 @@
       <div v-if="drawerOpen" class="admin-mask" @click.self="closeDrawer"></div>
     </transition>
     <transition name="admin-pop">
-      <aside v-if="drawerOpen" class="admin-modal" :class="{ wide: schema.wide }">
+      <aside
+        v-if="drawerOpen"
+        class="admin-modal"
+        :class="{ wide: schema.wide }"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="`resource-editor-title-${schema.key}`"
+      >
         <header class="admin-modal-head">
-          <h3>{{ editingId == null ? '新建' : '编辑' }}{{ schema.label.replace(/管理$/, '') }}</h3>
-          <button class="admin-modal-close" @click="closeDrawer">×</button>
+          <div class="admin-modal-title">
+            <h3 :id="`resource-editor-title-${schema.key}`">
+              {{ editingId == null ? '新建' : '编辑' }}{{ schema.label.replace(/管理$/, '') }}
+            </h3>
+            <span v-if="isDirty" class="admin-unsaved-mark">未保存</span>
+          </div>
+          <button
+            class="admin-modal-close"
+            type="button"
+            aria-label="关闭编辑弹窗"
+            :disabled="saving"
+            @click="closeDrawer"
+          >×</button>
         </header>
         <div class="admin-modal-body">
           <section v-for="group in fieldGroups" :key="group.key" class="admin-form-section">
@@ -180,15 +198,33 @@
                 :key="field.name"
                 v-model="form[field.name]"
                 :field="field"
-                :disabled="field.name === 'id' && editingId != null"
+                :disabled="saving || (field.name === 'id' && editingId != null)"
                 :class="fieldSpanClass(field)"
               />
             </div>
           </section>
         </div>
         <footer class="admin-modal-foot">
-          <button class="admin-btn admin-btn-ghost" @click="closeDrawer">取消</button>
-          <button class="admin-btn" :disabled="saving" @click="onSave">{{ saving ? '保存中…' : '保存' }}</button>
+          <p
+            class="admin-save-status"
+            :class="{ error: saveError }"
+            :role="saveError ? 'alert' : 'status'"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {{ saveError || (isDirty ? '有尚未保存的修改' : '当前内容已同步') }}
+          </p>
+          <div class="admin-modal-actions">
+            <button
+              type="button"
+              class="admin-btn admin-btn-ghost"
+              :disabled="saving"
+              @click="closeDrawer"
+            >取消</button>
+            <button type="button" class="admin-btn" :disabled="saving || !isDirty" @click="onSave">
+              {{ saving ? '保存中…' : '保存 Ctrl+S' }}
+            </button>
+          </div>
         </footer>
       </aside>
     </transition>
@@ -196,11 +232,11 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
 import AdminSelect from './AdminSelect.vue'
-import { filterResourceRows, groupFields } from './adminUi'
+import { createFormSnapshot, filterResourceRows, groupFields, isFormDirty } from './adminUi'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
 const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image', 'audio'])
@@ -225,6 +261,8 @@ const drawerOpen = ref(false)
 const saving = ref(false)
 const editingId = ref(null)
 const form = ref({})
+const initialSnapshot = ref('')
+const saveError = ref('')
 // 多选：选中行 id 集合；批量操作进行中标记
 const selected = ref(new Set())
 const batching = ref(false)
@@ -276,6 +314,13 @@ const columns = computed(() =>
 // schema 中标记 batch: true 的字段参与批量修改（select/boolean 下拉，其余 prompt 输入）
 const batchFields = computed(() => props.schema.fields.filter(f => f.batch))
 const fieldGroups = computed(() => groupFields(props.schema.fields))
+const isDirty = computed(() =>
+  drawerOpen.value && isFormDirty(form.value, props.schema.fields, initialSnapshot.value)
+)
+
+function resetSnapshot() {
+  initialSnapshot.value = createFormSnapshot(form.value, props.schema.fields)
+}
 
 // 「批量改状态」这类短标签：去掉 label 括号补充说明
 function shortLabel(field) {
@@ -413,17 +458,55 @@ function buildForm(row) {
 function openCreate() {
   editingId.value = null
   form.value = buildForm(null)
+  resetSnapshot()
+  saveError.value = ''
   drawerOpen.value = true
 }
 
 function openEdit(row) {
   editingId.value = row.id
   form.value = buildForm(row)
+  resetSnapshot()
+  saveError.value = ''
   drawerOpen.value = true
 }
 
 function closeDrawer() {
+  requestClose()
+}
+
+function requestClose() {
+  if (!drawerOpen.value) return true
+  if (saving.value) return false
+  if (isDirty.value && !window.confirm('当前修改尚未保存，确定放弃并关闭吗？')) return false
   drawerOpen.value = false
+  saveError.value = ''
+  return true
+}
+
+defineExpose({ requestClose })
+
+function hasOpenEditorOverlay() {
+  return Boolean(document.querySelector('.adm-select-panel, .cx-date-picker__panel, .media-picker-mask, .crop-overlay'))
+}
+
+function onEditorKeydown(event) {
+  if (!drawerOpen.value || saving.value) return
+  const isSaveShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's'
+  if (hasOpenEditorOverlay() && (isSaveShortcut || event.key === 'Escape')) {
+    event.preventDefault()
+    event.stopPropagation()
+    return
+  }
+  if (isSaveShortcut) {
+    event.preventDefault()
+    if (isDirty.value) void onSave()
+    return
+  }
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeDrawer()
+  }
 }
 
 // 提交前按字段类型收敛值：tags → 数组，number → 数值，空串日期 → null
@@ -450,15 +533,22 @@ function buildPayload() {
 }
 
 async function onSave() {
+  if (saving.value || !isDirty.value) return
+  saveError.value = ''
+  const submittedSnapshot = createFormSnapshot(form.value, props.schema.fields)
   saving.value = true
   try {
     const payload = buildPayload()
     if (editingId.value == null) await api.value.create(payload)
     else await api.value.update(editingId.value, payload)
-    toast && toast('保存成功')
-    drawerOpen.value = false
+    const changedDuringSave = createFormSnapshot(form.value, props.schema.fields) !== submittedSnapshot
+    initialSnapshot.value = submittedSnapshot
+    toast && toast(changedDuringSave ? '已保存提交内容，保留后续修改' : '保存成功')
+    if (!changedDuringSave) drawerOpen.value = false
+    saveError.value = ''
     await load()
   } catch (err) {
+    saveError.value = (err && err.message) || '保存失败，请检查输入后重试'
     handleError(err, '保存失败')
   } finally {
     saving.value = false
@@ -488,5 +578,9 @@ watch(
   }
 )
 
-onMounted(load)
+onMounted(() => {
+  window.addEventListener('keydown', onEditorKeydown)
+  void load()
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onEditorKeydown))
 </script>

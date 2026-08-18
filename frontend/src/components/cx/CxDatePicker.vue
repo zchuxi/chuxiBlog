@@ -194,7 +194,13 @@ function onDocPointerDown(e) {
   if (open.value && rootRef.value && !rootRef.value.contains(e.target)) open.value = false
 }
 function onDocKeydown(e) {
-  if (e.key === 'Escape' && open.value) open.value = false
+  if (!open.value) return
+  const isSaveShortcut = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'
+  if (e.key === 'Escape' || isSaveShortcut) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.key === 'Escape') open.value = false
+  }
 }
 
 // 打开时把已选时分秒滚到可见位置，否则 60 行列表停在顶部看不到当前值

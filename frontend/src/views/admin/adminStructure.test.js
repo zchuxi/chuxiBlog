@@ -188,3 +188,14 @@ test('字段调用端向自绘控件与布尔开关传递名称和必填语义',
   const booleanSwitch = field.match(/<!-- 布尔开关 -->[\s\S]*?<button[\s\S]*?>/)?.[0] || ''
   assert.match(booleanSwitch, /:aria-required="field\.required \? 'true' : undefined"/)
 })
+
+test('通用编辑弹窗保护未保存内容并支持快捷保存', async () => {
+  const source = await read('./ResourcePanel.vue')
+  assert.match(source, /initialSnapshot/)
+  assert.match(source, /isDirty/)
+  assert.match(source, /window\.confirm\('当前修改尚未保存/)
+  assert.match(source, /event\.(ctrlKey|metaKey)/)
+  assert.match(source, /event\.key\.toLowerCase\(\) === 's'/)
+  assert.match(source, /saveError/)
+  assert.match(source, /role="alert"/)
+})

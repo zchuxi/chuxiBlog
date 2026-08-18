@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({
@@ -258,6 +258,17 @@ function endDrag() {
 }
 
 onBeforeUnmount(endDrag)
+
+function onDocumentKeydown(event) {
+  const isSaveShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's'
+  if (event.key !== 'Escape' && !isSaveShortcut) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (event.key === 'Escape' && !saving.value) emit('close')
+}
+
+onMounted(() => document.addEventListener('keydown', onDocumentKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onDocumentKeydown))
 
 // ---- 保存：按原图分辨率裁出并上传为新图 ----
 async function save() {

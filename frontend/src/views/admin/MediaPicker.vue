@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { inject, ref, watch } from 'vue'
+import { inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({
@@ -93,4 +93,16 @@ function pick(item) {
 function close() {
   emit('update:modelValue', false)
 }
+
+function onDocumentKeydown(event) {
+  if (!props.modelValue) return
+  const isSaveShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's'
+  if (event.key !== 'Escape' && !isSaveShortcut) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (event.key === 'Escape') close()
+}
+
+onMounted(() => document.addEventListener('keydown', onDocumentKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onDocumentKeydown))
 </script>
