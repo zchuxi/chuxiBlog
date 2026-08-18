@@ -1,13 +1,23 @@
 <template>
   <div class="admin-field">
-    <label class="admin-field-label">{{ field.label }}</label>
+    <label class="admin-field-label" :for="inputId">
+      {{ field.label }}
+      <span v-if="field.required" class="admin-field-required" aria-hidden="true">*</span>
+    </label>
 
     <!-- 布尔开关 -->
     <button
       v-if="field.type === 'boolean'"
       type="button"
+      :id="inputId"
+      :name="field.name"
       class="admin-switch"
       :class="{ on: !!modelValue }"
+      :aria-pressed="!!modelValue"
+      :aria-label="field.label"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="describedBy"
+      :disabled="disabled"
       @click="emit('update:modelValue', !modelValue)"
     >
       <span class="admin-switch-dot"></span>
@@ -16,63 +26,90 @@
     <!-- 多行文本 / Markdown -->
     <textarea
       v-else-if="field.type === 'textarea' || field.type === 'markdown'"
+      :id="inputId"
+      :name="field.name"
       class="admin-input admin-textarea"
       :class="{ 'admin-md': field.type === 'markdown' }"
       :value="modelValue"
       :rows="field.type === 'markdown' ? 20 : 3"
+      :required="field.required"
+      :disabled="disabled"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="describedBy"
       @input="emit('update:modelValue', $event.target.value)"
     ></textarea>
 
     <!-- 数字 -->
     <input
       v-else-if="field.type === 'number'"
+      :id="inputId"
+      :name="field.name"
       class="admin-input"
       type="number"
       :value="modelValue"
+      :required="field.required"
       :disabled="disabled"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="describedBy"
       @input="emit('update:modelValue', $event.target.value)"
     />
 
     <!-- 日期时间 / 日期：自绘日历（原生弹层不受站点主题控制，且在管理端弹窗内会溢出） -->
     <CxDatePicker
       v-else-if="field.type === 'datetime'"
+      :id="inputId"
       type="datetime"
       :model-value="dateValue"
       :disabled="disabled"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="describedBy"
       @update:model-value="emit('update:modelValue', $event)"
     />
     <CxDatePicker
       v-else-if="field.type === 'date'"
+      :id="inputId"
       type="date"
       :model-value="dateValue"
       :disabled="disabled"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="describedBy"
       @update:model-value="emit('update:modelValue', $event)"
     />
 
     <!-- 下拉选择（自绘面板，主题一致） -->
     <AdminSelect
       v-else-if="field.type === 'select'"
+      :id="inputId"
       :model-value="modelValue"
       :options="field.options || []"
+      :disabled="disabled"
+      :aria-invalid="error ? 'true' : undefined"
+      :aria-describedby="describedBy"
       @update:model-value="v => emit('update:modelValue', v)"
     />
 
     <!-- 音频：试听 + URL 输入 + 导入音频文件 -->
     <div v-else-if="field.type === 'audio'" class="admin-audio-field">
       <input
+        :id="inputId"
+        :name="field.name"
         class="admin-input"
         type="text"
         :value="modelValue"
+        :required="field.required"
+        :disabled="disabled"
+        :aria-invalid="error ? 'true' : undefined"
+        :aria-describedby="describedBy"
         placeholder="音频 URL，可直接粘贴或点击下方导入"
         @input="emit('update:modelValue', $event.target.value)"
       />
       <div class="admin-img-actions">
-        <button type="button" class="admin-btn admin-btn-ghost" :disabled="uploading" @click="fileRef?.click()">
+        <button type="button" class="admin-btn admin-btn-ghost" :disabled="disabled || uploading" @click="fileRef?.click()">
           {{ uploading ? `上传中…${uploadPercent}%` : '导入音频文件' }}
         </button>
         <audio v-if="modelValue" class="admin-audio-preview" :src="modelValue" controls preload="none"></audio>
       </div>
-      <input ref="fileRef" type="file" accept="audio/*" hidden @change="onUploadAudio" />
+      <input ref="fileRef" type="file" accept="audio/*" :disabled="disabled" hidden @change="onUploadAudio" />
     </div>
 
     <!-- 图片：缩略图 + URL 输入 + 上传/图库 -->
@@ -83,22 +120,28 @@
       </div>
       <div class="admin-img-side">
         <input
+          :id="inputId"
+          :name="field.name"
           class="admin-input"
           type="text"
           :value="modelValue"
           :placeholder="placeholder"
+          :required="field.required"
+          :disabled="disabled"
+          :aria-invalid="error ? 'true' : undefined"
+          :aria-describedby="describedBy"
           @input="emit('update:modelValue', $event.target.value)"
         />
         <div class="admin-img-actions">
-          <button type="button" class="admin-btn admin-btn-ghost" :disabled="uploading" @click="fileRef?.click()">
+          <button type="button" class="admin-btn admin-btn-ghost" :disabled="disabled || uploading" @click="fileRef?.click()">
             {{ uploading ? '上传中…' : '上传图片' }}
           </button>
-          <button type="button" class="admin-btn admin-btn-ghost" @click="pickerOpen = true">从图库选择</button>
-          <button v-if="canCrop" type="button" class="admin-btn admin-btn-ghost" :disabled="fetching" @click="openCrop">
+          <button type="button" class="admin-btn admin-btn-ghost" :disabled="disabled" @click="pickerOpen = true">从图库选择</button>
+          <button v-if="canCrop" type="button" class="admin-btn admin-btn-ghost" :disabled="disabled || fetching" @click="openCrop">
             {{ fetching ? '取回中…' : '裁切' }}
           </button>
         </div>
-        <input ref="fileRef" type="file" accept="image/*" hidden @change="onUpload" />
+        <input ref="fileRef" type="file" accept="image/*" :disabled="disabled" hidden @change="onUpload" />
       </div>
       <MediaPicker v-model="pickerOpen" @select="url => emit('update:modelValue', url)" />
       <CropDialog
@@ -113,19 +156,27 @@
     <!-- 其余类型统一为文本输入（tags 带提示） -->
     <template v-else>
       <input
+        :id="inputId"
+        :name="field.name"
         class="admin-input"
         type="text"
         :value="modelValue"
         :placeholder="placeholder"
+        :required="field.required"
+        :disabled="disabled"
+        :aria-invalid="error ? 'true' : undefined"
+        :aria-describedby="describedBy"
         @input="emit('update:modelValue', $event.target.value)"
       />
-      <p v-if="field.type === 'tags'" class="admin-field-tip">多个标签用逗号分隔</p>
     </template>
+
+    <p v-if="displayTip" :id="tipId" class="admin-field-tip">{{ displayTip }}</p>
+    <p v-if="error" :id="errorId" class="admin-field-error" role="alert">{{ error }}</p>
   </div>
 </template>
 
 <script setup>
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, useId } from 'vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 import AdminSelect from './AdminSelect.vue'
@@ -135,9 +186,20 @@ import { mediaApi } from '../../api/admin'
 const props = defineProps({
   field: { type: Object, required: true },
   modelValue: { type: [String, Number, Boolean], default: '' },
-  disabled: { type: Boolean, default: false }
+  disabled: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
 const emit = defineEmits(['update:modelValue'])
+
+const uid = useId()
+const inputId = `admin-field-${uid}`
+const tipId = `${inputId}-tip`
+const errorId = `${inputId}-error`
+const displayTip = computed(() => props.field.tip || (props.field.type === 'tags' ? '多个标签用逗号分隔' : ''))
+const describedBy = computed(() => [
+  displayTip.value ? tipId : '',
+  props.error ? errorId : ''
+].filter(Boolean).join(' ') || undefined)
 
 // 图库选择弹窗开关（仅 image 字段用）
 const pickerOpen = ref(false)

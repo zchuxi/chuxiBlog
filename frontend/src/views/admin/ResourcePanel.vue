@@ -170,16 +170,21 @@
           <button class="admin-modal-close" @click="closeDrawer">×</button>
         </header>
         <div class="admin-modal-body">
-          <div class="admin-form-grid">
-            <FieldInput
-              v-for="field in schema.fields"
-              :key="field.name"
-              v-model="form[field.name]"
-              :field="field"
-              :disabled="field.name === 'id' && editingId != null"
-              :class="fieldSpanClass(field)"
-            />
-          </div>
+          <section v-for="group in fieldGroups" :key="group.key" class="admin-form-section">
+            <header class="admin-form-section-head">
+              <h4>{{ group.label }}</h4>
+            </header>
+            <div class="admin-form-grid">
+              <FieldInput
+                v-for="field in group.fields"
+                :key="field.name"
+                v-model="form[field.name]"
+                :field="field"
+                :disabled="field.name === 'id' && editingId != null"
+                :class="fieldSpanClass(field)"
+              />
+            </div>
+          </section>
         </div>
         <footer class="admin-modal-foot">
           <button class="admin-btn admin-btn-ghost" @click="closeDrawer">取消</button>
@@ -195,7 +200,7 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
 import AdminSelect from './AdminSelect.vue'
-import { filterResourceRows } from './adminUi'
+import { filterResourceRows, groupFields } from './adminUi'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
 const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image', 'audio'])
@@ -270,6 +275,7 @@ const columns = computed(() =>
 )
 // schema 中标记 batch: true 的字段参与批量修改（select/boolean 下拉，其余 prompt 输入）
 const batchFields = computed(() => props.schema.fields.filter(f => f.batch))
+const fieldGroups = computed(() => groupFields(props.schema.fields))
 
 // 「批量改状态」这类短标签：去掉 label 括号补充说明
 function shortLabel(field) {

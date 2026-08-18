@@ -111,3 +111,24 @@ test('columns 列名必须能解析到字段，或为内置 id 兜底列', () =>
     }
   }
 })
+
+test('字段可选元数据 group/tip/required 类型合法', () => {
+  for (const schema of resourceSchemas) {
+    for (const field of schema.fields) {
+      if ('group' in field) assert.ok(isNonEmptyString(field.group), `[${schema.key}.${field.name}] group 必须为非空字符串`)
+      if ('tip' in field) assert.ok(isNonEmptyString(field.tip), `[${schema.key}.${field.name}] tip 必须为非空字符串`)
+      if ('required' in field) assert.equal(typeof field.required, 'boolean', `[${schema.key}.${field.name}] required 必须为布尔值`)
+    }
+  }
+})
+
+test('高字段量通用资源配置分组、说明和业务必填元数据', () => {
+  const targetKeys = ['home-carousels', 'tool-sites', 'called-texts', 'musics', 'friend-links']
+  for (const key of targetKeys) {
+    const schema = resourceSchemas.find(item => item.key === key)
+    assert.ok(schema, `缺少目标 schema：${key}`)
+    assert.ok(schema.fields.every(field => isNonEmptyString(field.group)), `[${key}] 每个字段都应配置 group`)
+    assert.ok(schema.fields.some(field => isNonEmptyString(field.tip)), `[${key}] 至少应提供一条字段说明`)
+    assert.ok(schema.fields.some(field => field.required === true), `[${key}] 至少应标记一个业务必填字段`)
+  }
+})

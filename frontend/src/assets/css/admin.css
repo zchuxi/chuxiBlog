@@ -330,6 +330,26 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   color: var(--adm-text-faint);
 }
 
+.admin-field-required {
+  margin-left: 3px;
+  color: var(--adm-danger);
+  font-weight: 700;
+}
+
+.admin-field-error {
+  margin: 6px 0 0;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: var(--adm-error-bg);
+  color: var(--adm-danger);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-field :where(.admin-input, .admin-switch)[aria-invalid='true'] {
+  border-color: var(--adm-danger);
+}
+
 .admin-img-preview {
   display: block;
   margin-top: 8px;
@@ -1616,6 +1636,31 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   padding: 14px 24px 20px;
 }
 
+.admin-form-section {
+  padding: 18px 0;
+  border-top: 1px solid var(--adm-border-soft);
+}
+
+.admin-form-section:first-child {
+  padding-top: 8px;
+  border-top: 0;
+}
+
+.admin-form-section:last-child {
+  padding-bottom: 8px;
+}
+
+.admin-form-section-head {
+  margin-bottom: 13px;
+}
+
+.admin-form-section-head h4 {
+  margin: 0;
+  color: var(--adm-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
 /* 双列网格：短字段并排，长字段整行 */
 .admin-form-grid {
   display: grid;
@@ -1851,6 +1896,8 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
     transform: none;
   }
   .admin-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-form-section { padding: 15px 0; }
+  .admin-form-section-head { margin-bottom: 11px; }
   .admin-img-field { grid-template-columns: 84px minmax(0, 1fr); }
   .admin-img-thumb { width: 84px; height: 84px; }
 }

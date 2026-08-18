@@ -123,3 +123,27 @@ test('表格滚动容器承担纵向滚动并设置可控高度', async () => {
   assert.match(wrapBlock, /overscroll-behavior-y:\s*auto/)
   assert.doesNotMatch(wrapBlock, /overscroll-behavior:\s*contain/)
 })
+
+test('字段组件和通用弹窗渲染说明、必填、错误及分组', async () => {
+  const field = await read('./FieldInput.vue')
+  const panel = await read('./ResourcePanel.vue')
+  assert.match(field, /field\.required/)
+  assert.match(field, /field\.tip/)
+  assert.match(field, /aria-invalid/)
+  assert.match(field, /aria-describedby/)
+  assert.match(field, /useId\(\)/)
+  assert.match(field, /aria-pressed/)
+  assert.match(panel, /groupFields/)
+  assert.match(panel, /fieldGroups/)
+  assert.match(panel, /admin-form-section/)
+})
+
+test('字段分组使用一级边界且适配小屏，不创建嵌套卡片阴影', async () => {
+  const css = await read('../../assets/css/admin.css')
+  const sectionIndex = css.indexOf('.admin-form-section')
+  assert.ok(sectionIndex >= 0, '缺少字段分组样式')
+  assert.doesNotMatch(extractBlock(css, sectionIndex), /box-shadow/)
+  assert.match(css, /@media\s*\(max-width:\s*900px\)[\s\S]*\.admin-form-section/)
+  assert.match(css, /\.admin-field-error/)
+  assert.match(css, /\.admin-field-required/)
+})

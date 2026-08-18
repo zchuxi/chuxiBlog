@@ -34,18 +34,18 @@ export const resourceSchemas = [
     label: '首页轮播',
     columns: ['id', 'title', 'sortIndex', 'imageUrl'],
     fields: [
-      { name: 'id', label: 'ID', type: 'number' },
-      { name: 'title', label: '标题', type: 'text' },
-      { name: 'description', label: '描述', type: 'textarea' },
-      { name: 'content', label: '内容', type: 'textarea' },
-      { name: 'imageUrl', label: '图片', type: 'image', ratio: 16 / 10 },
-      { name: 'sortIndex', label: '排序值', type: 'number' },
-      { name: 'sceneLabel', label: '编号标签（如 SCENE 01）', type: 'text' },
-      { name: 'kicker', label: '眉标 Kicker（如 PERSPECTIVE）', type: 'text' },
-      { name: 'badge', label: '角标 Badge（如 04/19）', type: 'text' },
-      { name: 'visible', label: '在首页显示', type: 'boolean', batch: true },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'id', label: 'ID', type: 'number', group: '系统信息', tip: '由系统生成，编辑时仅供查看' },
+      { name: 'title', label: '标题', type: 'text', group: '基本信息', required: true },
+      { name: 'description', label: '描述', type: 'textarea', group: '内容与媒体' },
+      { name: 'content', label: '内容', type: 'textarea', group: '内容与媒体' },
+      { name: 'imageUrl', label: '图片', type: 'image', ratio: 16 / 10, group: '内容与媒体', required: true, tip: '建议使用横版图片，支持上传或从图库选择' },
+      { name: 'sortIndex', label: '排序值', type: 'number', group: '状态与排序', tip: '数值越小越靠前' },
+      { name: 'sceneLabel', label: '编号标签（如 SCENE 01）', type: 'text', group: '基本信息' },
+      { name: 'kicker', label: '眉标 Kicker（如 PERSPECTIVE）', type: 'text', group: '基本信息' },
+      { name: 'badge', label: '角标 Badge（如 04/19）', type: 'text', group: '基本信息' },
+      { name: 'visible', label: '在首页显示', type: 'boolean', batch: true, group: '状态与排序' },
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
     ]
   },
   {
@@ -137,19 +137,19 @@ export const resourceSchemas = [
     label: '工具站点',
     columns: ['id', 'websiteName', 'category', 'featured', 'websiteUrl'],
     fields: [
-      { name: 'id', label: 'ID', type: 'number' },
-      { name: 'websiteName', label: '站点名', type: 'text' },
-      { name: 'websiteDescription', label: '站点描述', type: 'textarea' },
-      { name: 'websiteUrl', label: '站点地址', type: 'text' },
-      { name: 'categoryId', label: '分类 ID', type: 'number' },
-      { name: 'category', label: '分类名', type: 'text' },
-      { name: 'iconUrl', label: '图标', type: 'image', ratio: 1 },
-      { name: 'imageUrl', label: '展示图（详情页，横版 2:1）', type: 'image', ratio: 2 / 1 },
-      { name: 'tags', label: '标签', type: 'tags' },
-      { name: 'highlight', label: '亮点', type: 'text' },
-      { name: 'featured', label: '是否推荐', type: 'boolean', batch: true },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'id', label: 'ID', type: 'number', group: '系统信息', tip: '由系统生成，编辑时仅供查看' },
+      { name: 'websiteName', label: '站点名', type: 'text', group: '基本信息', required: true },
+      { name: 'websiteDescription', label: '站点描述', type: 'textarea', group: '内容与媒体' },
+      { name: 'websiteUrl', label: '站点地址', type: 'text', group: '基本信息', required: true, tip: '请输入包含 http:// 或 https:// 的完整地址' },
+      { name: 'categoryId', label: '分类 ID', type: 'number', group: '基本信息' },
+      { name: 'category', label: '分类名', type: 'text', group: '基本信息' },
+      { name: 'iconUrl', label: '图标', type: 'image', ratio: 1, group: '内容与媒体' },
+      { name: 'imageUrl', label: '展示图（详情页，横版 2:1）', type: 'image', ratio: 2 / 1, group: '内容与媒体' },
+      { name: 'tags', label: '标签', type: 'tags', group: '基本信息', tip: '多个标签使用逗号分隔' },
+      { name: 'highlight', label: '亮点', type: 'text', group: '内容与媒体' },
+      { name: 'featured', label: '是否推荐', type: 'boolean', batch: true, group: '状态与排序' },
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
     ]
   },
   {
@@ -172,17 +172,17 @@ export const resourceSchemas = [
     label: '疗愈文本',
     columns: ['id', 'title', 'tag', 'readTime', 'sortIndex'],
     fields: [
-      { name: 'id', label: 'ID', type: 'number' },
-      { name: 'title', label: '标题', type: 'text' },
-      { name: 'tag', label: '标签', type: 'text' },
-      { name: 'content', label: '内容', type: 'textarea' },
-      { name: 'summary', label: '摘要', type: 'textarea' },
-      { name: 'imageUrl', label: '配图', type: 'image', ratio: 16 / 10 },
-      { name: 'readTime', label: '阅读时长', type: 'text' },
-      { name: 'sortIndex', label: '排序值', type: 'number' },
-      { name: 'audioUrl', label: '音频（可导入本地文件）', type: 'audio' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'id', label: 'ID', type: 'number', group: '系统信息', tip: '由系统生成，编辑时仅供查看' },
+      { name: 'title', label: '标题', type: 'text', group: '基本信息', required: true },
+      { name: 'tag', label: '标签', type: 'text', group: '基本信息' },
+      { name: 'content', label: '内容', type: 'textarea', group: '内容与媒体', required: true },
+      { name: 'summary', label: '摘要', type: 'textarea', group: '内容与媒体' },
+      { name: 'imageUrl', label: '配图', type: 'image', ratio: 16 / 10, group: '内容与媒体' },
+      { name: 'readTime', label: '阅读时长', type: 'text', group: '基本信息' },
+      { name: 'sortIndex', label: '排序值', type: 'number', group: '状态与排序', tip: '数值越小越靠前' },
+      { name: 'audioUrl', label: '音频（可导入本地文件）', type: 'audio', group: '内容与媒体', tip: '可粘贴音频 URL，或导入本地音频文件' },
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
     ]
   },
   {
@@ -190,14 +190,14 @@ export const resourceSchemas = [
     label: '音乐曲库',
     columns: ['id', 'title', 'artist', 'album'],
     fields: [
-      { name: 'id', label: 'ID', type: 'number' },
-      { name: 'title', label: '歌名', type: 'text' },
-      { name: 'artist', label: '歌手', type: 'text' },
-      { name: 'album', label: '专辑', type: 'text' },
-      { name: 'coverUrl', label: '封面', type: 'image', ratio: 1 },
-      { name: 'musicUrl', label: '音频（可导入本地文件）', type: 'audio' },
-      { name: 'lyric', label: '歌词', type: 'textarea' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'id', label: 'ID', type: 'number', group: '系统信息', tip: '由系统生成，编辑时仅供查看' },
+      { name: 'title', label: '歌名', type: 'text', group: '基本信息', required: true },
+      { name: 'artist', label: '歌手', type: 'text', group: '基本信息', required: true },
+      { name: 'album', label: '专辑', type: 'text', group: '基本信息' },
+      { name: 'coverUrl', label: '封面', type: 'image', ratio: 1, group: '内容与媒体' },
+      { name: 'musicUrl', label: '音频（可导入本地文件）', type: 'audio', group: '内容与媒体', required: true, tip: '可粘贴音频 URL，或导入本地音频文件' },
+      { name: 'lyric', label: '歌词', type: 'textarea', group: '内容与媒体' },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
     ]
   },
   {
@@ -217,15 +217,15 @@ export const resourceSchemas = [
     label: '友情链接',
     columns: ['id', 'siteName', 'siteUrl', 'sortIndex', 'visible'],
     fields: [
-      { name: 'id', label: 'ID', type: 'number' },
-      { name: 'siteName', label: '站点名称', type: 'text' },
-      { name: 'siteUrl', label: '站点地址', type: 'text' },
-      { name: 'logoUrl', label: 'Logo 地址', type: 'text' },
-      { name: 'description', label: '站点描述', type: 'text' },
-      { name: 'sortIndex', label: '排序', type: 'number' },
-      { name: 'visible', label: '可见', type: 'boolean', default: true, batch: true },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'id', label: 'ID', type: 'number', group: '系统信息', tip: '由系统生成，编辑时仅供查看' },
+      { name: 'siteName', label: '站点名称', type: 'text', group: '基本信息', required: true },
+      { name: 'siteUrl', label: '站点地址', type: 'text', group: '基本信息', required: true, tip: '请输入包含 http:// 或 https:// 的完整地址' },
+      { name: 'logoUrl', label: 'Logo 地址', type: 'text', group: '内容与媒体', tip: '请输入可公开访问的图片 URL' },
+      { name: 'description', label: '站点描述', type: 'text', group: '内容与媒体' },
+      { name: 'sortIndex', label: '排序', type: 'number', group: '状态与排序', tip: '数值越小越靠前' },
+      { name: 'visible', label: '可见', type: 'boolean', default: true, batch: true, group: '状态与排序' },
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
     ]
   },
   {
