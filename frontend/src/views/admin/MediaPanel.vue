@@ -111,7 +111,7 @@ async function copyUrl(item) {
       document.body.removeChild(ta)
     }
     toast('链接已复制')
-  } catch (err) {
+  } catch {
     toast('复制失败，请手动复制：' + text, 'error')
   }
 }

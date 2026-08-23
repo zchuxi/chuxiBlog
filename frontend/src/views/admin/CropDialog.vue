@@ -291,7 +291,7 @@ async function save() {
     )
     if (!blob) throw new Error('裁切失败，浏览器不支持该格式')
     // 输出扩展名与实际格式对齐（如 gif 原图会转成 jpg）
-    let name = props.item.name
+    const name = props.item.name
     const dot = name.lastIndexOf('.')
     const base = dot > 0 ? name.slice(0, dot) : name
     const extMap = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg' }
