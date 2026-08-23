@@ -62,8 +62,8 @@ public class HomeController {
                                                   @RequestParam(defaultValue = "10") int pageSize) {
         if (pageNo < 1 || pageSize < 1 || pageSize > 50) return R.fail("分页参数无效");
         var pageable = PageRequest.of(pageNo - 1, pageSize);
-        var result = articleRepo.findPublishedPage(pageable);
-        var items = result.getContent().stream().map(Dtos.ArticleItem::of).toList();
+        var result = articleRepo.findPublishedLitePage(pageable);
+        var items = result.getContent().stream().map(Dtos.ArticleItem::fromLite).toList();
         return R.ok(new PageData<>(items, result.getTotalElements(), pageNo, pageSize));
     }
 

@@ -15,15 +15,7 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
 
     @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
            "ORDER BY CASE WHEN a.pinned = true THEN 0 ELSE 1 END, a.updatedAt DESC NULLS LAST")
-    Page<Article> findPublishedPage(Pageable pageable);
-
-    @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
-           "ORDER BY CASE WHEN a.pinned = true THEN 0 ELSE 1 END, a.updatedAt DESC NULLS LAST")
     java.util.List<Article> findAllPublished();
-
-    @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
-           "ORDER BY a.updatedAt DESC NULLS LAST")
-    Page<Article> findAllPublishedByUpdatedAtDesc(Pageable pageable);
 
     @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') AND " +
            "(LOWER(a.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
@@ -81,4 +73,28 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
            "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
            "ORDER BY CASE WHEN a.pinned = true THEN 0 ELSE 1 END, a.updatedAt DESC NULLS LAST")
     java.util.List<ArticleLite> findPublishedLite();
+
+    @Query("SELECT a.id AS id, a.title AS title, a.summary AS summary, a.coverUrl AS coverUrl, " +
+           "a.categoryId AS categoryId, a.categoryName AS categoryName, a.archiveCategory AS archiveCategory, " +
+           "a.tags AS tags, a.pinned AS pinned, a.createdAt AS createdAt, a.updatedAt AS updatedAt " +
+           "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
+           "ORDER BY CASE WHEN a.pinned = true THEN 0 ELSE 1 END, a.updatedAt DESC NULLS LAST")
+    Page<ArticleLite> findPublishedLitePage(Pageable pageable);
+
+    @Query("SELECT a.id AS id, a.title AS title, a.summary AS summary, a.coverUrl AS coverUrl, " +
+           "a.categoryId AS categoryId, a.categoryName AS categoryName, a.archiveCategory AS archiveCategory, " +
+           "a.tags AS tags, a.pinned AS pinned, a.createdAt AS createdAt, a.updatedAt AS updatedAt " +
+           "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
+           "ORDER BY a.updatedAt DESC NULLS LAST")
+    Page<ArticleLite> findPublishedLiteByUpdatedAtDesc(Pageable pageable);
+
+    @Query("SELECT a.id AS id, a.title AS title, a.summary AS summary, a.coverUrl AS coverUrl, " +
+           "a.categoryId AS categoryId, a.categoryName AS categoryName, a.archiveCategory AS archiveCategory, " +
+           "a.tags AS tags, a.pinned AS pinned, a.createdAt AS createdAt, a.updatedAt AS updatedAt " +
+           "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') AND " +
+           "(LOWER(a.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+           "OR LOWER(a.summary) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+           "OR LOWER(a.tags) LIKE LOWER(CONCAT('%', :kw, '%'))) " +
+           "ORDER BY a.updatedAt DESC NULLS LAST")
+    Page<ArticleLite> searchPublishedLite(String kw, Pageable pageable);
 }

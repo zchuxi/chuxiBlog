@@ -53,9 +53,9 @@ public class ArticleController {
         var pageable = PageRequest.of(pageNo - 1, pageSize);
         String kw = keyword.trim();
         var result = kw.isEmpty()
-                ? articleRepo.findAllPublishedByUpdatedAtDesc(pageable)
-                : articleRepo.searchPublished(kw.toLowerCase(), pageable);
-        var items = result.getContent().stream().map(Dtos.ArticleItem::of).toList();
+                ? articleRepo.findPublishedLiteByUpdatedAtDesc(pageable)
+                : articleRepo.searchPublishedLite(kw.toLowerCase(), pageable);
+        var items = result.getContent().stream().map(Dtos.ArticleItem::fromLite).toList();
         return R.ok(new PageData<>(items, result.getTotalElements(), pageNo, pageSize));
     }
 
