@@ -289,7 +289,7 @@ test('Miku 首帧更新后重新适配，避免初始化时 drawable 状态尚�
 
 test('运行时把贴图指向降采样副本，且副本文件真实存在', async () => {
   // 模型自带 6 张 4096 贴图共 25.4MB，但看板娘最大只显示 270x430 CSS 像素。
-  // 运行时改用 2048 副本（6.4MB），原始 miku.4096/ 必须原样保留。
+  // 运行时改用降采样副本（WebP 首选 / PNG 回退），原始 miku.4096/ 必须原样保留。
   const modelUrl = new URL('../../public/live2d/miku/miku.model3.json', import.meta.url)
   const modelConfig = JSON.parse(await readFile(modelUrl, 'utf8'))
 
@@ -302,7 +302,7 @@ test('运行时把贴图指向降采样副本，且副本文件真实存在', as
   const rewritten = live2dMiku.useDownscaledTextures(structuredClone(modelConfig))
   const textures = rewritten.FileReferences.Textures
   assert.equal(textures.length, 6)
-  assert.ok(textures.every(p => p.startsWith('miku.2048/')), '运行时贴图应指向 2048 副本')
+  assert.ok(textures.every(p => p.startsWith('miku.2048/')), '运行时贴图应指向 2048 PNG 副本')
 
   // 降采样副本必须真实存在，否则模型会加载失败
   await Promise.all(textures.map(p => access(new URL(p, modelUrl))))
@@ -354,4 +354,118 @@ test('贴图路径改写对未知结构保持原样，避免模型换版后静�
   // 缺字段时不应抛错
   assert.doesNotThrow(() => live2dMiku.useDownscaledTextures({}))
   assert.doesNotThrow(() => live2dMiku.useDownscaledTextures(null))
+})
+
+test('URL 规范化让预取端与加载端共用同一个缓存 key', () => {
+  assert.equal(typeof live2dMiku.normalizeAssetUrl, 'function')
+
+  const base = 'https://example.com/live2d/miku/miku.model3.json'
+  assert.equal(
+    live2dMiku.normalizeAssetUrl('miku.moc3', base),
+    'https://example.com/live2d/miku/miku.moc3',
+    '相对路径应按 model3.json 所在目录解析'
+  )
+  assert.equal(
+    live2dMiku.normalizeAssetUrl('/live2d/miku/miku.moc3', base),
+    'https://example.com/live2d/miku/miku.moc3',
+    '绝对路径与相对路径必须归一到同一个 key'
+  )
+  // 非法输入不抛错，退化成原值交给正常链路
+  assert.equal(live2dMiku.normalizeAssetUrl('', base), '')
+  assert.equal(live2dMiku.normalizeAssetUrl(null, base), null)
+})
+
+test('预取中间件命中时直接交付字节，不再发第二次请求', async () => {
+  assert.equal(typeof live2dMiku.createPrefetchMiddleware, 'function')
+
+  const base = 'https://example.com/live2d/miku/miku.model3.json'
+  const buffer = new ArrayBuffer(8)
+  const cache = new Map([['https://example.com/live2d/miku/miku.moc3', Promise.resolve(buffer)]])
+  const middleware = live2dMiku.createPrefetchMiddleware(cache)
+
+  let nextCalls = 0
+  const next = async () => { nextCalls += 1 }
+  const context = {
+    type: 'arraybuffer',
+    url: 'miku.moc3',
+    settings: { resolveURL: path => new URL(path, base).href }
+  }
+
+  await middleware(context, next)
+  assert.equal(context.result, buffer, '命中预取应把字节直接写回 context')
+  assert.equal(nextCalls, 0, '命中后不应再走 XHRLoader')
+  assert.equal(cache.size, 0, '消费后必须清空缓存，避免长期占住 9MB 内存')
+})
+
+test('预取未命中或失败时回退到正常加载链路', async () => {
+  const base = 'https://example.com/live2d/miku/miku.model3.json'
+  const resolveURL = path => new URL(path, base).href
+
+  // 未命中
+  const emptyCache = new Map()
+  let nextCalls = 0
+  await live2dMiku.createPrefetchMiddleware(emptyCache)(
+    { type: 'arraybuffer', url: 'miku.moc3', settings: { resolveURL } },
+    async () => { nextCalls += 1 }
+  )
+  assert.equal(nextCalls, 1, '未预取的资源必须交给后续中间件')
+
+  // 预取失败（解析为 null）
+  const failedCache = new Map([['https://example.com/live2d/miku/miku.moc3', Promise.resolve(null)]])
+  const context = { type: 'arraybuffer', url: 'miku.moc3', settings: { resolveURL } }
+  let retryCalls = 0
+  await live2dMiku.createPrefetchMiddleware(failedCache)(context, async () => { retryCalls += 1 })
+  assert.equal(retryCalls, 1, '预取失败应重新走正常请求')
+  assert.equal(context.result, undefined, '不能把 null 当成模型数据')
+  assert.equal(failedCache.size, 0)
+
+  // 非 arraybuffer 类型（json 等）直接透传
+  const jsonCache = new Map([['https://example.com/live2d/miku/miku.physics3.json', Promise.resolve(new ArrayBuffer(4))]])
+  let jsonNext = 0
+  await live2dMiku.createPrefetchMiddleware(jsonCache)(
+    { type: 'json', url: 'miku.physics3.json', settings: { resolveURL } },
+    async () => { jsonNext += 1 }
+  )
+  assert.equal(jsonNext, 1, 'json 资源不走预取分支')
+})
+
+test('贴图只预热 HTTP 缓存，不占用预取字节缓存', async () => {
+  // 贴图由 Pixi 的 Texture.fromURL 走 blob 链路加载，不经过 arraybuffer 中间件。
+  // 若按 ArrayBuffer 缓存，这些字节没有消费方，会一直占着内存（WebP 2MB / PNG 6.5MB）。
+  assert.equal(typeof live2dMiku.warmAssetCache, 'function')
+
+  const requested = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async url => {
+    requested.push(url)
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) }
+  }
+
+  try {
+    const base = 'https://example.com/live2d/miku/miku.model3.json'
+    await live2dMiku.warmAssetCache('miku.2048webp/texture_00.webp', base)
+    assert.deepEqual(
+      requested,
+      ['https://example.com/live2d/miku/miku.2048webp/texture_00.webp'],
+      '预热应按 model3.json 所在目录解析贴图路径'
+    )
+
+    // 预热不能保留字节引用：中间件对同一 URL 必须判为未命中并透传
+    let nextCalls = 0
+    await live2dMiku.createPrefetchMiddleware(new Map())(
+      {
+        type: 'arraybuffer',
+        url: 'miku.2048webp/texture_00.webp',
+        settings: { resolveURL: path => new URL(path, base).href }
+      },
+      async () => { nextCalls += 1 }
+    )
+    assert.equal(nextCalls, 1)
+
+    // 失败不抛出，交由正常加载链路重试
+    globalThis.fetch = async () => { throw new Error('网络中断') }
+    await assert.doesNotReject(live2dMiku.warmAssetCache('miku.2048webp/texture_01.webp', base))
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })

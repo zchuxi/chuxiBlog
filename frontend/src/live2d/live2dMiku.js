@@ -12,6 +12,9 @@
 //   2. 表情/动作通过在内存中改写模型配置注册（不修改磁盘上的 model3.json，规避「不可二改」）。
 //   3. pixi.js / pixi-live2d-display 体积较大，用动态 import 按需加载，避免进入首屏主包。
 //   4. 适配画布时按 drawable 真实边界计算（避免右侧头发被声明画布裁切），保留安全边距并居中。
+//   5. 初始化时核心脚本、pixi 主包、model3.json 三条链路互不依赖，并发发出；
+//      配置一到手就抢跑预取 moc3（最大的单个资源），下载与 JS 解析重叠。
+//      预取结果经 Live2DLoader 中间件回灌，同一份字节只走一次网络。
 
 const CORE_URL = '/live2d/live2dcubismcore.min.js'
 const MODEL_URL = '/live2d/miku/miku.model3.json'
@@ -46,6 +49,10 @@ let lastTapAt = 0
 let toastEl = null
 let fitStop = null
 
+// 预取缓存：规范化后的绝对 URL -> Promise<ArrayBuffer>
+const prefetchCache = new Map()
+let prefetchMiddlewareInstalled = false
+
 function loadCore() {
   if (corePromise) return corePromise
   corePromise = new Promise((resolve, reject) => {
@@ -58,6 +65,78 @@ function loadCore() {
     document.body.appendChild(s)
   })
   return corePromise
+}
+
+/* ---------- 大资源预取（与 JS 解析重叠） ---------- */
+
+/**
+ * 把 URL 规范化成绝对形式，让预取端与加载端用同一个 key。
+ * 非浏览器环境（单测）下没有 location，原样返回。
+ */
+export function normalizeAssetUrl(url, base) {
+  if (typeof url !== 'string' || !url) return url
+  try {
+    return new URL(url, base || (typeof location !== 'undefined' ? location.href : undefined)).href
+  } catch {
+    return url
+  }
+}
+
+/**
+ * 抢跑下载指定资源并缓存 ArrayBuffer。
+ * 失败只记为 null，由正常加载链路重试，不影响初始化结果。
+ */
+export function prefetchArrayBuffer(url, base) {
+  const key = normalizeAssetUrl(url, base)
+  if (!key) return null
+  if (prefetchCache.has(key)) return prefetchCache.get(key)
+  const task = fetch(key, { credentials: 'same-origin' })
+    .then(res => (res.ok ? res.arrayBuffer() : null))
+    .catch(() => null)
+  prefetchCache.set(key, task)
+  return task
+}
+
+/**
+ * 抢跑下载但不保留字节，只为把响应喂进 HTTP 缓存。
+ * 用于贴图：Pixi 走 Texture.fromURL（blob 类型）不经过 arraybuffer 中间件，
+ * 若按 prefetchArrayBuffer 缓存则这些字节无人消费、会一直占着内存。
+ */
+export function warmAssetCache(url, base) {
+  const key = normalizeAssetUrl(url, base)
+  if (!key) return null
+  // 必须读完 body，响应未读完时缓存条目不落盘
+  return fetch(key, { credentials: 'same-origin' })
+    .then(res => (res.ok ? res.arrayBuffer() : null))
+    .then(() => undefined)
+    .catch(() => undefined)
+}
+
+/**
+ * Live2DLoader 中间件：命中预取缓存时直接交付字节，不再发第二次请求。
+ * 未命中、类型不符或预取失败时透传给后续中间件（XHRLoader）。
+ */
+export function createPrefetchMiddleware(cache) {
+  return async function prefetchMiddleware(context, next) {
+    if (context?.type !== 'arraybuffer') return next()
+    const raw = context.settings?.resolveURL ? context.settings.resolveURL(context.url) : context.url
+    const key = normalizeAssetUrl(raw)
+    if (!cache.has(key)) return next()
+    const buffer = await cache.get(key)
+    // 预取失败或已被消费：交回正常链路，避免把 null 当成模型数据
+    if (!buffer) {
+      cache.delete(key)
+      return next()
+    }
+    cache.delete(key)
+    context.result = buffer
+  }
+}
+
+function installPrefetchMiddleware(Live2DLoader) {
+  if (prefetchMiddlewareInstalled || !Array.isArray(Live2DLoader?.middlewares)) return
+  Live2DLoader.middlewares.unshift(createPrefetchMiddleware(prefetchCache))
+  prefetchMiddlewareInstalled = true
 }
 
 /* ---------- 贴图路径改写（降采样副本） ---------- */
@@ -381,23 +460,50 @@ export function isLive2dReady() {
 export async function initLive2d(canvas) {
   if (app) return
   if (!canvas) throw new Error('未找到 live2d 画布元素')
-  await loadCore()
 
-  const [{ Application }, { Live2DModel }] = await Promise.all([
-    import('pixi.js'),
+  // 核心脚本、pixi、模型配置三者互不依赖，并行发起，避免串行往返把最大的
+  // moc3 下载一路往后推。cubism4 入口在求值时就要求 window.Live2DCubismCore
+  // 已存在，所以它必须排在 loadCore() 之后，但仍可与 pixi.js、配置抓取重叠。
+  const corePromise = loadCore()
+  const pixiPromise = import('pixi.js')
+  const useWebpTextures = supportsWebpTextures()
+  const settingsPromise = (async () => {
+    // 读取模型配置并在内存中注册表情/动作（不动磁盘上的 model3.json）
+    const res = await fetch(MODEL_URL)
+    if (!res.ok) throw new Error('模型配置加载失败: ' + MODEL_URL)
+    const settingsJson = await res.json()
+    settingsJson.url = MODEL_URL
+    useDownscaledTextures(settingsJson, { webp: useWebpTextures })
+    settingsJson.FileReferences.Expressions = EXPRESSIONS.map(name => ({
+      Name: name,
+      File: encodeURIComponent(name + '.exp3.json')
+    }))
+    return settingsJson
+  })()
+
+  // 配置一到手就抢跑 moc3（9MB，全链路最大的一块）与贴图（WebP 2MB /
+  // PNG 回退 6.5MB），让它们的下载和剩余 JS 的下载/解析重叠。
+  // 两者的交付方式不同：moc3 经 Live2DLoader 的 arraybuffer 中间件直接回灌字节；
+  // 贴图由 Pixi 的 Texture.fromURL 加载（不过该中间件），只能预热 HTTP 缓存，
+  // 因此不保留其字节，否则 6 张贴图的 ArrayBuffer 无人消费、长期占内存。
+  settingsPromise.then(settingsJson => {
+    const base = normalizeAssetUrl(MODEL_URL)
+    const files = settingsJson?.FileReferences || {}
+    if (files.Moc) prefetchArrayBuffer(files.Moc, base)
+    if (Array.isArray(files.Textures)) {
+      files.Textures.forEach(file => warmAssetCache(file, base))
+    }
+  }).catch(() => { /* 配置失败由主链路抛出 */ })
+
+  await corePromise
+  const [{ Application }, cubism4] = await Promise.all([
+    pixiPromise,
     import('pixi-live2d-display-lipsyncpatch/cubism4'),
   ])
+  const { Live2DModel, Live2DLoader } = cubism4
+  installPrefetchMiddleware(Live2DLoader)
 
-  // 读取模型配置并在内存中注册表情/动作（不动磁盘上的 model3.json）
-  const res = await fetch(MODEL_URL)
-  if (!res.ok) throw new Error('模型配置加载失败: ' + MODEL_URL)
-  const settingsJson = await res.json()
-  settingsJson.url = MODEL_URL
-  useDownscaledTextures(settingsJson, { webp: supportsWebpTextures() })
-  settingsJson.FileReferences.Expressions = EXPRESSIONS.map(name => ({
-    Name: name,
-    File: encodeURIComponent(name + '.exp3.json')
-  }))
+  const settingsJson = await settingsPromise
 
   const session = await createLive2dSession({
     canvas,
