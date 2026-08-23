@@ -352,10 +352,59 @@ function markBroken(key) {
   brokenImgs.value = new Set(brokenImgs.value).add(key)
 }
 
-async function bgmFetch(path) {
-  const res = await fetch(`${BGM_API}${path}`)
-  if (!res.ok) throw new Error(`bgm ${res.status}`)
-  return res.json()
+// 在线数据本地缓存：bgm 条目/剧集/角色按 subjectId 缓存，无代理时兜底显示已看过的数据
+const BGM_LOCAL_PREFIX = 'cx-bgm-cache-'
+
+function bgmLocalKey(kind, sid) {
+  return BGM_LOCAL_PREFIX + kind + '-' + sid
+}
+
+function readBgmLocal(kind, sid) {
+  try {
+    const raw = localStorage.getItem(bgmLocalKey(kind, sid))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed && parsed.d != null ? parsed.d : null
+  } catch { return null }
+}
+
+function saveBgmLocal(kind, sid, data) {
+  try {
+    localStorage.setItem(bgmLocalKey(kind, sid), JSON.stringify({ t: Date.now(), d: data }))
+  } catch { /* 隐私模式 / 存储超限时忽略 */ }
+}
+
+function bgmPath(kind, sid) {
+  if (kind === 'subject') return `/v0/subjects/${sid}`
+  if (kind === 'episodes') return `/v0/episodes?subject_id=${sid}&type=0&limit=100&offset=0`
+  if (kind === 'characters') return `/v0/subjects/${sid}/characters`
+  throw new Error('unknown kind ' + kind)
+}
+
+async function bgmFetch(kind, sid) {
+  // 1) 后端代理 + 三层缓存（无需浏览器代理），命中后写入本地缓存
+  try {
+    const data = await api.bangumiBgm(kind, sid)
+    if (data != null) {
+      saveBgmLocal(kind, sid, data)
+      return data
+    }
+  } catch (e) {
+    console.warn(`[番剧] ${kind} 后端缓存不可用:`, e)
+  }
+  // 2) 浏览器直连兜底（本机开代理时仍可用），成功后写入本地缓存
+  try {
+    const res = await fetch(`${BGM_API}${bgmPath(kind, sid)}`)
+    if (!res.ok) throw new Error(`bgm ${res.status}`)
+    const data = await res.json()
+    saveBgmLocal(kind, sid, data)
+    return data
+  } catch (e) {
+    // 3) 本地缓存兜底：之前成功拉取过的数据，无代理也能看
+    const local = readBgmLocal(kind, sid)
+    if (local != null) return local
+    throw e
+  }
 }
 
 async function load(id) {
@@ -389,9 +438,9 @@ async function load(id) {
   const sid = record.value?.subjectId
   if (!sid) return
   const [s, eps, chars] = await Promise.allSettled([
-    bgmFetch(`/v0/subjects/${sid}`),
-    bgmFetch(`/v0/episodes?subject_id=${sid}&type=0&limit=100&offset=0`),
-    bgmFetch(`/v0/subjects/${sid}/characters`)
+    bgmFetch('subject', sid),
+    bgmFetch('episodes', sid),
+    bgmFetch('characters', sid)
   ])
   if (s.status === 'fulfilled' && s.value) subject.value = s.value
   if (eps.status === 'fulfilled' && Array.isArray(eps.value?.data)) {

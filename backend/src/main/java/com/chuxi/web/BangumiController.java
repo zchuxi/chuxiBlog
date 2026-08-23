@@ -4,6 +4,7 @@ import com.chuxi.common.R;
 import com.chuxi.entity.BangumiRecord;
 import com.chuxi.repo.BangumiRecordRepo;
 import com.chuxi.service.BangumiCalendarService;
+import com.chuxi.service.BangumiSubjectService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,17 +23,29 @@ public class BangumiController {
 
     private final BangumiRecordRepo bangumiRecordRepo;
     private final BangumiCalendarService bangumiCalendarService;
+    private final BangumiSubjectService bangumiSubjectService;
 
     public BangumiController(BangumiRecordRepo bangumiRecordRepo,
-                             BangumiCalendarService bangumiCalendarService) {
+                             BangumiCalendarService bangumiCalendarService,
+                             BangumiSubjectService bangumiSubjectService) {
         this.bangumiRecordRepo = bangumiRecordRepo;
         this.bangumiCalendarService = bangumiCalendarService;
+        this.bangumiSubjectService = bangumiSubjectService;
     }
 
     /** 每周放送日历：走三层缓存（内存 → 磁盘缓存文件 → 直连兜底），服务器被墙也能秒回 */
     @GetMapping("/api/front/bangumi/calendar")
     public R<JsonNode> calendar() {
         return R.ok(bangumiCalendarService.fetchCalendar());
+    }
+
+    /** 番剧详情在线数据（条目/剧集/角色）：三层缓存（内存 → 磁盘 → 直连兜底），浏览器无需代理 */
+    @GetMapping("/api/front/bangumi/bgm/{kind}/{sid}")
+    public R<JsonNode> bgm(@PathVariable String kind, @PathVariable Long sid) {
+        if (!bangumiSubjectService.supports(kind)) {
+            return R.fail("不支持的条目类型");
+        }
+        return R.ok(bangumiSubjectService.fetch(kind, sid));
     }
 
     @GetMapping("/api/front/bangumi")

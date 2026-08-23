@@ -62,6 +62,10 @@ export const api = {
   bangumiDetail: id => http.get(`/front/bangumi/${id}`),
   // 每周放送日历：后端三层缓存（内存→磁盘→直连兜底），不再浏览器直连 api.bgm.tv
   bangumiCalendar: () => http.get('/front/bangumi/calendar', { silent: true }),
+  // 番剧详情在线数据（条目/剧集/角色）：后端三层缓存（内存→磁盘→直连兜底），无代理也能看
+  bangumiBgm: (kind, sid) => http.get(`/front/bangumi/bgm/${kind}/${sid}`, { silent: true }),
+  // AI 助手对话：失败在面板内展示错误气泡，不弹全局 toast；上游模型调用较慢，放宽前端超时
+  aiChat: messages => http.post('/front/ai/chat', { messages }, { silent: true, timeout: 60000 }),
   friendLinks: () => http.get('/front/friend-links'),
   // 站点文案/外观/导航等配置读取：业务语义为"读不到就用默认"，缺失返回 R.fail 是预期路径，不弹 toast
   siteContent: key => http.get(`/front/site-content/${key}`, { silent: true }),

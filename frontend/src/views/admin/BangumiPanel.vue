@@ -141,28 +141,37 @@ async function syncCollections() {
   syncTip.value = ''
   try {
     sessionStorage.setItem(TOKEN_KEY, bgmToken.value)
-    // 1. 拿用户名
-    const meRes = await fetch('https://api.bgm.tv/v0/me', { headers: authHeaders() })
-    if (meRes.status === 401) throw new Error('令牌无效或已过期')
-    if (!meRes.ok) throw new Error(`获取用户信息失败: ${meRes.status}`)
-    const me = await meRes.json()
-    // 2. 分页拉全部动画收藏
-    const items = []
-    let offset = 0
-    let total = Infinity
-    while (offset < total && offset < 1000) {
-      syncTip.value = `拉取中 ${items.length}…`
-      const res = await fetch(
-        `https://api.bgm.tv/v0/users/${encodeURIComponent(me.username)}/collections?subject_type=2&limit=50&offset=${offset}`,
-        { headers: authHeaders() }
-      )
-      if (!res.ok) throw new Error(`获取收藏失败: ${res.status}`)
-      const data = await res.json()
-      total = Number(data.total) || 0
-      const page = Array.isArray(data.data) ? data.data : []
-      items.push(...page)
-      if (!page.length) break
-      offset += page.length
+    // 首选后端代理（服务器可达时无需浏览器代理）；失败降级浏览器直连
+    let me = {}
+    let items = []
+    try {
+      const result = await adminApi.bangumiSyncCollections(bgmToken.value)
+      me = { username: result.username, nickname: result.nickname }
+      items = Array.isArray(result.items) ? result.items : []
+    } catch (e) {
+      console.warn('[番剧管理] 后端同步不可用，降级浏览器直连:', e)
+      // 1. 拿用户名
+      const meRes = await fetch('https://api.bgm.tv/v0/me', { headers: authHeaders() })
+      if (meRes.status === 401) throw new Error('令牌无效或已过期', { cause: e })
+      if (!meRes.ok) throw new Error(`获取用户信息失败: ${meRes.status}`, { cause: e })
+      me = await meRes.json()
+      // 2. 分页拉全部动画收藏
+      let offset = 0
+      let total = Infinity
+      while (offset < total && offset < 1000) {
+        syncTip.value = `拉取中 ${items.length}…`
+        const res = await fetch(
+          `https://api.bgm.tv/v0/users/${encodeURIComponent(me.username)}/collections?subject_type=2&limit=50&offset=${offset}`,
+          { headers: authHeaders() }
+        )
+        if (!res.ok) throw new Error(`获取收藏失败: ${res.status}`, { cause: e })
+        const data = await res.json()
+        total = Number(data.total) || 0
+        const page = Array.isArray(data.data) ? data.data : []
+        items.push(...page)
+        if (!page.length) break
+        offset += page.length
+      }
     }
     if (!items.length) {
       toast && toast(`${me.nickname || me.username} 的收藏是空的，去 bgm 标几部吧`) 
@@ -276,25 +285,33 @@ async function doSearch() {
   searched.value = false
   try {
     let list = []
+    // 首选后端缓存代理（无代理也能搜已缓存的关键词），失败降级浏览器直连
     try {
-      // 首选 v0 搜索接口
-      const res = await fetch('https://api.bgm.tv/v0/search/subjects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: kw, filter: { type: [2] } })
-      })
-      if (!res.ok) throw new Error(`v0 搜索失败: ${res.status}`)
-      const data = await res.json()
-      list = data && Array.isArray(data.data) ? data.data : []
+      const data = await adminApi.bangumiSearch(kw)
+      if (!Array.isArray(data)) throw new Error('后端搜索返回空')
+      list = data
     } catch (e) {
-      console.warn('[番剧管理] v0搜索失败，降级旧接口:', e)
-      // 降级：旧版搜索接口
-      const res = await fetch(
-        `https://api.bgm.tv/search/subject/${encodeURIComponent(kw)}?type=2&responseGroup=large&max_results=10`
-      )
-      if (!res.ok) throw new Error(`搜索失败: ${res.status}`, { cause: e })
-      const data = await res.json()
-      list = data && Array.isArray(data.list) ? data.list : []
+      console.warn('[番剧管理] 后端搜索不可用，降级浏览器直连:', e)
+      try {
+        // 首选 v0 搜索接口
+        const res = await fetch('https://api.bgm.tv/v0/search/subjects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: kw, filter: { type: [2] } })
+        })
+        if (!res.ok) throw new Error(`v0 搜索失败: ${res.status}`, { cause: e })
+        const data = await res.json()
+        list = data && Array.isArray(data.data) ? data.data : []
+      } catch (e2) {
+        console.warn('[番剧管理] v0搜索失败，降级旧接口:', e2)
+        // 降级：旧版搜索接口
+        const res = await fetch(
+          `https://api.bgm.tv/search/subject/${encodeURIComponent(kw)}?type=2&responseGroup=large&max_results=10`
+        )
+        if (!res.ok) throw new Error(`搜索失败: ${res.status}`, { cause: e2 })
+        const data = await res.json()
+        list = data && Array.isArray(data.list) ? data.list : []
+      }
     }
     results.value = list.slice(0, 10).map(normalize)
     searched.value = true
@@ -361,9 +378,10 @@ async function importItem(item) {
   let usedFallback = false
   let record
   try {
-    const res = await fetch(`https://api.bgm.tv/v0/subjects/${item.id}`)
-    if (!res.ok) throw new Error(`详情获取失败: ${res.status}`)
-    record = buildDetailRecord(item, await res.json())
+    // 走后端三层缓存详情接口（无代理也能导已缓存条目），失败降级用搜索摘要
+    const data = await adminApi.bangumiSubject(item.id)
+    if (data == null) throw new Error('详情获取失败')
+    record = buildDetailRecord(item, data)
   } catch {
     usedFallback = true
     record = buildFallbackRecord(item)

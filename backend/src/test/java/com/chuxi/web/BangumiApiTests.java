@@ -39,6 +39,14 @@ class BangumiApiTests {
     }
 
     @Test
+    void bangumiBgm_unknownKind_returnsCode400() throws Exception {
+        // 非法 kind 在进入网络层之前即被拒绝，测试不依赖外网
+        mockMvc.perform(get("/api/front/bangumi/bgm/foo/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
     void bangumiDetail_nonExistentId_returnsCode400() throws Exception {
         // 使用一个极大 id，保证不存在
         mockMvc.perform(get("/api/front/bangumi/999999"))

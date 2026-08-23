@@ -87,4 +87,15 @@ export const adminApi = Object.fromEntries(RESOURCE_KEYS.map(key => [key, crud(k
 // 日历页通过 adminApi.me() 探活，单独挂上避免 tree-shake 把它干掉（被删后调用会 undefined → 抛错 → catch 清 token）
 adminApi.me = () => http.get('/auth/me')
 
+// AI 配置：服务端只返回 apiKeyConfigured，不接触密钥本身
+adminApi.aiConfig = {
+  get: () => http.get('/admin/ai/config'),
+  save: data => http.put('/admin/ai/config', data)
+}
+
+// 番剧导入：搜索走后端三层缓存；收藏同步走后端代理（个人实时数据不缓存）；条目详情复用前台缓存接口
+adminApi.bangumiSearch = keyword => http.get('/admin/bangumi/search', { params: { keyword } })
+adminApi.bangumiSyncCollections = token => http.post('/admin/bangumi/sync-collections', { token })
+adminApi.bangumiSubject = sid => http.get(`/front/bangumi/bgm/subject/${sid}`)
+
 export default http

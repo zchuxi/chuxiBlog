@@ -45,6 +45,31 @@ class AdminApiTests {
     }
 
     @Test
+    void adminBangumiSearch_requiresAdminCookie() throws Exception {
+        mockMvc.perform(get("/api/admin/bangumi/search").param("keyword", "芙莉莲"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void adminBangumiSearch_emptyKeyword_rejects() throws Exception {
+        Cookie session = login();
+        mockMvc.perform(get("/api/admin/bangumi/search").param("keyword", "").cookie(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void adminBangumiSync_missingToken_rejects() throws Exception {
+        Cookie session = login();
+        mockMvc.perform(post("/api/admin/bangumi/sync-collections")
+                        .cookie(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
     void loginWithWrongPasswordFails() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
