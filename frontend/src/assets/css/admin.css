@@ -11,6 +11,9 @@
   --adm-border-soft: rgba(63, 119, 181, 0.12);
   --adm-text: #22344c;
   --adm-text-dim: rgba(34, 52, 76, 0.68);
+  /* 仅用于装饰性字符（如日期输入的 / : 分隔符）。
+     白底上合成后对比度约 2.6:1，低于 WCAG AA 正文要求的 4.5:1，
+     任何需要阅读的文字请用 --adm-text-dim（4.69:1）。 */
   --adm-text-faint: rgba(34, 52, 76, 0.46);
   --adm-accent: #3f77b5;
   --adm-accent-strong: #33639a;
@@ -122,12 +125,28 @@ html.dark {
   background-color: var(--adm-accent-soft);
 }
 
+/* 键盘操作时原先只有浏览器默认描边，在深色卡片上几乎看不见 */
+.admin-link:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-focus-ring);
+}
+
 .admin-link.danger {
   color: var(--adm-danger);
 }
 
 .admin-link.danger:hover {
   background-color: var(--adm-danger-soft);
+}
+
+.admin-link.danger:focus-visible {
+  box-shadow: 0 0 0 3px var(--adm-danger-soft);
+}
+
+/* 「删除」不可恢复，与「编辑」之间留出间距，避免相邻误点。
+   不改操作列 td 的 display —— 它是 sticky 定位，换成 flex 有兼容风险 */
+.admin-col-ops .admin-link + .admin-link {
+  margin-left: 6px;
 }
 
 /* ---------- 输入控件 ---------- */
@@ -327,7 +346,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-field-tip {
   margin: 4px 0 0;
   font-size: 14.5px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .admin-field-required {
@@ -553,7 +572,9 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   border: 1px solid var(--adm-input-border);
   border-radius: 10px;
   background: var(--adm-input-bg);
-  color: var(--adm-text-faint);
+  /* 这里的 color 是搜索图标（svg 取 currentColor）；图标传达控件用途，
+     按 WCAG 1.4.11 需 3:1，faint 只有 2.6:1，故用 dim */
+  color: var(--adm-text-dim);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -586,7 +607,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 
 .admin-nav-empty {
   margin: 18px 16px 0;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
   font-size: 14px;
   line-height: 1.6;
   text-align: center;
@@ -618,7 +639,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   font-size: 14px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .admin-nav-item {
@@ -699,7 +720,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 .admin-topbar-sub {
   margin: 2px 0 0;
   font-size: 15px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .admin-avatar {
@@ -744,7 +765,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 
 .admin-toolbar-meta {
   margin: 3px 0 0;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
   font-size: 14px;
 }
 
@@ -785,7 +806,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
   font: inherit;
   line-height: 1;
   cursor: pointer;
@@ -808,7 +829,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   padding: 48px 16px;
   text-align: center;
   font-size: 15px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .admin-state-error {
@@ -860,6 +881,57 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   border-radius: 0 12px 12px 0;
 }
 
+/* 吸顶表头与首行之间需要一条实线分隔：--adm-sticky-bg 带透明度，
+   纵向滚动时行内容会从表头下透出，仅靠背景色区分不足 */
+.admin-table thead th {
+  border-bottom: 1px solid var(--adm-border);
+}
+
+/* 表头排序按钮：撑满 th 以扩大点击区，视觉上仍是表头文字 */
+.admin-th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.admin-th-sort:hover {
+  color: var(--adm-accent-strong);
+}
+
+.admin-th-sort:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-focus-ring);
+}
+
+/* 未排序时箭头淡显，排序中完全显示——不占位移动，避免点击时表头抖动 */
+.admin-sort-mark {
+  flex: 0 0 auto;
+  font-size: 12px;
+  opacity: 0.32;
+  transition: opacity 0.15s ease;
+}
+
+.admin-th-sort:hover .admin-sort-mark {
+  opacity: 0.7;
+}
+
+.admin-th-sort.is-active {
+  font-weight: 600;
+}
+
+.admin-th-sort.is-active .admin-sort-mark {
+  opacity: 1;
+}
+
 .admin-table td {
   padding: 12px 14px;
   border-bottom: 1px dashed var(--adm-border-soft);
@@ -867,11 +939,19 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   color: var(--adm-text);
 }
 
+/* 斑马纹：表格可横向滚动，长行靠虚线分隔不足以锁定视线 */
+.admin-table tbody tr:nth-child(even) td {
+  background-color: var(--adm-card-2);
+}
+
 .admin-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.admin-table tbody tr:hover {
+/* hover / 选中的高亮必须作用在 td 上：斑马纹也是 td 背景，
+   若写在 tr 上会被子元素 td 的背景整行盖掉，等于悬停无反馈 */
+.admin-table tbody tr:hover td,
+.admin-table tbody tr.is-checked td {
   background-color: var(--adm-accent-soft);
 }
 
@@ -884,6 +964,12 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   vertical-align: middle;
 }
 
+/* ID / 数字列等宽数字：默认比例字距下各行数位不对齐，纵向扫读困难 */
+.admin-cell-text.is-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
 .admin-cell-img {
   width: 56px;
   height: 36px;
@@ -892,18 +978,19 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   border: 1px solid var(--adm-border);
 }
 
+/* 徽章原先 14.5px，比表格正文 14px 还大，"是/否"这类附属信息抢了主内容的视觉重量 */
 .admin-badge {
   display: inline-block;
-  padding: 2px 11px;
+  padding: 2px 10px;
   border-radius: 999px;
-  font-size: 14.5px;
+  font-size: 13px;
   background-color: var(--adm-accent-soft);
   color: var(--adm-accent-ink);
 }
 
 .admin-badge.off {
   background-color: var(--adm-border-soft);
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .admin-col-ops {
@@ -927,6 +1014,12 @@ td.admin-col-ops {
   z-index: 1;
   background-color: var(--adm-card) !important;
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* 斑马纹的偶数行背景在操作列同样要不透明，否则横向滚动时正文从下方穿透。
+   与上方 tr:nth-child(even) td 取同色，视觉上连成一行 */
+.admin-table tbody tr:nth-child(even) td.admin-col-ops {
+  background-color: var(--adm-card-2) !important;
 }
 
 html.dark th.admin-col-ops,
@@ -998,7 +1091,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   background: none;
   font-size: 24px;
   line-height: 1;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
   cursor: pointer;
 }
 
@@ -1086,7 +1179,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 .media-tip {
   margin: 4px 0 0;
   font-size: 14.5px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .media-grid {
@@ -1137,7 +1230,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   gap: 8px;
   margin: 4px 0 0;
   font-size: 13px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .media-ops {
@@ -1370,7 +1463,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 .crop-format {
   margin-left: auto;
   font-size: 14px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 /* ---------- 小屏适配 ---------- */
@@ -1811,7 +1904,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   padding: 20px 12px;
   text-align: center;
   font-size: 14px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 .adm-img-select-grid {
   display: grid;
@@ -1896,7 +1989,9 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   padding: 14px 16px;
   border-top: 1px solid var(--admin-border, rgba(127, 127, 127, 0.16));
 }
-.admin-pager-info { font-size: 13px; opacity: 0.65; }
+/* 分页信息是要读的内容，不用 opacity 淡化：0.65 合成后约 4.3:1，
+   13px 小字仍需 4.5:1。改用 text-dim（4.69:1） */
+.admin-pager-info { font-size: 13px; color: var(--adm-text-dim); }
 .admin-pager-btns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
 .admin-pager-btn {
   min-width: 34px;
@@ -2025,7 +2120,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   content: '在左侧输入 Markdown，这里实时预览渲染效果';
   display: block;
   padding: 24px 0;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
   font-size: 14.5px;
 }
 

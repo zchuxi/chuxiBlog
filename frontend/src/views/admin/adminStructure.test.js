@@ -43,6 +43,34 @@ test('统一键盘焦点规则以足够优先级覆盖按钮 hover 阴影', asyn
   assert.match(extractBlock(css, focusIndex), /box-shadow:\s*var\(--adm-focus-ring\)/)
 })
 
+test('斑马纹作用在 td 上，且 hover/选中高亮写在其后以胜出层叠', async () => {
+  const css = await read('../../assets/css/admin.css')
+  // 斑马纹染的是 td 背景，高亮若写在 tr 上会被 td 背景盖掉，等于悬停无反馈
+  assert.match(css, /\.admin-table tbody tr:nth-child\(even\) td\s*\{[^}]*background-color/)
+  const zebraIndex = css.lastIndexOf('.admin-table tbody tr:nth-child(even) td {')
+  const highlightIndex = css.lastIndexOf('.admin-table tbody tr.is-checked td {')
+  assert.ok(highlightIndex > zebraIndex, 'hover/选中高亮必须写在斑马纹之后')
+
+  // sticky 操作列的两条规则特异性相同且都带 !important，只靠源码顺序决胜
+  const zebraOpsIndex = css.lastIndexOf('.admin-table tbody tr:nth-child(even) td.admin-col-ops {')
+  const hoverOpsIndex = css.lastIndexOf('.admin-table tbody tr:hover td.admin-col-ops {')
+  const checkedOpsIndex = css.lastIndexOf('.admin-table tbody tr.is-checked td.admin-col-ops {')
+  assert.ok(zebraOpsIndex > 0, '偶数行操作列需要不透明背景，否则横向滚动时正文穿透')
+  assert.ok(hoverOpsIndex > zebraOpsIndex, '操作列 hover 背景必须写在斑马纹之后')
+  assert.ok(checkedOpsIndex > zebraOpsIndex, '操作列选中背景必须写在斑马纹之后')
+})
+
+test('需要阅读的辅助文字不使用低对比度的 text-faint', async () => {
+  const css = await read('../../assets/css/admin.css')
+  // text-faint 在白底上约 2.6:1，低于 WCAG AA 的 4.5:1，只允许留给装饰性字符
+  for (const selector of ['.admin-toolbar-meta', '.admin-state', '.admin-field-tip']) {
+    const block = extractBlock(css, css.lastIndexOf(`${selector} {`))
+    assert.doesNotMatch(block, /--adm-text-faint/, `${selector} 是要读的文字，应改用 --adm-text-dim`)
+  }
+  // 也不能改用 opacity 绕过：同样会压低实际对比度
+  assert.doesNotMatch(extractBlock(css, css.lastIndexOf('.admin-pager-info {')), /opacity/)
+})
+
 test('小屏编辑弹窗使用全屏安全尺寸', async () => {
   const css = await read('../../assets/css/admin.css')
   const mediaBlocks = Array.from(css.matchAll(/@media\s*\(max-width:\s*900px\)/g), match =>

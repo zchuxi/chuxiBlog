@@ -30,6 +30,49 @@ export function filterResourceRows(rows, columns, query) {
   ))
 }
 
+/**
+ * 中文优先的比较器。numeric: true 让「文章 2」排在「文章 10」前面，
+ * 否则按字符串比较会得到 10 < 2 的反直觉结果。
+ */
+const COLLATOR = new Intl.Collator('zh-Hans-CN', { numeric: true, sensitivity: 'base' })
+
+/** 排序取值：按列类型归一化为可比较的原始值。空值统一返回 null，由比较器沉底 */
+function sortableValue(value, column) {
+  if (value == null || value === '') return null
+  if (Array.isArray(value)) return value.length ? value.join(', ') : null
+  if (column.type === 'boolean') return value ? 1 : 0
+  if (column.type === 'number') {
+    const num = Number(value)
+    return Number.isNaN(num) ? null : num
+  }
+  if (column.type === 'date' || column.type === 'datetime') {
+    const ts = Date.parse(value)
+    // 非标准格式解析失败时退回字符串比较，避免整列被误判为空值而全部沉底
+    return Number.isNaN(ts) ? String(value) : ts
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') return value
+  return String(value)
+}
+
+/**
+ * 按单列排序，返回新数组（不改动入参：无关键词时 filterResourceRows 直接返回
+ * 原始 rows 引用，原地 sort 会污染数据源）。
+ * 空值恒定排在末尾，不随升降序翻转——列表里「没填」始终应该垫底。
+ */
+export function sortResourceRows(rows, column, direction) {
+  if (!column || (direction !== 'asc' && direction !== 'desc')) return rows
+  const factor = direction === 'asc' ? 1 : -1
+  return [...rows].sort((rowA, rowB) => {
+    const a = sortableValue(rowA[column.name], column)
+    const b = sortableValue(rowB[column.name], column)
+    if (a === null && b === null) return 0
+    if (a === null) return 1
+    if (b === null) return -1
+    if (typeof a === 'number' && typeof b === 'number') return (a - b) * factor
+    return COLLATOR.compare(String(a), String(b)) * factor
+  })
+}
+
 export function groupFields(fields) {
   const groups = new Map()
   for (const field of fields) {

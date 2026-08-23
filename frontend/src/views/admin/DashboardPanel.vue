@@ -196,7 +196,7 @@ function barWidth(count) {
 .dash-stat-sub {
   margin: 2px 0 0;
   font-size: 14px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .dash-row {
@@ -257,7 +257,7 @@ function barWidth(count) {
   margin: 0;
   padding: 20px 0;
   font-size: 16px;
-  color: var(--adm-text-faint);
+  color: var(--adm-text-dim);
 }
 
 .dash-cat-list {

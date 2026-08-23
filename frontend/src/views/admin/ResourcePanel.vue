@@ -95,7 +95,22 @@
                   @change="toggleAll"
                 />
               </th>
-              <th v-for="col in columns" :key="col.name">{{ col.label }}</th>
+              <th v-for="col in columns" :key="col.name" :aria-sort="ariaSort(col)">
+                <span v-if="col.type === 'image'">{{ col.label }}</span>
+                <button
+                  v-else
+                  type="button"
+                  class="admin-th-sort"
+                  :class="{ 'is-active': sortKey === col.name }"
+                  :title="`按${col.label}排序`"
+                  @click="toggleSort(col)"
+                >
+                  {{ col.label }}
+                  <span class="admin-sort-mark" aria-hidden="true">{{
+                    sortKey === col.name ? (sortDir === 'asc' ? '↑' : '↓') : '↕'
+                  }}</span>
+                </button>
+              </th>
               <th class="admin-col-ops">操作</th>
             </tr>
           </thead>
@@ -119,7 +134,12 @@
                 <span v-else-if="col.type === 'boolean'" class="admin-badge" :class="{ off: !row[col.name] }">
                   {{ row[col.name] ? '是' : '否' }}
                 </span>
-                <span v-else class="admin-cell-text">{{ cellText(row[col.name]) }}</span>
+                <span
+                  v-else
+                  class="admin-cell-text"
+                  :class="{ 'is-num': col.type === 'number' || col.name === 'id' }"
+                  :title="cellTitle(row[col.name])"
+                >{{ cellText(row[col.name]) }}</span>
               </td>
               <td class="admin-col-ops">
                 <button class="admin-link" @click="openEdit(row)">编辑</button>
@@ -236,7 +256,7 @@ import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import FieldInput from './FieldInput.vue'
 import AdminSelect from './AdminSelect.vue'
-import { createFormSnapshot, filterResourceRows, groupFields, isFormDirty } from './adminUi'
+import { createFormSnapshot, filterResourceRows, groupFields, isFormDirty, sortResourceRows } from './adminUi'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
 const FULL_ROW_TYPES = new Set(['textarea', 'markdown', 'image', 'audio'])
@@ -280,9 +300,38 @@ const columns = computed(() =>
 const pageNo = ref(1)
 const pageSize = ref(10)
 const filteredRows = computed(() => filterResourceRows(rows.value, columns.value, searchQuery.value))
+
+// 点击表头排序：升 → 降 → 取消，取消后回到后端返回的原始顺序
+const sortKey = ref('')
+const sortDir = ref('')
+const sortColumn = computed(() => columns.value.find(col => col.name === sortKey.value) || null)
+const sortedRows = computed(() => sortResourceRows(filteredRows.value, sortColumn.value, sortDir.value))
+
+function toggleSort(col) {
+  // 图片列没有可比较的语义，不参与排序
+  if (col.type === 'image') return
+  if (sortKey.value !== col.name) {
+    sortKey.value = col.name
+    sortDir.value = 'asc'
+  } else if (sortDir.value === 'asc') {
+    sortDir.value = 'desc'
+  } else {
+    sortKey.value = ''
+    sortDir.value = ''
+  }
+}
+
+// aria-sort 只标注可排序列：图片列不可排序，报 none 会让读屏软件
+// 把它当成「可排序但当前未排序」，返回 undefined 让 Vue 不渲染该属性
+function ariaSort(col) {
+  if (col.type === 'image') return undefined
+  if (sortKey.value !== col.name) return 'none'
+  return sortDir.value === 'asc' ? 'ascending' : 'descending'
+}
+
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / pageSize.value)))
 const pagedRows = computed(() =>
-  filteredRows.value.slice((pageNo.value - 1) * pageSize.value, pageNo.value * pageSize.value)
+  sortedRows.value.slice((pageNo.value - 1) * pageSize.value, pageNo.value * pageSize.value)
 )
 // 页码列表：总页数多时用省略号收敛（首页 + 当前页邻域 + 尾页）
 const pageItems = computed(() => {
@@ -309,6 +358,10 @@ watch(pageSize, () => {
   pageNo.value = 1
 })
 watch(searchQuery, () => {
+  pageNo.value = 1
+})
+// 换排序后停留在第 3 页会看到不相干的记录，回到首页
+watch([sortKey, sortDir], () => {
   pageNo.value = 1
 })
 
@@ -442,6 +495,14 @@ function cellText(value) {
   if (value == null || value === '') return '—'
   if (Array.isArray(value)) return value.join(', ')
   return String(value)
+}
+
+// 单元格最大 320px 且省略号截断，长内容原先无从查看。
+// 只有可能被截断时才给 title，避免每个短单元格都挂无用的悬浮提示。
+function cellTitle(value) {
+  if (value == null || value === '') return undefined
+  const text = Array.isArray(value) ? value.join(', ') : String(value)
+  return text.length > 18 ? text : undefined
 }
 
 // 打开表单：编辑时把 tags 数组转成逗号字符串便于输入
@@ -584,6 +645,9 @@ watch(
     searchQuery.value = ''
     selected.value = new Set()
     pageNo.value = 1
+    // 列名在不同资源间不通用，排序状态必须跟着清空
+    sortKey.value = ''
+    sortDir.value = ''
     load()
   }
 )

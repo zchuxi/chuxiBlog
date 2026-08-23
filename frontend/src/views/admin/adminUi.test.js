@@ -5,7 +5,8 @@ import {
   filterMenuGroups,
   filterResourceRows,
   groupFields,
-  isFormDirty
+  isFormDirty,
+  sortResourceRows
 } from './adminUi.js'
 
 test('filterMenuGroups 同时按菜单名、分组名和说明过滤，并移除空分组', () => {
@@ -31,6 +32,63 @@ test('filterResourceRows 只检索展示列，忽略大小写并支持数组与�
   assert.deepEqual(filterResourceRows(rows, columns, '前端').map(row => row.id), [1])
   assert.deepEqual(filterResourceRows(rows, columns, '否').map(row => row.id), [2])
   assert.equal(filterResourceRows(rows, columns, '隐藏命中').length, 0)
+})
+
+test('sortResourceRows 不改动入参数组', () => {
+  // filterResourceRows 无关键词时返回原引用，原地 sort 会污染 rows.value
+  const rows = [{ id: 2 }, { id: 1 }]
+  const sorted = sortResourceRows(rows, { name: 'id', type: 'number' }, 'asc')
+  assert.deepEqual(rows.map(row => row.id), [2, 1])
+  assert.deepEqual(sorted.map(row => row.id), [1, 2])
+  assert.notEqual(sorted, rows)
+})
+
+test('sortResourceRows 按列类型比较：数字按数值、布尔真在前、日期按时间', () => {
+  const rows = [{ n: 10 }, { n: 2 }, { n: 9 }]
+  assert.deepEqual(
+    sortResourceRows(rows, { name: 'n', type: 'number' }, 'asc').map(row => row.n),
+    [2, 9, 10]
+  )
+  const flags = [{ v: false }, { v: true }]
+  assert.deepEqual(
+    sortResourceRows(flags, { name: 'v', type: 'boolean' }, 'asc').map(row => row.v),
+    [false, true]
+  )
+  const dates = [{ d: '2026-08-23' }, { d: '2025-01-05' }]
+  assert.deepEqual(
+    sortResourceRows(dates, { name: 'd', type: 'datetime' }, 'asc').map(row => row.d),
+    ['2025-01-05', '2026-08-23']
+  )
+})
+
+test('sortResourceRows 文本按中文排序且数字部分按数值，降序对称', () => {
+  const rows = [{ t: '文章 10' }, { t: '文章 2' }]
+  assert.deepEqual(
+    sortResourceRows(rows, { name: 't', type: 'text' }, 'asc').map(row => row.t),
+    ['文章 2', '文章 10']
+  )
+  assert.deepEqual(
+    sortResourceRows(rows, { name: 't', type: 'text' }, 'desc').map(row => row.t),
+    ['文章 10', '文章 2']
+  )
+})
+
+test('sortResourceRows 空值恒定沉底，升降序都不翻到前面', () => {
+  const rows = [{ t: '' }, { t: 'b' }, { t: null }, { t: 'a' }]
+  assert.deepEqual(
+    sortResourceRows(rows, { name: 't', type: 'text' }, 'asc').map(row => row.t),
+    ['a', 'b', '', null]
+  )
+  assert.deepEqual(
+    sortResourceRows(rows, { name: 't', type: 'text' }, 'desc').map(row => row.t),
+    ['b', 'a', '', null]
+  )
+})
+
+test('sortResourceRows 无排序列或方向非法时原样返回', () => {
+  const rows = [{ id: 2 }, { id: 1 }]
+  assert.equal(sortResourceRows(rows, null, 'asc'), rows)
+  assert.equal(sortResourceRows(rows, { name: 'id' }, ''), rows)
 })
 
 test('groupFields 按首次出现顺序分组，未配置字段进入基本信息', () => {
