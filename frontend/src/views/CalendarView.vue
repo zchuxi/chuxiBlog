@@ -107,6 +107,10 @@ const noticeType = ref('') // 'success' | 'error' | 'info'
 let noticeTimer = null
 let cleanupTimer = null
 
+// api.bgm.tv 在国内网络常年不可达，裸 fetch 会挂到浏览器默认超时（分钟级），
+// 期间按钮一直转圈。给直连兜底设上限，超时后走正常错误提示。
+const BGM_TIMEOUT_MS = 8000
+
 const NOTICE_FADE_DELAY = 200  // 替换通知时的淡出等待
 const NOTICE_LEAVE_DURATION = 350  // leave 动画时长（与 CSS 0.35s 对应）
 
@@ -184,7 +188,9 @@ async function importSubject(item) {
   if (importingId.value === item.id || item.localId) return
   importingId.value = item.id
   try {
-    const res = await fetch(`https://api.bgm.tv/v0/subjects/${item.id}`)
+    const res = await fetch(`https://api.bgm.tv/v0/subjects/${item.id}`, {
+      signal: AbortSignal.timeout(BGM_TIMEOUT_MS)
+    })
     if (!res.ok) throw new Error(`详情获取失败: ${res.status}`)
     const s = await res.json()
     const images = s.images || {}

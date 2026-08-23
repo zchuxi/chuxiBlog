@@ -84,6 +84,10 @@ const cleaning = ref(false)
 const panelKey = ref(0)
 
 // Bangumi 访问令牌：仅存当前浏览器会话（sessionStorage），关闭页面即失效，避免长期驻留
+// 直连 api.bgm.tv 的兜底请求超时：该域名在国内不稳定，没有超时会让
+// 同步/搜索一直挂在 pending，按钮的 loading 态永远不回落。
+const BGM_TIMEOUT_MS = 8000
+
 const TOKEN_KEY = 'cx-bgm-token'
 const bgmToken = ref(sessionStorage.getItem(TOKEN_KEY) || '')
 const syncing = ref(false)
@@ -151,7 +155,10 @@ async function syncCollections() {
     } catch (e) {
       console.warn('[番剧管理] 后端同步不可用，降级浏览器直连:', e)
       // 1. 拿用户名
-      const meRes = await fetch('https://api.bgm.tv/v0/me', { headers: authHeaders() })
+      const meRes = await fetch('https://api.bgm.tv/v0/me', {
+        headers: authHeaders(),
+        signal: AbortSignal.timeout(BGM_TIMEOUT_MS)
+      })
       if (meRes.status === 401) throw new Error('令牌无效或已过期', { cause: e })
       if (!meRes.ok) throw new Error(`获取用户信息失败: ${meRes.status}`, { cause: e })
       me = await meRes.json()
@@ -162,7 +169,7 @@ async function syncCollections() {
         syncTip.value = `拉取中 ${items.length}…`
         const res = await fetch(
           `https://api.bgm.tv/v0/users/${encodeURIComponent(me.username)}/collections?subject_type=2&limit=50&offset=${offset}`,
-          { headers: authHeaders() }
+          { headers: authHeaders(), signal: AbortSignal.timeout(BGM_TIMEOUT_MS) }
         )
         if (!res.ok) throw new Error(`获取收藏失败: ${res.status}`, { cause: e })
         const data = await res.json()
@@ -297,7 +304,8 @@ async function doSearch() {
         const res = await fetch('https://api.bgm.tv/v0/search/subjects', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keyword: kw, filter: { type: [2] } })
+          body: JSON.stringify({ keyword: kw, filter: { type: [2] } }),
+          signal: AbortSignal.timeout(BGM_TIMEOUT_MS)
         })
         if (!res.ok) throw new Error(`v0 搜索失败: ${res.status}`, { cause: e })
         const data = await res.json()
@@ -306,7 +314,8 @@ async function doSearch() {
         console.warn('[番剧管理] v0搜索失败，降级旧接口:', e2)
         // 降级：旧版搜索接口
         const res = await fetch(
-          `https://api.bgm.tv/search/subject/${encodeURIComponent(kw)}?type=2&responseGroup=large&max_results=10`
+          `https://api.bgm.tv/search/subject/${encodeURIComponent(kw)}?type=2&responseGroup=large&max_results=10`,
+          { signal: AbortSignal.timeout(BGM_TIMEOUT_MS) }
         )
         if (!res.ok) throw new Error(`搜索失败: ${res.status}`, { cause: e2 })
         const data = await res.json()
