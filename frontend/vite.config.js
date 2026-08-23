@@ -5,7 +5,13 @@ import { compression } from 'vite-plugin-compression2'
 export default defineConfig({
   plugins: [
     vue(),
-    compression({ algorithm: 'gzip' })
+    // 注意参数名是 algorithms（复数）；写成 algorithm 会被静默忽略并回退到默认值。
+    // 默认 include 只覆盖 html/xml/css/json/js/mjs/svg/yaml/toml，
+    // Live2D 的 miku.moc3（9.07MiB）不在其中，一直是裸传；brotli 后仅 1.97MiB。
+    compression({
+      algorithms: ['gzip', 'brotliCompress'],
+      include: /\.(html|xml|css|json|js|mjs|svg|yaml|yml|toml|moc3|can3|mtn)$/
+    })
   ],
   server: {
     port: 5173,

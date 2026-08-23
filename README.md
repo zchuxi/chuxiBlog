@@ -104,6 +104,30 @@
 - **可信代理**：应用默认只监听 `127.0.0.1:8080` 且不信任客户端转发头（`app.trust-proxy=false`，fail-closed）。生产经 nginx 接入时，必须在 systemd unit 注入 `APP_TRUST_PROXY=true`，且 nginx 以 `proxy_set_header` **覆盖** `X-Forwarded-For`（用 `$remote_addr`，勿用 `$proxy_add_x_forwarded_for` 追加客户端值）与 `X-Forwarded-Proto`；`SERVER_ADDRESS` 默认已为回环，无需改动
 - **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本
 
+### live2d 资产传输优化（审阅点）
+
+看板娘模型资产（moc3 9.5MB + 贴图）由 nginx 直接服务，默认配置下有两个坑：`.moc3` 不在 nginx 的 `gzip_types` 里会裸传；`/live2d/` 目录没有强缓存，回访要逐文件发 304 协商。`vite.config.js` 的 compression 插件已在构建期产出 `.gz`/`.br` 预压缩文件（moc3 brotli 后约 2MB），nginx 侧只需静态启用，零 CPU 开销：
+
+```nginx
+# server 块内：静态预压缩优先（dist 内已有 .gz/.br 产物）
+gzip_static on;
+# 若 nginx 带 ngx_brotli 模块则一并启用（brotli 比 gzip 再小约 35%）：
+# brotli_static on;
+
+# /live2d/ 大文件强缓存 30 天；将来换模型版本时改目录名（如 miku2/）即可让缓存失效。
+# model3.json 等小配置文件不放强缓存，走 etag 协商，改动即生效。
+location /live2d/ {
+    expires 30d;
+    add_header Cache-Control "public";
+}
+```
+
+注意事项：
+
+- 没有 `ngx_brotli` 时只开 `gzip_static on` 即可命中 `.gz`（3.2MB）；都不开时 moc3 裸传 9.5MB，等于预压缩白做
+- `gzip_static`/`brotli_static` 只影响压缩产物选择，不影响上面的缓存头
+- 若 `listen 443 ssl` 尚未启用 `http2`，顺手加上：贴图有 6 张，HTTP/2 多路复用可避免连接数竞争
+
 ### 回滚 runbook
 
 新版本上线后异常（服务起不来 / 页面白屏 / 接口大面积报错）时，按以下步骤回滚到上一版本。全程在服务器上执行（`ssh root@106.14.202.90`），不需要本地构建。
