@@ -48,10 +48,6 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
            "AND a.archiveCategory IS NOT NULL AND a.archiveCategory <> ''")
     java.util.List<String> findDistinctPublishedArchiveCategories();
 
-    @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
-           "ORDER BY a.publishedAt DESC NULLS LAST")
-    java.util.List<Article> findAllPublishedOrderByPublishedAtDesc();
-
     /** 列表投影：不加载 LONGTEXT content，供首页/列表等只读场景避免全量正文入内存 */
     interface ArticleLite {
         Long getId();
@@ -105,4 +101,35 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
            "OR LOWER(a.tags) LIKE LOWER(CONCAT('%', :kw, '%'))) " +
            "ORDER BY a.updatedAt DESC NULLS LAST")
     Page<ArticleLite> searchPublishedLite(String kw, Pageable pageable);
+
+    /**
+     * 归档/RSS 投影：同样不加载 LONGTEXT content，但补上按发布时间展示所需的
+     * publishedAt/readingTime/mood。与 {@link ArticleLite} 分开声明，避免为了
+     * 少数几个字段把列表投影撑大。
+     */
+    interface ArticleArchiveLite {
+        Long getId();
+        String getTitle();
+        String getSummary();
+        String getArchiveCategory();
+        String getTags();
+        LocalDateTime getPublishedAt();
+        LocalDateTime getUpdatedAt();
+        String getReadingTime();
+        String getMood();
+    }
+
+    @Query("SELECT a.id AS id, a.title AS title, a.summary AS summary, " +
+           "a.archiveCategory AS archiveCategory, a.tags AS tags, a.publishedAt AS publishedAt, " +
+           "a.updatedAt AS updatedAt, a.readingTime AS readingTime, a.mood AS mood " +
+           "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
+           "ORDER BY a.publishedAt DESC NULLS LAST")
+    java.util.List<ArticleArchiveLite> findPublishedArchiveLite();
+
+    @Query("SELECT a.id AS id, a.title AS title, a.summary AS summary, " +
+           "a.archiveCategory AS archiveCategory, a.tags AS tags, a.publishedAt AS publishedAt, " +
+           "a.updatedAt AS updatedAt, a.readingTime AS readingTime, a.mood AS mood " +
+           "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
+           "ORDER BY a.publishedAt DESC NULLS LAST")
+    java.util.List<ArticleArchiveLite> findPublishedArchiveLite(Pageable pageable);
 }

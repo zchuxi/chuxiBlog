@@ -70,8 +70,9 @@ public class SectionController {
     @Transactional(readOnly = true)
     public R<Map<String, Object>> archiveLanding() {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("entries", articleRepo.findAllPublishedOrderByPublishedAtDesc().stream()
-                .map(Dtos.ArchiveEntry::of).toList());
+        // 归档只用标题/摘要/分类等元数据，走投影避免把 LONGTEXT 正文全部读进内存
+        data.put("entries", articleRepo.findPublishedArchiveLite().stream()
+                .map(Dtos.ArchiveEntry::fromLite).toList());
         data.put("categories", archiveCategoryRepo.findAll().stream().map(c -> Map.of(
                 "category", c.getCategory(),
                 "title", c.getTitle(),

@@ -1,7 +1,7 @@
 package com.chuxi.web;
 
-import com.chuxi.entity.Article;
 import com.chuxi.repo.ArticleRepo;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +12,9 @@ import java.util.List;
 @RequestMapping("/api")
 public class RssController {
 
+    /** Atom 输出条数上限 */
+    private static final int FEED_SIZE = 20;
+
     private final ArticleRepo articleRepo;
 
     public RssController(ArticleRepo articleRepo) {
@@ -20,9 +23,11 @@ public class RssController {
 
     @GetMapping(value = "/rss", produces = "application/atom+xml;charset=UTF-8")
     public String atom() {
-        // 按发布时间倒序取最新 20 篇；不能复用 findAllPublished（置顶优先排序会让置顶旧文霸榜）
-        List<Article> articles = articleRepo.findAllPublishedOrderByPublishedAtDesc();
-        List<Article> latest = articles.stream().limit(20).toList();
+        // 按发布时间倒序取最新 20 篇；不能复用 findAllPublished（置顶优先排序会让置顶旧文霸榜）。
+        // 用投影 + Pageable：RSS 只需要标题/摘要/时间，不必把 LONGTEXT 正文读进内存，
+        // 也不必先取全部已发布文章再在内存里 limit。
+        List<ArticleRepo.ArticleArchiveLite> latest =
+                articleRepo.findPublishedArchiveLite(PageRequest.of(0, FEED_SIZE));
 
         StringBuilder xml = new StringBuilder();
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -36,7 +41,7 @@ public class RssController {
                 latest.isEmpty() ? java.time.LocalDateTime.now() : latest.get(0).getUpdatedAt()
         )).append("</updated>\n");
 
-        for (Article a : latest) {
+        for (ArticleRepo.ArticleArchiveLite a : latest) {
             xml.append("  <entry>\n");
             xml.append("    <title>").append(escapeXml(a.getTitle())).append("</title>\n");
             xml.append("    <link href=\"https://chuxi.online/article/").append(a.getId()).append("\"/>\n");

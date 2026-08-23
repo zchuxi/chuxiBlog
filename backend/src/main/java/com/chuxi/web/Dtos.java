@@ -61,6 +61,12 @@ public final class Dtos {
             return new ArchiveEntry(a.getId(), a.getTitle(), a.getSummary(), a.getArchiveCategory(),
                     splitTags(a.getTags()), a.getPublishedAt(), a.getReadingTime(), a.getMood());
         }
+
+        /** 从归档投影构建，避免加载 LONGTEXT content */
+        public static ArchiveEntry fromLite(com.chuxi.repo.ArticleRepo.ArticleArchiveLite a) {
+            return new ArchiveEntry(a.getId(), a.getTitle(), a.getSummary(), a.getArchiveCategory(),
+                    splitTags(a.getTags()), a.getPublishedAt(), a.getReadingTime(), a.getMood());
+        }
     }
 
     public static Map<String, Object> toolOf(ToolSite t) {
