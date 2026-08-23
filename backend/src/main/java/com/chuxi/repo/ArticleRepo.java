@@ -13,10 +13,6 @@ import java.util.Optional;
 public interface ArticleRepo extends JpaRepository<Article, Long> {
     java.util.List<Article> findByTitleContainingOrSummaryContaining(String t, String s);
 
-    @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
-           "ORDER BY CASE WHEN a.pinned = true THEN 0 ELSE 1 END, a.updatedAt DESC NULLS LAST")
-    java.util.List<Article> findAllPublished();
-
     @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') AND " +
            "(LOWER(a.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
            "OR LOWER(a.summary) LIKE LOWER(CONCAT('%', :kw, '%')) " +
@@ -132,4 +128,14 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
            "FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
            "ORDER BY a.publishedAt DESC NULLS LAST")
     java.util.List<ArticleArchiveLite> findPublishedArchiveLite(Pageable pageable);
+
+    /**
+     * 正文关键词检索，交给数据库做 LIKE 并由 Pageable 限流。
+     * AI 上下文补齐用：此前在 Java 内存里对全部已发布文章做 contains，
+     * 等于每次公开请求都全表读一遍 LONGTEXT。
+     */
+    @Query("SELECT a FROM Article a WHERE (a.status IS NULL OR a.status <> '草稿') " +
+           "AND LOWER(a.content) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+           "ORDER BY a.updatedAt DESC NULLS LAST")
+    java.util.List<Article> searchPublishedByContent(@Param("kw") String kw, Pageable pageable);
 }

@@ -24,7 +24,7 @@ class AiChatServiceTests {
         Article article = new Article();
         article.setId(1L); article.setTitle("春日随笔"); article.setSummary("关于春天的记录");
         when(repo.searchPublished(eq("春天"), any())).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(article)));
-        when(repo.findAllPublished()).thenReturn(List.of());
+        when(repo.searchPublishedByContent(eq("春天"), any())).thenReturn(List.of());
         AiProperties props = new AiProperties();
         AiChatService service = new AiChatService(repo, props, RestClient.builder());
 
@@ -46,15 +46,17 @@ class AiChatServiceTests {
     void contentSearchOnlyUsesPublishedArticles() {
         ArticleRepo repo = mock(ArticleRepo.class);
         when(repo.searchPublished(eq("隐藏词"), any())).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
+        // 正文补齐走数据库侧 LIKE（查询本身已排除草稿），不再把全部已发布正文读进内存过滤
         Article published = new Article(); published.setId(2L); published.setTitle("正文命中"); published.setContent("这里含有隐藏词"); published.setStatus("已发布");
-        Article draft = new Article(); draft.setId(3L); draft.setTitle("草稿命中"); draft.setContent("隐藏词"); draft.setStatus("草稿");
-        when(repo.findAllPublished()).thenReturn(List.of(published, draft));
+        when(repo.searchPublishedByContent(eq("隐藏词"), any())).thenReturn(List.of(published));
         AiChatService service = new AiChatService(repo, new AiProperties(), RestClient.builder());
 
         AiChatService.ChatResult result = service.chat("隐藏词");
 
         assertEquals(List.of(new AiChatService.ArticleRef(2L, "正文命中")), result.references());
-        assertFalse(result.reply().contains("草稿命中"));
+        // 草稿隔离由 searchPublishedByContent 的 JPQL 条件保证；限流交给 Pageable，
+        // 不再有「把全部已发布正文读进内存再 contains」的调用
+        verify(repo).searchPublishedByContent(eq("隐藏词"), any());
     }
 
     @Test
@@ -75,7 +77,7 @@ class AiChatServiceTests {
         try {
             ArticleRepo repo = mock(ArticleRepo.class);
             when(repo.searchPublished(anyString(), any())).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
-            when(repo.findAllPublished()).thenReturn(List.of());
+            when(repo.searchPublishedByContent(anyString(), any())).thenReturn(List.of());
             AiProperties props = new AiProperties(); props.setEnabled(true); props.setApiKey("secret");
             props.setBaseUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1");
             AiChatService service = new AiChatService(repo, props, RestClient.builder());
@@ -108,7 +110,7 @@ class AiChatServiceTests {
         try {
             ArticleRepo repo = mock(ArticleRepo.class);
             when(repo.searchPublished(anyString(), any())).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
-            when(repo.findAllPublished()).thenReturn(List.of());
+            when(repo.searchPublishedByContent(anyString(), any())).thenReturn(List.of());
             AiProperties props = new AiProperties(); props.setEnabled(true); props.setApiKey("top-secret-key");
             props.setBaseUrl("http://127.0.0.1:" + server.getAddress().getPort() + "/v1");
             AiChatService.ChatResult result = new AiChatService(repo, props, RestClient.builder()).chat("问题");

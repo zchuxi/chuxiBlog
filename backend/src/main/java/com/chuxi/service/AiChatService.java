@@ -87,16 +87,18 @@ public class AiChatService {
         int limit = Math.max(1, Math.min(properties.getMaxContextArticles(), 8));
         try {
             List<Article> matches = new ArrayList<>(articleRepo.searchPublished(prompt, PageRequest.of(0, limit)).getContent());
-            // searchPublished 覆盖标题/摘要/标签；补充正文匹配时仍使用已发布查询，避免草稿泄露。
+            // searchPublished 覆盖标题/摘要/标签；仍不足时用数据库侧 LIKE 补正文匹配。
+            // 交给数据库并用 Pageable 限流：此前在 Java 内存里对全部已发布文章做 contains，
+            // 等于每次公开 AI 请求都把所有 LONGTEXT 正文读一遍。
+            // 多取一页余量，过滤掉已命中的 id 后仍能补足 limit。
             if (matches.size() < limit) {
-                String keyword = prompt.toLowerCase();
-                List<Article> published = articleRepo.findAllPublished();
-                if (published == null) published = List.of();
-                published.stream()
-                        .filter(a -> !"草稿".equals(a.getStatus()))
-                        .filter(a -> contains(a.getContent(), keyword))
+                int remaining = limit - matches.size();
+                List<Article> byContent = articleRepo.searchPublishedByContent(
+                        prompt, PageRequest.of(0, remaining + matches.size()));
+                if (byContent == null) byContent = List.of();
+                byContent.stream()
                         .filter(a -> matches.stream().noneMatch(existing -> Objects.equals(existing.getId(), a.getId())))
-                        .limit(limit - matches.size())
+                        .limit(remaining)
                         .forEach(matches::add);
             }
             return matches;
@@ -178,9 +180,6 @@ public class AiChatService {
     }
 
     private static String safe(String text) { return text == null ? "" : text; }
-    private static boolean contains(String text, String keyword) {
-        return text != null && !text.isBlank() && text.toLowerCase().contains(keyword);
-    }
     private static String truncate(String text, int max) { return text.length() <= max ? text : text.substring(0, max); }
 
     public record ChatResult(String reply, List<ArticleRef> references, boolean degraded) {}
