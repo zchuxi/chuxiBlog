@@ -46,6 +46,13 @@ spring:
 
 # Bangumi.tv 可选 access token（提高日历直连的限流配额）；服务器通常走磁盘缓存，直连仅兜底
 app:
+  ai:
+    enabled: ${APP_AI_ENABLED:false}
+    base-url: ${APP_AI_BASE_URL:https://api.deepseek.com/v1}
+    api-key: ${APP_AI_API_KEY:}
+    model: ${APP_AI_MODEL:deepseek-chat}
+    timeout-seconds: ${APP_AI_TIMEOUT_SECONDS:20}
+    max-context-articles: ${APP_AI_MAX_CONTEXT_ARTICLES:5}
   bangumi:
     token: ${APP_BANGUMI_TOKEN:}
   # 生产经受控反向代理（nginx）接入时置为 true，且 nginx 必须覆盖 XFF/X-Real-IP/X-Forwarded-Proto
