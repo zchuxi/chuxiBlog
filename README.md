@@ -45,7 +45,9 @@
 | `/bangumi` | 番剧记录：封面卡、进度、评分、状态筛选、详情浮层（bgm.tv 数据） |
 | `/components` | CX 组件展示页（button/message/popover/radio/switch/tag） |
 
-全局：左上导航（滑动指示器）、暗色模式（日月过渡动画）、背景图轮换（横/竖屏两套 29 张）、底部音乐播放器、AI 助手侧栏（界面演示）、live2d 看板娘（Mashiro）、樱花特效、文章搜索浮层、设置弹窗、登录/注册弹窗（原创玻璃拟态设计，视觉演示）。
+全局：左上导航（滑动指示器）、暗色模式（日月过渡动画）、背景图轮换（横/竖屏两套 29 张）、底部音乐播放器、站内 AI 助手（文章检索增强 + 模型不可用时本地降级）、live2d 看板娘（Mashiro）、樱花特效、文章搜索浮层、设置弹窗、登录/注册弹窗（原创玻璃拟态设计，视觉演示）。
+
+站内 AI 助手默认关闭外部模型调用；配置 `APP_AI_ENABLED=true`、`APP_AI_API_KEY` 后启用 OpenAI-compatible chat completions。可选配置包括 `APP_AI_BASE_URL`（默认 `https://api.deepseek.com/v1`）、`APP_AI_MODEL`（默认 `deepseek-chat`）、`APP_AI_TIMEOUT_SECONDS` 和 `APP_AI_MAX_CONTEXT_ARTICLES`。API key 仅由后端读取，不会下发到浏览器；未配置或上游失败时自动返回已发布文章的检索结果。
 
 ## 后台管理端
 
@@ -57,6 +59,7 @@
 - 换网站图标：把头像图存为项目根 `avatar.png`，运行 `pwsh scripts/make-favicon.ps1`（自动裁白边 + 圆形遮罩 → `frontend/public/favicon.png`）
 - 管理 API：`POST /api/auth/login` 登录成功后写入 7 天有效的 `HttpOnly` Cookie，Cookie 使用 `SameSite=Strict`、`Path=/api`，在 HTTPS 或 `X-Forwarded-Proto: https` 下自动启用 `Secure`；浏览器不会保存或读取明文 token，`POST /api/auth/logout` 会使当前会话失效并清除 Cookie
 - `/api/admin/{resource}` 系列 REST 接口使用管理 Cookie 鉴权（未登录 401，服务端暂保留 Bearer 读取兼容）；删除文章会级联删除其评论与评论点赞记录；tags 在 API 层为数组、库内为 CSV，由服务端互转
+- 番剧导入工具走后台代理缓存：`GET /api/admin/bangumi/search?keyword=`（搜索，后端三层缓存）、`POST /api/admin/bangumi/sync-collections`（同步收藏，后端代理、个人实时数据不缓存）、条目详情复用前台缓存接口 `/api/front/bangumi/bgm/subject/{sid}`；无代理时前端自动降级浏览器直连
 
 ## 主要接口
 
@@ -67,6 +70,8 @@
 - `GET /api/front/timeline/landing` · `GET /api/front/archive/landing`
 - `GET/POST /api/front/tree-hole/barrages`（`POST .../{id}/likes`）· `GET /api/front/tree-hole/called-texts`
 - `GET /api/front/parallax/stories` · `GET /api/front/tools/landing` · `GET /api/music`
+- `POST /api/front/ai/chat`（最近 8 轮对话；使用已发布文章作为上下文；模型未启用或不可用时降级为站内检索）
+- `GET /api/front/bangumi/bgm/{kind}/{sid}`（`kind` ∈ subject/episodes/characters；番剧详情在线数据，后端三层缓存：内存 → 磁盘 `data/bangumi-bgm/` → 直连兜底，浏览器无需代理）
 - `GET /actuator/health`（仅返回健康状态，不暴露组件详情）
 
 种子数据在 `backend/src/main/resources/seed/*.json`（取自原站接口样例），表空时自动导入，可随意清库重建。

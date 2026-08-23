@@ -51,11 +51,20 @@ frontend/dist.bak2-*/
 frontend/dist.prelaunch-*/
 frontend/*.timestamp-*.mjs
 
-# Bangumi 日历本地缓存备份
+# Bangumi 日历 / 番剧详情本地缓存备份
 scripts/bangumi-calendar.local.json
+scripts/bangumi-bgm-local/
 
 # graphify 知识图谱产物（本地生成，6MB+，用 graphify update . 重建）
 graphify-out/
+
+# CDP 调试用的 Edge 独立用户配置（579MB，调试管理端时生成）
+.edge-test-profile/
+graphify-update.log
+backend-run.log
+
+# 一次性 CDP 探针脚本（硬编码本机端口，仅排查管理端白屏时临时使用）
+scripts/_admin_probe.mjs
 
 # 环境变量与私钥（预防性：防止误提交敏感文件）
 .env
