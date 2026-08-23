@@ -17,6 +17,12 @@ public class AiProperties {
     private String model = "deepseek-chat";
     private int timeoutSeconds = 20;
     private int maxContextArticles = 5;
+    /**
+     * 全站每日上游调用上限（0 或负数表示不限制）。
+     * 公开接口消耗站方付费 key，每 IP 限流可被换 IP 绕过，故再加一道与来源无关的日闸。
+     * 超出后不报错，降级为站内检索结果（零成本），站点功能不中断。
+     */
+    private int dailyQuota = 300;
 
     /** 将后台持久化的非敏感配置覆盖当前环境配置，apiKey 始终保留环境注入值。 */
     public void applyNonSensitive(boolean enabled, String baseUrl, String model,

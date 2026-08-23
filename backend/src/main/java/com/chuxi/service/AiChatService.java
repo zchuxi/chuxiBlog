@@ -1,5 +1,6 @@
 package com.chuxi.service;
 
+import com.chuxi.common.AiDailyQuota;
 import com.chuxi.config.AiProperties;
 import com.chuxi.entity.Article;
 import com.chuxi.repo.ArticleRepo;
@@ -28,11 +29,14 @@ public class AiChatService {
     private final ArticleRepo articleRepo;
     private final AiProperties properties;
     private final RestClient.Builder restClientBuilder;
+    private final AiDailyQuota dailyQuota;
 
-    public AiChatService(ArticleRepo articleRepo, AiProperties properties, RestClient.Builder restClientBuilder) {
+    public AiChatService(ArticleRepo articleRepo, AiProperties properties, RestClient.Builder restClientBuilder,
+                         AiDailyQuota dailyQuota) {
         this.articleRepo = articleRepo;
         this.properties = properties;
         this.restClientBuilder = restClientBuilder;
+        this.dailyQuota = dailyQuota;
     }
 
     /** 使用站内已发布文章构造上下文，并在模型不可用时返回可用的检索降级结果。 */
@@ -60,6 +64,12 @@ public class AiChatService {
                 .map(a -> new ArticleRef(a.getId(), safe(a.getTitle())))
                 .toList();
         if (!properties.ready()) {
+            return new ChatResult(fallbackReply(prompt, articles), references, true);
+        }
+        // 站点级日配额：接口对外公开且消耗站方付费 key，IP 限流挡不住换 IP 的持续调用。
+        // 超额不报错，降级为站内检索结果，功能仍可用但不再产生上游费用。
+        if (!dailyQuota.tryAcquire(properties.getDailyQuota())) {
+            log.warn("AI 站点日配额已用尽，本次降级为站内检索");
             return new ChatResult(fallbackReply(prompt, articles), references, true);
         }
 
