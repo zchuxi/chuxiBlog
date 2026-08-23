@@ -40,6 +40,7 @@ export const menuGroups = [
     items: [
       { key: 'site-settings', label: '站点设置', icon: 'common-setting', description: '配置站点基础与 SEO 信息' },
       { key: 'appearance-settings', label: '外观设置', icon: 'common-component', description: '配置主题和显示偏好' },
+      { key: 'ai-config', label: 'AI 配置', icon: 'common-ai', description: '配置 AI 服务与文章上下文' },
       { key: 'nav-menu', label: '导航菜单', icon: 'common-menu', description: '编辑前台导航结构' },
       { key: 'page-content', label: '页面文案', icon: 'common-articlePages', description: '集中维护页面文字' }
     ]

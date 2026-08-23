@@ -18,8 +18,17 @@
       <SvgIcon name="common-history" size="15px" class="cx-date-picker__icon" />
     </button>
 
+    <!-- 面板 teleport 到 body：作为独立弹层展示，避免嵌套在原组件内被表单/弹窗裁剪 -->
+    <Teleport to="body">
     <transition name="cx-date-picker-fade">
-      <div v-if="open" class="cx-date-picker__panel" role="dialog" :aria-label="withTime ? '选择日期时间' : '选择日期'">
+      <div
+        v-if="open"
+        ref="panelRef"
+        class="cx-date-picker__panel"
+        :style="panelStyle"
+        role="dialog"
+        :aria-label="withTime ? '选择日期时间' : '选择日期'"
+      >
         <div class="cx-date-picker__body">
           <!-- 日历 -->
           <div class="cx-date-picker__calendar">
@@ -80,6 +89,7 @@
         </div>
       </div>
     </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -119,6 +129,8 @@ const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 
 const open = ref(false)
 const rootRef = ref(null)
+const panelRef = ref(null)
+const panelStyle = ref({})
 
 /* 解析 / 格式化 / 日格逻辑在 utils/dateValue.js，由 node --test 覆盖 */
 const format = dt => formatDateValue(dt, withTime.value)
@@ -187,11 +199,37 @@ function clear() {
 function toggle() {
   if (props.disabled) return
   open.value = !open.value
-  if (open.value) nextTick(scrollTimeColumnsIntoView)
+  if (open.value) nextTick(() => {
+    positionPanel()
+    scrollTimeColumnsIntoView()
+  })
+}
+
+// 面板作为独立弹层：按触发字段的视口位置定位，下方空间不足时向上翻转
+function positionPanel() {
+  const root = rootRef.value
+  const panel = panelRef.value
+  if (!root || !panel) return
+  const rootRect = root.getBoundingClientRect()
+  const panelRect = panel.getBoundingClientRect()
+  const gap = 6
+  const spaceBelow = window.innerHeight - rootRect.bottom
+  const spaceAbove = rootRect.top
+  const openUp = panelRect.height > spaceBelow && spaceAbove > spaceBelow
+  panelStyle.value = {
+    position: 'fixed',
+    left: `${Math.max(8, Math.min(rootRect.left, window.innerWidth - panelRect.width - 8))}px`,
+    ...(openUp
+      ? { bottom: `${window.innerHeight - rootRect.top + gap}px` }
+      : { top: `${rootRect.bottom + gap}px` })
+  }
 }
 
 function onDocPointerDown(e) {
-  if (open.value && rootRef.value && !rootRef.value.contains(e.target)) open.value = false
+  if (!open.value) return
+  if (rootRef.value?.contains(e.target)) return
+  if (panelRef.value?.contains(e.target)) return
+  open.value = false
 }
 function onDocKeydown(e) {
   if (!open.value) return
@@ -203,10 +241,26 @@ function onDocKeydown(e) {
   }
 }
 
+/**
+ * 时间列高度对齐日历实测高度。
+ * 日历高 = 月份头 + 周头 + 6 行日格 + 间隙，随字号/间距变化，
+ * CSS 里写死数值必然与之错开（曾写 226px，实测日历 254px，差 28px）。
+ * 取整块日历高度：两者是 flex 兄弟、顶边同高，所以等高才能上下都齐平，
+ * 若减掉月份头会导致列底比日历底短一个头高。
+ */
+function syncTimeColumnHeight() {
+  if (!withTime.value || !panelRef.value) return
+  const cal = panelRef.value.querySelector('.cx-date-picker__calendar')
+  if (!cal) return
+  const h = cal.getBoundingClientRect().height
+  if (h > 0) panelRef.value.style.setProperty('--cx-dp-col-h', `${Math.round(h)}px`)
+}
+
 // 打开时把已选时分秒滚到可见位置，否则 60 行列表停在顶部看不到当前值
 function scrollTimeColumnsIntoView() {
-  if (!withTime.value || !rootRef.value) return
-  rootRef.value.querySelectorAll('.cx-date-picker__time-col').forEach(col => {
+  if (!withTime.value || !panelRef.value) return
+  syncTimeColumnHeight()
+  panelRef.value.querySelectorAll('.cx-date-picker__time-col').forEach(col => {
     const active = col.querySelector('.is-active')
     if (active) col.scrollTop = active.offsetTop - col.clientHeight / 2 + active.clientHeight / 2
   })

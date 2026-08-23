@@ -110,6 +110,7 @@
           <BackgroundPanel v-else-if="currentKey === 'background-gallery'" />
           <SiteSettingsPanel v-else-if="currentKey === 'site-settings'" />
           <AppearancePanel v-else-if="currentKey === 'appearance-settings'" />
+          <AiConfigPanel v-else-if="currentKey === 'ai-config'" />
           <NavMenuPanel v-else-if="currentKey === 'nav-menu'" />
           <PageContentPanel v-else-if="currentKey === 'page-content'" />
           <BangumiPanel v-else-if="currentKey === 'bangumi-records'" />
@@ -155,6 +156,7 @@ import ScenePanel from './ScenePanel.vue'
 import SiteContentPanel from './SiteContentPanel.vue'
 import SiteSettingsPanel from './SiteSettingsPanel.vue'
 import AppearancePanel from './AppearancePanel.vue'
+import AiConfigPanel from './AiConfigPanel.vue'
 import NavMenuPanel from './NavMenuPanel.vue'
 import PageContentPanel from './PageContentPanel.vue'
 import '../../assets/css/admin.css'

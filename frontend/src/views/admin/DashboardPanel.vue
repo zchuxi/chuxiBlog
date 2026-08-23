@@ -65,7 +65,6 @@ import SvgIcon from '../../components/SvgIcon.vue'
 
 const emit = defineEmits(['go'])
 
-const toast = inject('adminToast', () => {})
 const unauthorized = inject('adminUnauthorized', () => {})
 
 const loading = ref(true)
@@ -115,7 +114,7 @@ const quickActions = [
   { label: '工具站点', icon: 'common-tool', run: () => emit('go', 'tool-sites') },
   { label: '番剧管理', icon: 'common-open', run: () => emit('go', 'bangumi-records') },
   { label: '背景管理', icon: 'common-parallax', run: () => emit('go', 'media') },
-  { label: 'AI 配置', icon: 'common-ai', run: () => toast('AI 配置敬请期待') }
+  { label: 'AI 配置', icon: 'common-ai', run: () => emit('go', 'ai-config') }
 ]
 
 const categories = computed(() => {

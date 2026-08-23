@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-field">
+  <div v-if="!field.hidden" class="admin-field">
     <label class="admin-field-label" :for="inputId">
       {{ field.label }}
       <span v-if="field.required" class="admin-field-required" aria-hidden="true">*</span>
@@ -81,19 +81,29 @@
       @update:model-value="emit('update:modelValue', $event)"
     />
 
-    <!-- 下拉选择（自绘面板，主题一致） -->
-    <AdminSelect
-      v-else-if="field.type === 'select'"
-      :id="inputId"
-      :name="field.name"
-      :model-value="modelValue"
-      :options="field.options || []"
-      :disabled="disabled"
-      :aria-invalid="error ? 'true' : undefined"
-      :aria-describedby="describedBy"
-      :aria-required="field.required ? 'true' : undefined"
-      @update:model-value="v => emit('update:modelValue', v)"
-    />
+    <!-- 下拉选择（自绘面板，主题一致）；allowCustom 时末尾追加「自定义…」，可手动输入新类型 -->
+    <template v-else-if="field.type === 'select'">
+      <AdminSelect
+        :id="inputId"
+        :name="field.name"
+        :model-value="selectModelValue"
+        :options="selectOptions"
+        :disabled="disabled"
+        :aria-invalid="error ? 'true' : undefined"
+        :aria-describedby="describedBy"
+        :aria-required="field.required ? 'true' : undefined"
+        @update:model-value="v => emit('update:modelValue', v)"
+      />
+      <input
+        v-if="field.allowCustom && isCustomCategory"
+        class="admin-input cx-field-custom-input"
+        type="text"
+        :value="customCategoryText"
+        :placeholder="`输入新的${field.label || '选项'}`"
+        :disabled="disabled"
+        @input="e => emit('update:modelValue', e.target.value)"
+      />
+    </template>
 
     <!-- 音频：试听 + URL 输入 + 导入音频文件 -->
     <div v-else-if="field.type === 'audio'" class="admin-audio-field">
@@ -197,6 +207,27 @@ const props = defineProps({
   error: { type: String, default: '' }
 })
 const emit = defineEmits(['update:modelValue'])
+
+// 自定义下拉标记：allowCustom 的 select 在固定选项后追加「自定义…」，选中后展示文本输入框
+const CUSTOM_MARKER = '__cx_custom__'
+
+const selectOptions = computed(() => {
+  const base = Array.isArray(props.field.options) ? [...props.field.options] : []
+  if (props.field.allowCustom) base.push({ label: '自定义…', value: CUSTOM_MARKER })
+  return base
+})
+
+// 当前值不在固定选项内（且非空）视为自定义值
+const isCustomCategory = computed(() => {
+  if (!props.field.allowCustom) return false
+  if (props.modelValue === '' || props.modelValue == null) return false
+  const known = Array.isArray(props.field.options)
+    && props.field.options.some(o => (o && typeof o === 'object' ? o.value : o) === props.modelValue)
+  return !known
+})
+
+const selectModelValue = computed(() => (isCustomCategory.value ? CUSTOM_MARKER : props.modelValue))
+const customCategoryText = computed(() => (props.modelValue === CUSTOM_MARKER ? '' : props.modelValue))
 
 const uid = useId()
 const inputId = `admin-field-${uid}`
@@ -305,3 +336,9 @@ const placeholder = computed(() => {
   return ''
 })
 </script>
+
+<style scoped>
+.cx-field-custom-input {
+  margin-top: 6px;
+}
+</style>

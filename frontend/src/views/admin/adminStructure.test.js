@@ -67,7 +67,7 @@ test('AdminView 使用菜单单一信息源渲染搜索和当前模块上下文'
 
 test('后台菜单元数据完整且 key 唯一', () => {
   const items = menuGroups.flatMap(group => group.items)
-  assert.equal(items.length, 25)
+  assert.equal(items.length, 26)
   assert.equal(new Set(items.map(item => item.key)).size, items.length)
   assert.ok(items.every(item => item.description.trim().length > 0))
 })
@@ -95,6 +95,28 @@ test('通用表格具有吸顶表头和固定操作列', async () => {
   const css = await read('../../assets/css/admin.css')
   assert.match(css, /\.admin-table th[\s\S]*position:\s*sticky/)
   assert.match(css, /\.admin-col-ops[\s\S]*position:\s*sticky/)
+})
+
+test('固定操作列层级低于吸顶表头，滚动时按钮不盖住标题栏', async () => {
+  // 曾出现 .admin-col-ops 整体 z-index:3 高于表头的 2，纵向滚动时
+  // 行内「编辑/删除」单元格绘制在吸顶表头之上
+  const css = await read('../../assets/css/admin.css')
+  const zIndexOf = selector => {
+    const index = css.indexOf(selector)
+    assert.ok(index >= 0, `未找到 ${selector} 规则`)
+    const match = extractBlock(css, index).match(/z-index:\s*(\d+)/)
+    assert.ok(match, `${selector} 必须显式声明 z-index`)
+    return Number(match[1])
+  }
+  const headerZ = zIndexOf('.admin-table th')
+  const opsHeaderZ = zIndexOf('th.admin-col-ops')
+  const opsCellZ = zIndexOf('td.admin-col-ops')
+  assert.ok(opsCellZ < headerZ, '操作列 td 必须低于吸顶表头 th')
+  assert.ok(opsHeaderZ > headerZ, '表头右上交叉格必须高于普通表头')
+  // 基础 .admin-col-ops 同时命中 th 与 td，不得在这里整体抬高 z-index
+  const baseIndex = css.indexOf('\n.admin-col-ops {')
+  assert.ok(baseIndex >= 0, '未找到 .admin-col-ops 基础规则')
+  assert.doesNotMatch(extractBlock(css, baseIndex), /z-index/)
 })
 
 test('ResourcePanel 仅接受最新加载请求并在失败时禁用批量操作', async () => {
@@ -230,4 +252,23 @@ test('后台菜单切换经过资源编辑器关闭守卫', async () => {
   assert.match(view, /ref\(null\)/)
   assert.match(view, /requestClose/)
   assert.match(view, /if \(!canLeaveCurrentPanel\(\)\) return/)
+})
+
+test('ResourcePanel 的 columns 声明在依赖它的 computed 之前', async () => {
+  // 曾出现 columns 声明晚于 filteredRows，触发 TDZ「Cannot access 'columns' before initialization」，
+  // 导致所有通用资源面板渲染时抛错、内容区整块空白
+  const source = await read('./ResourcePanel.vue')
+  const columnsIndex = source.indexOf('const columns = computed(')
+  const apiIndex = source.indexOf('const api = computed(')
+  const filteredRowsIndex = source.indexOf('const filteredRows = computed(')
+  assert.ok(columnsIndex > -1 && apiIndex > -1 && filteredRowsIndex > -1)
+  assert.ok(columnsIndex < filteredRowsIndex, 'columns 必须声明在 filteredRows 之前')
+  assert.ok(apiIndex < source.indexOf('async function load('), 'api 必须声明在 load 之前')
+})
+
+test('后台入口不残留调试代码，默认停在概览面板', async () => {
+  const view = await read('./AdminView.vue')
+  assert.match(view, /const currentKey = ref\('dashboard'\)/)
+  assert.doesNotMatch(view, /data-test-debug/)
+  assert.doesNotMatch(view, /onErrorCaptured/)
 })

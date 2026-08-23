@@ -911,17 +911,20 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   text-align: right;
   position: sticky;
   right: 0;
-  z-index: 3;
   min-width: 120px;
 }
 
-/* sticky 操作列需要完全不透明背景，避免滚动时左侧内容穿透 */
+/* sticky 操作列需要完全不透明背景，避免滚动时左侧内容穿透。
+   层级顺序：普通 td(auto) < 操作列 td(1) < 吸顶表头 th(2) < 表头操作列 th(3)，
+   操作列 td 必须低于 th，否则纵向滚动时「编辑/删除」会盖住吸顶表头 */
 th.admin-col-ops {
+  z-index: 3;
   background-color: var(--adm-card-2) !important;
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
 }
 
 td.admin-col-ops {
+  z-index: 1;
   background-color: var(--adm-card) !important;
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.1);
 }

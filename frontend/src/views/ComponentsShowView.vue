@@ -1,7 +1,7 @@
 <template>
   <main class="components-page">
     <!-- 页面 HERO -->
-    <section class="components-page__hero">
+    <section v-reveal="0" class="components-page__hero">
       <div class="components-page__hero-main">
         <div class="components-page__hero-content">
           <p class="components-page__hero-eyebrow">ChuXi Components Showcase</p>
@@ -35,7 +35,7 @@
 
     <!-- 内容区 -->
     <section class="components-page__content">
-      <aside class="demo-sidebar">
+      <aside v-reveal="60" class="demo-sidebar">
         <h2 class="demo-sidebar__title">组件菜单</h2>
         <ul class="demo-sidebar__menu">
           <li v-for="m in menus" :key="m.id">
@@ -53,7 +53,7 @@
       </aside>
       <div class="demo-main">
         <!-- CX-button -->
-        <section id="demo-button" class="demo-panel">
+        <section id="demo-button" v-reveal="80" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-icons" size="18px" />
             <span>CX-button 示例</span>
@@ -75,7 +75,7 @@
         </section>
 
         <!-- CX-message -->
-        <section id="demo-message" class="demo-panel">
+        <section id="demo-message" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-icons" size="18px" />
             <span>CX-message 示例</span>
@@ -93,7 +93,7 @@
         </section>
 
         <!-- CX-popover -->
-        <section id="demo-popover" class="demo-panel">
+        <section id="demo-popover" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-icons" size="18px" />
             <span>CX-popover 示例</span>
@@ -114,7 +114,7 @@
         </section>
 
         <!-- CX-date-picker -->
-        <section id="demo-date-picker" class="demo-panel">
+        <section id="demo-date-picker" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-icons" size="18px" />
             <span>CX-date-picker 示例</span>
@@ -153,7 +153,7 @@
         </section>
 
         <!-- CX-radio -->
-        <section id="demo-radio" class="demo-panel">
+        <section id="demo-radio" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-icons" size="18px" />
             <span>CX-radio / CX-radio-group 示例</span>
@@ -183,7 +183,7 @@
         </section>
 
         <!-- CX-switch -->
-        <section id="demo-switch" class="demo-panel">
+        <section id="demo-switch" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-icons" size="18px" />
             <span>CX-switch 示例</span>
@@ -214,7 +214,7 @@
         </section>
 
         <!-- CX-tag -->
-        <section id="demo-tag" class="demo-panel">
+        <section id="demo-tag" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-component" size="18px" />
             <span>CX-tag 示例</span>
@@ -258,7 +258,7 @@
         </section>
 
         <!-- CX-section -->
-        <section id="demo-section" class="demo-panel">
+        <section id="demo-section" v-reveal="100" class="demo-panel">
           <header class="demo-panel-header">
             <SvgIcon name="common-component" size="18px" />
             <span>CX-section 示例</span>

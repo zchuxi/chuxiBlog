@@ -268,6 +268,14 @@ const selected = ref(new Set())
 const batching = ref(false)
 let latestRequestId = 0
 
+const api = computed(() => adminApi[props.schema.key])
+const columns = computed(() =>
+  props.schema.columns.map(name => {
+    const field = props.schema.fields.find(f => f.name === name)
+    return field || { name, label: name === 'id' ? 'ID' : name, type: 'text' }
+  })
+)
+
 // 前端分页：list 接口返回全量，这里切页展示
 const pageNo = ref(1)
 const pageSize = ref(10)
@@ -304,13 +312,6 @@ watch(searchQuery, () => {
   pageNo.value = 1
 })
 
-const api = computed(() => adminApi[props.schema.key])
-const columns = computed(() =>
-  props.schema.columns.map(name => {
-    const field = props.schema.fields.find(f => f.name === name)
-    return field || { name, label: name === 'id' ? 'ID' : name, type: 'text' }
-  })
-)
 // schema 中标记 batch: true 的字段参与批量修改（select/boolean 下拉，其余 prompt 输入）
 const batchFields = computed(() => props.schema.fields.filter(f => f.batch))
 const fieldGroups = computed(() => groupFields(props.schema.fields))
@@ -526,6 +527,15 @@ function buildPayload() {
     } else {
       payload[field.name] = raw
     }
+  }
+  // 兼容旧数据：存在 category/categoryId 字段时，按分类名自动维护 categoryId
+  // （同名沿用已有 ID，新分类名取 max+1），无需人工填写
+  if (payload.category != null && payload.category !== ''
+    && props.schema.fields.some(f => f.name === 'categoryId')) {
+    const match = rows.value.find(r => r.category === payload.category && r.categoryId != null)
+    payload.categoryId = match
+      ? Number(match.categoryId)
+      : rows.value.reduce((max, r) => Math.max(max, Number(r.categoryId) || 0), 0) + 1
   }
   // 新建且未填 id 时交给服务端取 max(id)+1
   if (editingId.value == null && (payload.id == null || Number.isNaN(payload.id))) delete payload.id

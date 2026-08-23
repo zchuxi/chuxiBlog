@@ -1,24 +1,59 @@
 // v-reveal：进入视口时 viewport-reveal-pending -> viewport-reveal-visible
+//
+// 取值两种形态：
+//   v-reveal="120"                            错峰延迟毫秒数
+//   v-reveal="{ delay: 120, instant: true }"  instant 为真时跳过入场动画直接显形
+//
+// instant 用于筛选/搜索这类用户主动触发的列表更新：结果应当立刻可见，
+// 而不是先留白再逐个淡入（错峰延迟叠加 .84s 过渡最长可拖到 1.2s）。
 const observer = typeof IntersectionObserver !== 'undefined'
   ? new IntersectionObserver(entries => {
       for (const entry of entries) {
-        if (entry.isIntersecting) {
-          entry.target.classList.remove('viewport-reveal-pending')
-          entry.target.classList.add('viewport-reveal-visible')
-          observer.unobserve(entry.target)
-        }
+        if (entry.isIntersecting) reveal(entry.target)
       }
     }, { threshold: 0.12 })
   : null
 
+function parseValue(value) {
+  if (value && typeof value === 'object') return { delay: value.delay, instant: !!value.instant }
+  return { delay: value, instant: false }
+}
+
+function setDelay(el, delay) {
+  if (delay != null) el.style.setProperty('--viewport-reveal-delay', `${delay}ms`)
+}
+
+function reveal(el) {
+  el.classList.remove('viewport-reveal-pending')
+  el.classList.add('viewport-reveal-visible')
+  if (observer) observer.unobserve(el)
+}
+
 export default {
   mounted(el, binding) {
-    el.classList.add('viewport-reveal', 'viewport-reveal-pending')
-    if (binding.value != null) {
-      el.style.setProperty('--viewport-reveal-delay', `${binding.value}ms`)
+    const { delay, instant } = parseValue(binding.value)
+    el.classList.add('viewport-reveal')
+    setDelay(el, instant ? 0 : delay)
+    // 无观察器（SSR/老浏览器）时同样直接显形，避免内容永久隐藏
+    if (instant || !observer) {
+      el.classList.add('viewport-reveal-visible')
+      return
     }
-    if (observer) observer.observe(el)
-    else el.classList.replace('viewport-reveal-pending', 'viewport-reveal-visible')
+    el.classList.add('viewport-reveal-pending')
+    observer.observe(el)
+  },
+  updated(el, binding) {
+    const { delay, instant } = parseValue(binding.value)
+    // 筛选态下促活仍停在 pending 的元素：列表变短后它们会被推进视口，
+    // 若继续等观察器回调 + 错峰延迟，用户会看到一片空白卡位
+    if (instant) {
+      setDelay(el, 0)
+      if (el.classList.contains('viewport-reveal-pending')) reveal(el)
+      return
+    }
+    // 退出筛选态后需无条件回写错峰延迟：这些元素是从 instant 态（delay=0）
+    // 复用的 DOM，此时多为 visible，若只在 pending 时回写，错峰会永久丢失
+    setDelay(el, delay)
   },
   unmounted(el) {
     if (observer) observer.unobserve(el)

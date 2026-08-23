@@ -53,9 +53,11 @@
 }
 
 /* ---------- 弹层 ---------- */
+/* 面板已 teleport 到 body 作为独立弹层（fixed 定位由组件内联样式给出）；
+   position:absolute / top / left 仅作 JS 未定位时的兜底。 */
 .cx-date-picker__panel {
   position: absolute;
-  z-index: 60;
+  z-index: 9999;
   top: calc(100% + 8px);
   left: 0;
   width: max-content;
@@ -161,11 +163,15 @@
   border-left: 1px solid var(--nested-inner-card-border);
 }
 .cx-date-picker__time-col {
-  /* 高度对齐日历（周头 + 6 行日格），超出滚动 */
-  height: 226px;
+  /* 高度由 JS 按日历实测值写入 --cx-dp-col-h（周头 24 + 6×30 + 间隙，
+     写死数值会与日历差几十像素），未就绪时用近似值兜底 */
+  height: var(--cx-dp-col-h, 254px);
   overflow-y: auto;
-  scrollbar-width: thin;
+  /* 滚动条不占版面：三列各挂一条原生滚动条会在小弹层里形成明显竖纹 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.cx-date-picker__time-col::-webkit-scrollbar { width: 0; height: 0; }
 .cx-date-picker__time-col button {
   display: block;
   width: 44px;
