@@ -67,25 +67,36 @@
         <button type="button" class="control-btn music-rate-btn" title="播放速度" @click="cycleRate">{{ rateLabel }}</button>
         <div class="cx-popover-wrapper">
           <div class="cx-popover-trigger">
-            <button type="button" class="control-btn" @click="playlistOpen = !playlistOpen">
+            <button type="button" class="control-btn" @click="togglePlaylist">
               <SvgIcon name="music-list" size="18px" />
             </button>
           </div>
-          <transition name="cx-popover-fade">
-            <div v-if="playlistOpen" class="cx-popover music-playlist-popover">
+          <!-- 弹层 teleport 到 body：音乐条带 transform + overflow:hidden，原地渲染会被裁剪/遮挡 -->
+          <Teleport to="body">
+            <transition name="cx-popover-fade">
               <div
-                v-for="(t, i) in tracks"
-                :key="t.id"
-                class="cx-popover-item"
-                @click="playIndex(i)"
+                v-if="playlistOpen"
+                ref="playlistRef"
+                class="cx-popover music-playlist-popover"
+                :style="playlistStyle"
+                @click.stop
               >
-                <span class="cx-popover-item__content">{{ t.title }} - {{ t.artist }}</span>
+                <div
+                  v-for="(t, i) in tracks"
+                  :key="t.id"
+                  class="cx-popover-item"
+                  @click="playIndex(i)"
+                >
+                  <span class="cx-popover-item__content">{{ t.title }} - {{ t.artist }}</span>
+                </div>
               </div>
-            </div>
-          </transition>
+            </transition>
+          </Teleport>
         </div>
         <button type="button" class="control-btn bottom-bar-close-btn" @click="musicBarOpen = false">
-          <SvgIcon name="common-big-close" size="16px" />
+          <!-- 用细线描边的 common-close：common-big-close 是实心填充字形
+               （viewBox 1216×1312、无 stroke），混在整排 2px 细线控件里显得格外粗重 -->
+          <SvgIcon name="common-close" size="16px" />
         </button>
         <audio
           ref="audioRef"
@@ -100,7 +111,7 @@
 </template>
 
 <script setup>
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
 import SvgIcon from '../../components/SvgIcon.vue'
 import { api } from '../../api'
 
@@ -116,6 +127,8 @@ const musicBarOpen = computed({
 })
 
 const playlistOpen = ref(false)
+const playlistRef = ref(null)
+const playlistStyle = ref({})
 const tracks = ref([])
 const trackIndex = ref(0)
 const playing = ref(false)
@@ -132,9 +145,47 @@ const currentTrack = computed(() => tracks.value[trackIndex.value] || null)
 const playModeIcon = computed(() => ({ order: 'music-order', shuffle: 'music-shuffle', repeatOne: 'music-repeatOne' }[playMode.value]))
 const rateLabel = computed(() => `${playbackRate.value}x`)
 
+function togglePlaylist() {
+  playlistOpen.value = !playlistOpen.value
+  if (playlistOpen.value) nextTick(updatePlaylistPosition)
+}
+
+// 播放列表固定在音乐条上方展开（音乐条在屏幕底部），并限制在视口内
+function updatePlaylistPosition() {
+  const bar = document.querySelector('.music-bottom-bar')
+  const trigger = document.querySelector('.music-bottom-bar .cx-popover-trigger')
+  const pop = playlistRef.value
+  if (!bar || !trigger || !pop) return
+  const barRect = bar.getBoundingClientRect()
+  const triggerRect = trigger.getBoundingClientRect()
+  const popRect = pop.getBoundingClientRect()
+  const gap = 10
+  // 以音乐条顶边为锚向上展开，完全避开播放组件；右缘对齐触发按钮并夹在视口内
+  const top = Math.max(10, barRect.top - popRect.height - gap)
+  const left = Math.max(10, Math.min(triggerRect.right - popRect.width, window.innerWidth - popRect.width - 10))
+  playlistStyle.value = { position: 'fixed', top: `${top}px`, left: `${left}px` }
+}
+
+// 点击播放列表/触发按钮以外区域时关闭
+function onPlaylistDocClick(e) {
+  if (!playlistOpen.value) return
+  const trigger = document.querySelector('.music-bottom-bar .cx-popover-trigger')
+  const pop = playlistRef.value
+  if ((trigger && trigger.contains(e.target)) || (pop && pop.contains(e.target))) return
+  playlistOpen.value = false
+}
+
+// 音乐条关闭时同步收起播放列表
+watch(musicBarOpen, open => {
+  if (!open) playlistOpen.value = false
+})
+
 async function toggleMusicBar() {
-  musicBarOpen.value = !musicBarOpen.value
-  if (musicBarOpen.value && !tracks.value.length) {
+  // 先算目标状态再设置：musicBarOpen 是 props 的 computed，emit 后 props 要到下一帧才更新，
+  // 若直接用 musicBarOpen.value 判断会读到旧值，导致「首次打开不拉取、关闭时才拉取」。
+  const opening = !musicBarOpen.value
+  musicBarOpen.value = opening
+  if (opening && !tracks.value.length) {
     try {
       const data = await api.music()
       tracks.value = data.records || []
@@ -216,6 +267,14 @@ function formatTime(t) {
   const m = Math.floor(t / 60), s = Math.floor(t % 60)
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
+
+onMounted(() => {
+  document.addEventListener('click', onPlaylistDocClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onPlaylistDocClick)
+})
 
 defineExpose({ toggleMusicBar })
 </script>

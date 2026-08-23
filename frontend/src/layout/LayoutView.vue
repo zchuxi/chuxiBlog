@@ -7,9 +7,10 @@
     <TopBar
       ref="topBarRef"
       :site-name="siteName"
-      :paw-progress="pawEnabled ? pawProgress : 0"
+      :paw-progress="pawProgress"
       :solid="topbarSolid"
       :setting-open="settingOpen"
+      :ai-open="aiExpanded"
       @open-search="searchOpen = true"
       @toggle-theme="toggleTheme"
       @toggle-ai="aiExpanded = !aiExpanded"
@@ -18,7 +19,7 @@
       @close-settings="settingOpen = false"
       @open-auth="openAuthDialog"
       @go-admin="goAdmin"
-      @paw-toggle="togglePaw"
+      @toggle-live2d="toggleLive2d"
       @scroll-to-top="scrollMainToTop"
     />
 
@@ -45,24 +46,42 @@
 
     <!-- live2d 看板娘 -->
     <div
+      ref="live2dWidgetRef"
       class="live2d-widget"
       :class="{ 'is-hidden': !settings.live2dEnabled }"
       style="--live2d-bottom-offset: 0px; --live2d-bottom-gap: 8px;"
     >
-      <div class="live2d-widget__stage">
+      <div ref="live2dStageRef" class="live2d-widget__stage" :class="{ 'is-ready': live2dStageReady }">
         <canvas id="live2d-canvas" width="280" height="280" style="touch-action: none;"></canvas>
       </div>
+      <!-- 加载态：模型约 15MB，首次加载有明显等待，给占位骨架避免一片空白 -->
+      <div
+        v-if="live2dStatus !== 'ready'"
+        class="live2d-widget__placeholder"
+        :class="{ 'is-error': live2dStatus === 'error' }"
+        role="status"
+        aria-live="polite"
+      >
+        <template v-if="live2dStatus === 'error'">
+          <p class="live2d-widget__placeholder-text">看板娘加载失败</p>
+          <button type="button" class="live2d-widget__placeholder-retry" @click="reloadLive2d">点击重试</button>
+        </template>
+        <template v-else>
+          <span class="live2d-widget__placeholder-figure" aria-hidden="true"></span>
+          <p class="live2d-widget__placeholder-text">看板娘登场中…</p>
+        </template>
+      </div>
       <div class="live2d-widget__actions">
-        <button type="button" class="cx-button cx-button--primary is-round is-circle is-plain" @click="aiExpanded = true">
+        <button type="button" class="cx-button cx-button--primary is-round is-circle is-plain" aria-label="打开 AI 助手" title="打开 AI 助手" @click="aiExpanded = true">
           <span class="cx-button__content"><SvgIcon name="common-chat" size="18px" /></span>
         </button>
-        <button type="button" class="cx-button cx-button--info is-round is-circle is-plain is-disabled" disabled>
+        <button type="button" class="cx-button cx-button--info is-round is-circle is-plain is-disabled" aria-label="更换服装（暂不可用）" title="更换服装（暂不可用）" disabled>
           <span class="cx-button__content"><SvgIcon name="common-hanger" size="18px" /></span>
         </button>
-        <button type="button" class="cx-button cx-button--warning is-round is-circle is-plain" @click="reloadLive2d">
+        <button type="button" class="cx-button cx-button--warning is-round is-circle is-plain" aria-label="重新加载看板娘" title="重新加载看板娘" @click="reloadLive2d">
           <span class="cx-button__content"><SvgIcon name="common-reset" size="18px" /></span>
         </button>
-        <button type="button" class="cx-button cx-button--danger is-round is-circle is-plain" @click="settings.update({ live2dEnabled: false })">
+        <button type="button" class="cx-button cx-button--danger is-round is-circle is-plain" aria-label="关闭看板娘" title="关闭看板娘" @click="settings.update({ live2dEnabled: false })">
           <span class="cx-button__content"><SvgIcon name="common-big-close" size="18px" /></span>
         </button>
       </div>
@@ -85,24 +104,26 @@
           <button type="button" class="login-dialog__close" @click="authOpen = false">
             <span class="login-dialog__close-icon"><SvgIcon name="common-big-close" size="14px" /></span>
           </button>
-          <!-- 左侧渐变装饰侧板 -->
+          <!-- 左侧图片封面 -->
           <aside class="login-dialog__side">
-            <span class="login-dialog__orb login-dialog__orb--1"></span>
-            <span class="login-dialog__orb login-dialog__orb--2"></span>
-            <span class="login-dialog__orb login-dialog__orb--3"></span>
-            <span class="login-dialog__star login-dialog__star--1">✦</span>
-            <span class="login-dialog__star login-dialog__star--2">✧</span>
-            <span class="login-dialog__star login-dialog__star--3">✦</span>
-            <div class="login-dialog__side-body">
-              <span class="login-dialog__paw"><SvgIcon name="common-paw" size="28px" /></span>
-              <h3 class="login-dialog__side-title">{{ authPanel === 'login' ? 'Hi，朋友！' : '欢迎加入！' }}</h3>
-              <p class="login-dialog__side-desc">{{ authPanel === 'login' ? '登录后可以点赞、评论，和这个小站有更多互动。' : '注册一个账号，把喜欢的内容都收藏起来。' }}</p>
-              <button
-                type="button"
-                class="login-dialog__side-btn"
-                @click="authPanel = authPanel === 'login' ? 'register' : 'login'"
-              >{{ authPanel === 'login' ? '去注册' : '去登录' }}</button>
-            </div>
+            <img
+              :src="settings.selectedVerticalImage"
+              class="login-dialog__side-image"
+              alt=""
+              decoding="async"
+              draggable="false"
+            />
+            <button
+              type="button"
+              class="login-dialog__change-image"
+              aria-label="更换登录侧栏图片"
+              title="更换图片"
+              :disabled="settings.verticalImages.length < 2"
+              @click="changeAuthSideImage"
+            >
+              <SvgIcon name="common-exchange" size="16px" />
+              <span>更换图片</span>
+            </button>
           </aside>
           <!-- 右侧表单区 -->
           <div class="login-dialog__main">
@@ -188,6 +209,14 @@ import AiChatPanel from './components/AiChatPanel.vue'
 import SearchOverlay from './components/SearchOverlay.vue'
 import SettingsDialog from './components/SettingsDialog.vue'
 import SakuraCanvas from './components/SakuraCanvas.vue'
+import {
+  LIVE2D_AUTO_START_DELAY_MS,
+  initLive2d as initLive2dModel,
+  destroyLive2d,
+  handleLive2dTap,
+  isLive2dReady
+} from '../live2d/live2dMiku.js'
+import { bindLive2dWidgetDrag } from '../live2d/live2dWidgetDrag.js'
 
 const settings = useSettingsStore()
 const router = useRouter()
@@ -195,6 +224,8 @@ const router = useRouter()
 const bgLayerRef = ref(null)
 const topBarRef = ref(null)
 const musicBarRef = ref(null)
+const live2dWidgetRef = ref(null)
+const live2dStageRef = ref(null)
 
 /* ---------- 站点全局设置 ---------- */
 const siteSettings = reactive({
@@ -291,6 +322,14 @@ function chooseBackground(img) {
   bgLayerRef.value?.swapBackground(img)
 }
 
+function changeAuthSideImage() {
+  const images = settings.verticalImages.filter(Boolean)
+  if (images.length < 2) return
+  const currentIndex = images.indexOf(settings.selectedVerticalImage)
+  const nextImage = images[currentIndex < 0 ? 0 : (currentIndex + 1) % images.length]
+  settings.update({ selectedVerticalImage: nextImage })
+}
+
 /* ---------- 共享弹窗状态 ---------- */
 const musicBarOpen = ref(false)
 const aiExpanded = ref(false)
@@ -300,12 +339,11 @@ const authOpen = ref(false)
 const authMode = ref('password')
 const authPanel = ref('login')
 const pawProgress = ref(0)
-const pawEnabled = ref(true)
 const topbarSolid = ref(false)
 const PAW_SCROLL_THRESHOLD = 2400
 
-function togglePaw() {
-  pawEnabled.value = !pawEnabled.value
+function toggleLive2d() {
+  settings.update({ live2dEnabled: !settings.live2dEnabled })
 }
 
 // 路由切换时关闭所有浮层，避免 keep-alive / 滚动导致的状态残留
@@ -334,18 +372,20 @@ function onAuthKeydown(e) {
   if (authOpen.value) authOpen.value = false
 }
 
-/* ---------- live2d（P1-5 延迟加载：首屏不拉脚本，idle 或首次交互后再初始化）---------- */
+/* ---------- live2d 看板娘（Cubism 4 / miku；延迟加载：首屏空闲或首次交互后再初始化）---------- */
 let live2dReady = false
 let live2dInitTimer = null
+let cleanupLive2dDrag = () => {}
+const live2dStageReady = ref(false)
+// 加载态三值：idle（未开始/加载中）→ ready（已就绪）| error（失败可重试）
+const live2dStatus = ref('idle')
 
-function loadLive2dScript() {
-  return new Promise((resolve, reject) => {
-    if (window.loadlive2d) { resolve(); return }
-    const s = document.createElement('script')
-    s.src = '/live2d/live2d.min.js'
-    s.onload = resolve
-    s.onerror = reject
-    document.body.appendChild(s)
+function bindLive2dDrag() {
+  cleanupLive2dDrag()
+  cleanupLive2dDrag = bindLive2dWidgetDrag({
+    widget: live2dWidgetRef.value,
+    handle: live2dStageRef.value,
+    onTap: handleLive2dTap
   })
 }
 
@@ -353,11 +393,18 @@ async function initLive2d() {
   if (live2dReady) return
   live2dReady = true
   try {
-    await loadLive2dScript()
-    if (window.loadlive2d) {
-      window.loadlive2d('live2d-canvas', '/live2d/model/mashiro/shifuku.model.json')
-    }
-  } catch (e) { console.warn('[Live2D] 加载失败:', e) }
+    const canvas = document.getElementById('live2d-canvas')
+    if (!canvas) throw new Error('未找到 live2d 画布元素')
+    await initLive2dModel(canvas)
+    if (!isLive2dReady()) throw new Error('Live2D 模型未进入就绪状态')
+    live2dStageReady.value = true
+    live2dStatus.value = 'ready'
+  } catch (e) {
+    console.warn('[Live2D] 加载失败:', e)
+    live2dStageReady.value = false
+    live2dStatus.value = 'error'
+    live2dReady = false
+  }
 }
 
 function cancelLive2dInit() {
@@ -369,8 +416,8 @@ function cancelLive2dInit() {
 function scheduleLive2dInit() {
   if (!settings.live2dEnabled || live2dReady) return
   cancelLive2dInit()
-  // 首屏空闲 3.5s 后再初始化；页面全程可见时用 requestIdleCallback 兜底
-  live2dInitTimer = setTimeout(initLive2d, 3500)
+  // 首屏稳定后尽快初始化；首次指针交互仍可提前触发
+  live2dInitTimer = setTimeout(initLive2d, LIVE2D_AUTO_START_DELAY_MS)
   window.addEventListener('pointerdown', initLive2dOnce, { once: true })
 }
 
@@ -381,9 +428,11 @@ function initLive2dOnce() {
 }
 
 function reloadLive2d() {
-  if (window.loadlive2d) {
-    window.loadlive2d('live2d-canvas', '/live2d/model/mashiro/shifuku.model.json')
-  }
+  live2dStageReady.value = false
+  live2dStatus.value = 'idle'
+  destroyLive2d()
+  live2dReady = false
+  initLive2d()
 }
 
 watch(() => settings.live2dEnabled, val => { val ? scheduleLive2dInit() : cancelLive2dInit() })
@@ -416,6 +465,7 @@ onMounted(() => {
   loadSiteSettings()
   loadAppearanceSettings()
   nextTick(bindPawScroll)
+  nextTick(bindLive2dDrag)
   window.addEventListener('keydown', onAuthKeydown)
   if (settings.live2dEnabled) scheduleLive2dInit()
 })
@@ -423,11 +473,138 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onAuthKeydown)
   cancelLive2dInit()
+  cleanupLive2dDrag()
+  destroyLive2d()
   if (pawScrollEl) pawScrollEl.removeEventListener('scroll', onMainScroll)
 })
 </script>
 
 <style>
+/* 看板娘加载占位：模型约 15MB（moc3 9MB + 贴图 6.4MB），首次加载有明显等待。
+   stage 在就绪前是 opacity:0，若不给占位，用户只会看到一片空白。 */
+.live2d-widget__placeholder {
+  position: absolute;
+  right: 0;
+  bottom: var(--live2d-composer-space-desktop, 56px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 18px 12px;
+  border: 1px dashed var(--topbar-border);
+  border-radius: 20px;
+  background: var(--popover-bg);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+  color: var(--text-color);
+  pointer-events: none;
+}
+
+/* 失败态要能点重试，占位整体恢复可交互 */
+.live2d-widget__placeholder.is-error {
+  border-style: solid;
+  pointer-events: auto;
+}
+
+/* 拟人形占位：圆头 + 身体，比纯色块更贴合看板娘的轮廓预期 */
+.live2d-widget__placeholder-figure {
+  position: relative;
+  width: 46px;
+  height: 58px;
+  opacity: 0.55;
+  animation: live2d-placeholder-pulse 1.6s ease-in-out infinite;
+}
+
+.live2d-widget__placeholder-figure::before,
+.live2d-widget__placeholder-figure::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+.live2d-widget__placeholder-figure::before {
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.live2d-widget__placeholder-figure::after {
+  top: 28px;
+  width: 40px;
+  height: 30px;
+  border-radius: 16px 16px 12px 12px;
+}
+
+.live2d-widget__placeholder-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.live2d-widget__placeholder-retry {
+  padding: 5px 14px;
+  border: 1px solid var(--topbar-border);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.live2d-widget__placeholder-retry:hover {
+  opacity: 0.72;
+}
+
+.live2d-widget__placeholder-retry:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@keyframes live2d-placeholder-pulse {
+  0%, 100% { opacity: 0.32; transform: translateY(0); }
+  50% { opacity: 0.62; transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live2d-widget__placeholder-figure { animation: none; }
+}
+
+@media (max-width: 900px) {
+  .live2d-widget__placeholder {
+    bottom: var(--live2d-composer-space-mobile, 52px);
+    padding: 14px 10px;
+  }
+  .live2d-widget__placeholder-figure { width: 38px; height: 48px; }
+  .live2d-widget__placeholder-figure::before { width: 20px; height: 20px; }
+  .live2d-widget__placeholder-figure::after { top: 24px; width: 34px; height: 24px; }
+}
+
+/* Pixi 会动态改写 canvas 的内联 cursor；用 !important 钉死为手型，保证悬停看板娘时光标不闪烁。
+   canvas 仅负责渲染（pointer-events:none），点击/拖动/光标统一由 stage 命中面处理。 */
+.live2d-widget__stage,
+.live2d-widget__stage canvas {
+  cursor: grab !important;
+}
+
+/* canvas 只负责渲染，stage 是唯一的 DOM 指针命中面。 */
+.live2d-widget__stage canvas {
+  pointer-events: none !important;
+}
+
+.live2d-widget.is-dragging .live2d-widget__stage,
+.live2d-widget.is-dragging .live2d-widget__stage canvas {
+  cursor: grabbing !important;
+}
+
 /* ========== 顶栏悬浮岛定位 ========== */
 .app-shell > header.app-shell-top {
   position: absolute;
@@ -580,76 +757,67 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
   position: relative;
   flex-shrink: 0;
   width: 292px;
-  padding: 40px 32px;
-  display: flex;
-  align-items: center;
   overflow: hidden;
-  color: #fff;
-  /* 由 accent 令牌带 alpha 推导：混白会得到全不透明实色，与外层玻璃卡片割裂 */
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--accent-strong) 88%, transparent) 0%,
-    color-mix(in srgb, var(--accent-strong) 94%, transparent) 52%,
-    color-mix(in srgb, var(--accent-text) 88%, transparent) 100%
-  );
+  background: var(--input-bg);
+  box-shadow: 12px 0 32px rgba(35, 48, 78, 0.12);
 }
 
-.login-dialog__side-body {
-  position: relative;
+.login-dialog__side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(90deg, transparent 72%, rgba(18, 28, 48, 0.12));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-dialog__side-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+}
+
+.login-dialog__change-image {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.login-dialog__paw {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 8px 20px rgba(58, 100, 150, 0.25);
-  animation: login-dialog-bob 3.2s ease-in-out infinite;
-}
-
-.login-dialog__side-title { margin: 0; font-size: 29px; letter-spacing: 2px; text-shadow: 0 2px 8px rgba(58, 100, 150, 0.3); }
-.login-dialog__side-desc { margin: 0; font-size: 15.5px; line-height: 1.8; opacity: 0.92; }
-
-.login-dialog__side-btn {
-  margin-top: 6px;
-  padding: 9px 30px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, 0.75);
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(18, 28, 48, 0.52);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  box-shadow: 0 10px 26px rgba(12, 20, 36, 0.24);
   color: #fff;
   font: inherit;
-  font-size: 15.5px;
-  letter-spacing: 3px;
+  font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.24s ease, color 0.24s ease, transform 0.24s ease, box-shadow 0.24s ease;
+  transform: translateX(-50%);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.login-dialog__side-btn:hover {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--accent-strong);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(58, 100, 150, 0.32);
+.login-dialog__change-image:not(:disabled):hover {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(18, 28, 48, 0.68);
+  box-shadow: 0 14px 30px rgba(12, 20, 36, 0.32);
+  transform: translate(-50%, -2px);
 }
-.login-dialog__side-btn:active { transform: translateY(0) scale(0.97); }
 
-.login-dialog__orb { position: absolute; border-radius: 999px; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.22); pointer-events: none; }
-.login-dialog__orb--1 { width: 140px; height: 140px; top: -46px; left: -40px; animation: login-dialog-float 7s ease-in-out infinite alternate; }
-.login-dialog__orb--2 { width: 90px; height: 90px; right: -28px; top: 38%; animation: login-dialog-float 8.5s ease-in-out infinite alternate-reverse; }
-.login-dialog__orb--3 { width: 120px; height: 120px; bottom: -42px; left: 24%; animation: login-dialog-float 6s ease-in-out infinite alternate; }
-
-.login-dialog__star { position: absolute; color: rgba(255, 255, 255, 0.85); pointer-events: none; animation: login-dialog-twinkle 2.8s ease-in-out infinite; }
-.login-dialog__star--1 { top: 14%; right: 22%; font-size: 16.5px; }
-.login-dialog__star--2 { top: 42%; left: 12%; font-size: 13px; animation-delay: 0.9s; }
-.login-dialog__star--3 { bottom: 16%; right: 16%; font-size: 14.5px; animation-delay: 1.7s; }
+.login-dialog__change-image:not(:disabled):active { transform: translate(-50%, 0) scale(0.97); }
+.login-dialog__change-image:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.login-dialog__change-image:disabled { opacity: 0.5; cursor: not-allowed; transform: translateX(-50%); }
 
 .login-dialog__main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 40px 44px; }
 .login-dialog__panel { width: 100%; max-width: 330px; margin: 0 auto; display: flex; flex-direction: column; }
@@ -699,21 +867,8 @@ html.dark .app-shell-body__content-col > .music-bottom-bar-shell {
 .login-dialog-panel-enter-from { opacity: 0; transform: translateX(16px); }
 .login-dialog-panel-leave-to { opacity: 0; transform: translateX(-16px); }
 
-@keyframes login-dialog-float { from { transform: translateY(-8px); } to { transform: translateY(10px); } }
-@keyframes login-dialog-bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(6deg); } }
-@keyframes login-dialog-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.12); } }
-
 /* 登录弹窗暗色模式 */
 html.dark .login-dialog__mask { background: radial-gradient(circle at 20% 10%, var(--glow-left), transparent 55%), radial-gradient(circle at 85% 90%, var(--glow-right), transparent 55%), rgba(10, 14, 28, 0.55); }
-/* 暗色同样改为令牌推导：原先三段硬编码 hex 是全不透明的 */
-html.dark .login-dialog__side {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--accent-strong) 72%, transparent) 0%,
-    color-mix(in srgb, var(--accent-solid) 80%, transparent) 55%,
-    color-mix(in srgb, var(--accent-strong) 88%, transparent) 100%
-  );
-}
 html.dark .login-dialog__submit { background: linear-gradient(135deg, #4f86c6 0%, #67b7cf 100%); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42); }
 html.dark .login-dialog__submit:hover { box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5); }
 

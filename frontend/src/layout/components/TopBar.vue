@@ -58,8 +58,27 @@
       <button type="button" class="shell-action-btn is-music" aria-label="音乐播放器" @click="$emit('toggle-music')">
         <SvgIcon name="common-music" class="action-icon" />
       </button>
+      <button
+        type="button"
+        class="shell-action-btn is-ai"
+        :class="{ 'is-active': aiOpen }"
+        :aria-pressed="aiOpen"
+        :title="aiOpen ? '关闭 AI 助手' : '打开 AI 助手'"
+        aria-label="打开 AI 助手"
+        @click="emit('toggle-ai')"
+      >
+        <SvgIcon name="common-chat" class="action-icon" />
+      </button>
       <div class="shell-action-cat-wrap">
-        <button type="button" class="shell-action-btn is-cat" aria-label="返回顶部" @click="$emit('paw-toggle')">
+        <button
+          type="button"
+          class="shell-action-btn is-cat"
+          :class="{ 'is-active': settings.live2dEnabled, 'is-off': !settings.live2dEnabled }"
+          :aria-pressed="settings.live2dEnabled"
+          :title="settings.live2dEnabled ? '关闭看板娘' : '打开看板娘'"
+          aria-label="切换看板娘"
+          @click="$emit('toggle-live2d')"
+        >
           <SvgIcon name="common-cat" class="action-icon" />
         </button>
         <transition name="paw-rope">
@@ -117,10 +136,11 @@ const props = defineProps({
   siteName: { type: String, default: '初曦的窝' },
   pawProgress: { type: Number, default: 0 },
   solid: { type: Boolean, default: false },
-  settingOpen: { type: Boolean, default: false }
+  settingOpen: { type: Boolean, default: false },
+  aiOpen: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['open-search', 'toggle-theme', 'toggle-ai', 'toggle-music', 'open-settings', 'close-settings', 'open-auth', 'go-admin', 'paw-toggle', 'scroll-to-top'])
+const emit = defineEmits(['open-search', 'toggle-theme', 'toggle-ai', 'toggle-music', 'open-settings', 'close-settings', 'open-auth', 'go-admin', 'toggle-live2d', 'scroll-to-top'])
 const MIN_ROPE_HEIGHT = 24
 const MAX_ROPE_HEIGHT = 120
 
@@ -324,5 +344,14 @@ html.dark .shell-nav .nav-underline {
 
 @media (max-width: 768px) {
   .shell-nav .nav-underline { display: none; }
+}
+
+/* ========== 猫图标按钮：看板娘开关状态 ========== */
+.shell-action-btn.is-cat.is-active {
+  color: var(--action-btn-hover-color);
+  background-color: var(--action-btn-hover-bg);
+}
+.shell-action-btn.is-cat.is-off {
+  opacity: 0.45;
 }
 </style>

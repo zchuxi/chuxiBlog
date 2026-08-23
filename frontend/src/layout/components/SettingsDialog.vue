@@ -214,6 +214,14 @@ html.dark .setting-dialog .theme-pick-card {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
+.setting-dialog .effect-card {
+  display: grid;
+  gap: 16px;
+}
+.setting-dialog .effect-card__content {
+  min-height: 44px;
+}
+
 .setting-section__head {
   display: flex;
   align-items: flex-start;
