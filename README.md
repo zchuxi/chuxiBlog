@@ -9,7 +9,7 @@
 
 ## 启动方式
 
-1. 确保 MySQL 在 `localhost:3306`，账号与口令通过环境变量 `DB_USERNAME` / `DB_PASSWORD` 注入（缺省回退值见 `backend/src/main/resources/application.yml`，请按本机实际口令设置；数据库 `blog_db` 首次启动自动创建并注入种子数据）
+1. 确保 MySQL 在 `localhost:3306`，账号与口令通过环境变量 `DB_USERNAME` / `DB_PASSWORD` 注入（缺省回退值见 `backend/src/main/resources/application.yml`，请按本机实际口令设置；本地缺省库 `chuxi_db` 首次启动自动创建并注入种子数据，可用 `DB_URL` 覆盖）
 2. 双击 `start-backend.bat`（首次会自动 `mvn package`；**务必用 java -jar 方式运行**，中文路径下 `mvn spring-boot:run` 会因 GBK argfile 报 ClassNotFoundException）
 3. 双击 `start-frontend.bat`，浏览器打开 http://localhost:5173
 
@@ -80,7 +80,7 @@
 
 `spring.jpa.hibernate.ddl-auto` 已改为环境变量注入（`${JPA_DDL_AUTO:update}`）：
 
-- **本地**：缺省 `update`，实体改动自动同步到本地 `blog_db`，无需额外操作
+- **本地**：缺省 `update`，实体改动自动同步到本地 `chuxi_db`，无需额外操作
 - **线上**：由服务器 systemd unit 注入 `JPA_DDL_AUTO=validate`，启动时只校验实体与库结构是否一致，**绝不自动改表**；不一致时启动直接失败（SchemaManagementException），以此兜底拦截未经审阅的结构变更
 
 因此**实体字段一旦变更（新增/删除/改名/改类型），上线前必须人工出具对应 DDL，先在线上库执行完毕，再启动新版本服务**，顺序不可颠倒。评审涉及 `backend/src/main/java/com/chuxi/entity/` 改动的提交时，须确认对应 DDL 已随变更给出。
