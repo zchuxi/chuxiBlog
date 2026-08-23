@@ -3,6 +3,8 @@
     class="cx-switch"
     :class="{ 'is-checked': modelValue, 'is-disabled': disabled }"
     type="button"
+    role="switch"
+    :aria-checked="modelValue ? 'true' : 'false'"
     :disabled="disabled"
     @click="handleClick"
   >

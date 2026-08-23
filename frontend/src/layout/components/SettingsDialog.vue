@@ -92,6 +92,10 @@
                 <p>开启后，背景会在图库中逐渐平滑切换图片；关闭时仅显示选中的单张背景。</p>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-label="背景轮播"
+                :aria-checked="settings.backgroundCarouselEnabled ? 'true' : 'false'"
                 class="cx-switch"
                 :class="{ 'is-checked': settings.backgroundCarouselEnabled }"
                 :disabled="!settings.backgroundImageEnabled"
@@ -134,6 +138,10 @@
               <div class="effect-card__content">
                 <span>樱花飘落</span>
                 <button
+                  type="button"
+                  role="switch"
+                  aria-label="樱花飘落"
+                  :aria-checked="settings.sakuraEnabled ? 'true' : 'false'"
                   class="cx-switch"
                   :class="{ 'is-checked': settings.sakuraEnabled }"
                   @click="settings.update({ sakuraEnabled: !settings.sakuraEnabled })"
@@ -144,6 +152,10 @@
               <div class="effect-card__content">
                 <span>看板娘</span>
                 <button
+                  type="button"
+                  role="switch"
+                  aria-label="看板娘"
+                  :aria-checked="settings.live2dEnabled ? 'true' : 'false'"
                   class="cx-switch"
                   :class="{ 'is-checked': settings.live2dEnabled }"
                   @click="settings.update({ live2dEnabled: !settings.live2dEnabled })"

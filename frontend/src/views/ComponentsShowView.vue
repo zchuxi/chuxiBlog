@@ -196,14 +196,14 @@
                   <span class="demo-card__label">消息提醒</span>
                   <p class="demo-card__hint">模拟常见的设置面板开关场景。</p>
                 </div>
-                <CxSwitch v-model="switchOn" :disabled="switchLocked" />
+                <CxSwitch v-model="switchOn" :disabled="switchLocked" aria-label="消息提醒" />
               </div>
               <div class="demo-card demo-card--row">
                 <div>
                   <span class="demo-card__label">锁定演示开关</span>
                   <p class="demo-card__hint">开启后，上方主开关进入禁用状态。</p>
                 </div>
-                <CxSwitch v-model="switchLocked" />
+                <CxSwitch v-model="switchLocked" aria-label="锁定演示开关" />
               </div>
               <div class="demo-card">
                 <span class="demo-card__label">当前状态</span>
