@@ -98,6 +98,9 @@ const searchLoading = ref(false)
 const searchResult = ref(null)
 const searchInputRef = ref(null)
 
+// 请求代次：连续回车换关键词时，慢的旧响应不能覆盖新关键词的结果
+let searchGeneration = 0
+
 watch(() => props.modelValue, open => {
   if (open) nextTick(() => searchInputRef.value && searchInputRef.value.focus())
 })
@@ -105,14 +108,18 @@ watch(() => props.modelValue, open => {
 async function doSearch() {
   const kw = searchKeyword.value.trim()
   if (!kw) return
+  const generation = ++searchGeneration
   searchLoading.value = true
   try {
-    searchResult.value = await api.searchArticles(kw, 1, 12)
+    const data = await api.searchArticles(kw, 1, 12)
+    if (generation !== searchGeneration) return
+    searchResult.value = data
   } catch (e) {
+    if (generation !== searchGeneration) return
     console.warn('[搜索] 查询失败:', e)
     searchResult.value = { records: [], total: 0 }
   } finally {
-    searchLoading.value = false
+    if (generation === searchGeneration) searchLoading.value = false
   }
 }
 

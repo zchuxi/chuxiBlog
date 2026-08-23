@@ -254,14 +254,20 @@ const commentTotal = ref(0)
 const commentPage = ref(1)
 const commentLoadingMore = ref(false)
 
-async function loadComments(page = 1) {
+// 请求代次：每次切换文章自增，异步回来时若代次已过期就丢弃结果。
+// 快速连点上一篇/下一篇时，慢的旧响应不能覆盖新文章的内容与评论。
+let loadGeneration = 0
+
+async function loadComments(page = 1, generation = loadGeneration, targetId = articleId.value) {
   try {
-    const data = await api.articleComments(articleId.value, page, 20)
+    const data = await api.articleComments(targetId, page, 20)
+    if (generation !== loadGeneration) return
     const records = (data && data.records) || []
     commentPage.value = page
     commentTotal.value = Number((data && data.total) || 0)
     comments.value = page === 1 ? records : [...comments.value, ...records]
   } catch (e) {
+    if (generation !== loadGeneration) return
     console.warn('[评论] 加载失败:', e)
     if (page === 1) { comments.value = []; commentTotal.value = 0 }
   }
@@ -299,8 +305,21 @@ let headingObserver = null
 let jsonLdScript = null
 
 async function load() {
+  const generation = ++loadGeneration
+  const targetId = articleId.value
+  // 切换文章先清空上一篇，避免新文章加载失败时旧正文残留在新 URL 下
+  article.value = null
+  prevArticle.value = null
+  nextArticle.value = null
+  renderedHtml.value = ''
+  headings.value = []
+  activeHeading.value = ''
+  comments.value = []
+  commentTotal.value = 0
+  commentPage.value = 1
   try {
-    const data = await api.articleDetail(articleId.value)
+    const data = await api.articleDetail(targetId)
+    if (generation !== loadGeneration) return
     article.value = data.article
     prevArticle.value = data.prev || null
     nextArticle.value = data.next || null
@@ -309,12 +328,14 @@ async function load() {
     headings.value = hs
     activeHeading.value = hs.length ? hs[0].id : ''
     await nextTick()
+    if (generation !== loadGeneration) return
     observeHeadings()
     injectJsonLd()
-  } catch (e) { console.warn('[文章] 加载失败:', e) }
-  try {
-    await loadComments(1)
-  } catch (e) { console.warn('[评论] 加载失败:', e) }
+  } catch (e) {
+    if (generation !== loadGeneration) return
+    console.warn('[文章] 加载失败:', e)
+  }
+  await loadComments(1, generation, targetId)
 }
 
 function observeHeadings() {

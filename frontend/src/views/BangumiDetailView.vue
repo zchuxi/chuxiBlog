@@ -210,6 +210,7 @@ const router = useRouter()
 
 const GRAD_COUNT = 5
 const BGM_API = 'https://api.bgm.tv'
+const BGM_TIMEOUT_MS = 8000
 // STAFF 岛按此优先级挑 infobox 常见键
 const STAFF_KEYS = ['原作', '导演', '系列构成', '脚本', '人物设定', '音乐', '动画制作', '总作画监督', '美术监督', '音响监督', '角色原案', '制片人']
 
@@ -394,7 +395,8 @@ async function bgmFetch(kind, sid) {
   }
   // 2) 浏览器直连兜底（本机开代理时仍可用），成功后写入本地缓存
   try {
-    const res = await fetch(`${BGM_API}${bgmPath(kind, sid)}`)
+    // 无代理时直连 bgm.tv 往往是挂住而非立刻失败，必须自带超时才能落到本地缓存兜底
+    const res = await fetch(`${BGM_API}${bgmPath(kind, sid)}`, { signal: AbortSignal.timeout(BGM_TIMEOUT_MS) })
     if (!res.ok) throw new Error(`bgm ${res.status}`)
     const data = await res.json()
     saveBgmLocal(kind, sid, data)
@@ -407,7 +409,11 @@ async function bgmFetch(kind, sid) {
   }
 }
 
+// 请求代次：切换番剧时自增，慢的旧响应回来时代次已过期，直接丢弃
+let loadGeneration = 0
+
 async function load(id) {
+  const generation = ++loadGeneration
   loading.value = true
   record.value = null
   subject.value = null
@@ -417,31 +423,39 @@ async function load(id) {
   coverBroken.value = false
   brokenImgs.value = new Set()
 
+  let detail = null
   try {
-    record.value = await api.bangumiDetail(id)
+    detail = await api.bangumiDetail(id)
   } catch (e) {
-    console.warn('[番剧] 详情加载失败:', e)
+    if (generation === loadGeneration) console.warn('[番剧] 详情加载失败:', e)
   } finally {
-    loading.value = false
+    if (generation === loadGeneration) {
+      record.value = detail
+      loading.value = false
+    }
   }
+  if (generation !== loadGeneration) return
 
   // 底部更多记录（本地列表，失败静默）
   try {
     const list = (await api.bangumiRecords()) || []
+    if (generation !== loadGeneration) return
     others.value = list.filter(r => String(r.id) !== String(id)).slice(0, 12)
   } catch (e) {
+    if (generation !== loadGeneration) return
     console.warn('[番剧] 更多记录加载失败:', e)
     others.value = []
   }
 
   // 在线增强：任一失败对应区块降级隐藏
-  const sid = record.value?.subjectId
+  const sid = detail?.subjectId
   if (!sid) return
   const [s, eps, chars] = await Promise.allSettled([
     bgmFetch('subject', sid),
     bgmFetch('episodes', sid),
     bgmFetch('characters', sid)
   ])
+  if (generation !== loadGeneration) return
   if (s.status === 'fulfilled' && s.value) subject.value = s.value
   if (eps.status === 'fulfilled' && Array.isArray(eps.value?.data)) {
     episodes.value = eps.value.data
