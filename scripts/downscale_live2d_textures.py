@@ -10,11 +10,16 @@
 本脚本只生成新目录，不修改也不删除原始 miku.4096/，以符合模型
 「不可二改」的授权约束——原图完整保留，运行时改为加载降采样副本。
 
-用法：
-    python scripts/downscale_live2d_textures.py            # 生成 2048
-    python scripts/downscale_live2d_textures.py --size 1024
-    python scripts/downscale_live2d_textures.py --force    # 覆盖已存在的输出
-    python scripts/downscale_live2d_textures.py --dry-run  # 只打印计划
+输出两套副本（live2dMiku.js 运行时按浏览器能力选择）：
+  miku.2048/      PNG 副本（WebP 不可用时的回退）
+  miku.2048webp/  WebP 副本（体积约为 PNG 的 1/3，6.4MB -> 约 2.1MB）
+
+用法:
+    python scripts/downscale_live2d_textures.py                       # 生成 2048 PNG
+    python scripts/downscale_live2d_textures.py --size 1024           # 指定边长
+    python scripts/downscale_live2d_textures.py --format webp         # 生成 WebP 副本
+    python scripts/downscale_live2d_textures.py --force               # 覆盖已存在的输出
+    python scripts/downscale_live2d_textures.py --dry-run             # 只打印计划
 """
 
 from __future__ import annotations
@@ -37,7 +42,7 @@ def human_mb(size: int) -> str:
     return f'{size / 1024 / 1024:.2f}MB'
 
 
-def downscale(source: Path, target: Path, size: int, dry_run: bool) -> tuple[int, int]:
+def downscale(source: Path, target: Path, size: int, fmt: str, quality: int, dry_run: bool) -> tuple[int, int]:
     """把单张贴图缩到 size x size，返回 (原体积, 新体积)。"""
     original = source.stat().st_size
     if dry_run:
@@ -49,8 +54,12 @@ def downscale(source: Path, target: Path, size: int, dry_run: bool) -> tuple[int
         # LANCZOS 对这类线稿/色块混合的立绘贴图边缘保持最好
         resized = rgba.resize((size, size), Image.Resampling.LANCZOS)
         target.parent.mkdir(parents=True, exist_ok=True)
-        # optimize 让 PNG 编码器多尝试几种过滤器，体积再降一点
-        resized.save(target, format='PNG', optimize=True)
+        if fmt == 'webp':
+            # q85 对线稿/色块贴图视觉无损；method=6 让编码器多花时间换更小体积（离线脚本不心疼）
+            resized.save(target, format='WEBP', quality=quality, method=6)
+        else:
+            # optimize 让 PNG 编码器多尝试几种过滤器，体积再降一点
+            resized.save(target, format='PNG', optimize=True)
 
     return original, target.stat().st_size
 
@@ -58,6 +67,9 @@ def downscale(source: Path, target: Path, size: int, dry_run: bool) -> tuple[int
 def main() -> int:
     parser = argparse.ArgumentParser(description='Live2D 贴图降采样')
     parser.add_argument('--size', type=int, default=2048, help='输出边长（默认 2048）')
+    parser.add_argument('--format', choices=['png', 'webp'], default='png',
+                        help='输出格式（默认 png；webp 输出到 miku.<size>webp/ 目录）')
+    parser.add_argument('--quality', type=int, default=85, help='WebP 质量（默认 85）')
     parser.add_argument('--force', action='store_true', help='覆盖已存在的输出文件')
     parser.add_argument('--dry-run', action='store_true', help='只打印计划，不写文件')
     args = parser.parse_args()
@@ -71,9 +83,11 @@ def main() -> int:
         print(f'源目录没有 texture_*.png: {SOURCE_DIR}', file=sys.stderr)
         return 1
 
-    out_dir = MIKU_DIR / f'miku.{args.size}'
+    ext = 'webp' if args.format == 'webp' else 'png'
+    suffix = 'webp' if args.format == 'webp' else ''
+    out_dir = MIKU_DIR / f'miku.{args.size}{suffix}'
     print(f'源: {SOURCE_DIR}')
-    print(f'出: {out_dir}  ({args.size}x{args.size})')
+    print(f'出: {out_dir}  ({args.size}x{args.size} {args.format.upper()})')
     print()
 
     total_before = 0
@@ -81,15 +95,15 @@ def main() -> int:
     written = 0
 
     for source in sources:
-        target = out_dir / source.name
+        target = out_dir / (source.stem + '.' + ext)
         if target.exists() and not args.force and not args.dry_run:
             size_after = target.stat().st_size
             total_before += source.stat().st_size
             total_after += size_after
-            print(f'[skip] {source.name}: 已存在 {human_mb(size_after)}（--force 可覆盖）')
+            print(f'[skip] {target.name}: 已存在 {human_mb(size_after)}（--force 可覆盖）')
             continue
 
-        before, after = downscale(source, target, args.size, args.dry_run)
+        before, after = downscale(source, target, args.size, args.format, args.quality, args.dry_run)
         total_before += before
         total_after += after
         if args.dry_run:

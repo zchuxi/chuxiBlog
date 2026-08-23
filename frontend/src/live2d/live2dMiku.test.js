@@ -311,6 +311,42 @@ test('运行时把贴图指向降采样副本，且副本文件真实存在', as
   await Promise.all(modelConfig.FileReferences.Textures.map(p => access(new URL(p, modelUrl))))
 })
 
+test('支持 WebP 的浏览器把贴图指向 WebP 副本，且副本文件真实存在', async () => {
+  const modelUrl = new URL('../../public/live2d/miku/miku.model3.json', import.meta.url)
+  const modelConfig = JSON.parse(await readFile(modelUrl, 'utf8'))
+
+  const rewritten = live2dMiku.useDownscaledTextures(structuredClone(modelConfig), { webp: true })
+  const textures = rewritten.FileReferences.Textures
+  assert.equal(textures.length, 6)
+  assert.ok(
+    textures.every(p => /^miku\.2048webp\/texture_\d+\.webp$/.test(p)),
+    'WebP 模式应指向 miku.2048webp/ 下的 .webp 文件'
+  )
+
+  // WebP 副本必须真实存在（由 downscale 脚本 --format webp 生成）
+  await Promise.all(textures.map(p => access(new URL(p, modelUrl))))
+})
+
+test('不支持 WebP 的环境回退 PNG 副本，探测函数在非浏览器环境不抛错', () => {
+  assert.equal(
+    live2dMiku.supportsWebpTextures(),
+    false,
+    '单测环境没有 document，应判定为不支持并走 PNG 回退'
+  )
+
+  const config = { FileReferences: { Textures: ['miku.4096/texture_00.png'] } }
+  assert.deepEqual(
+    live2dMiku.useDownscaledTextures(structuredClone(config), { webp: false }).FileReferences.Textures,
+    ['miku.2048/texture_00.png']
+  )
+  // 非 png 后缀的未知路径不做 WebP 改写，交由 PNG 分支原样/常规处理
+  const mixed = live2dMiku.useDownscaledTextures(
+    { FileReferences: { Textures: ['miku.4096/texture_00.webp'] } },
+    { webp: true }
+  )
+  assert.deepEqual(mixed.FileReferences.Textures, ['miku.2048/texture_00.webp'])
+})
+
 test('贴图路径改写对未知结构保持原样，避免模型换版后静默失败', () => {
   const untouched = live2dMiku.useDownscaledTextures({ FileReferences: { Textures: ['other/tex.png'] } })
   assert.deepEqual(untouched.FileReferences.Textures, ['other/tex.png'])

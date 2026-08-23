@@ -18,10 +18,13 @@ const MODEL_URL = '/live2d/miku/miku.model3.json'
 
 // 模型自带 6 张 4096 贴图（共 25.4MB），但看板娘最大只显示 270x430 CSS 像素，
 // DPR 3 下也只需 810x1290。4096 会带来三重开销：下载 25.4MB、主线程解码
-// 约 208ms/张、解码后显存 384MB。运行时改用 2048 副本（6.4MB / 96MB 显存），
-// 原始 miku.4096/ 完整保留在磁盘上不做修改。
+// 约 208ms/张、解码后显存 384MB。运行时改用降采样副本，原始 miku.4096/
+// 完整保留在磁盘上不做修改：
+//   miku.2048webp/  WebP 副本（2.0MB / 96MB 显存），浏览器支持时的首选
+//   miku.2048/      PNG 副本（6.5MB / 96MB 显存），WebP 不可用时的回退
 const TEXTURE_DIR_ORIGINAL = 'miku.4096/'
 const TEXTURE_DIR_RUNTIME = 'miku.2048/'
+const TEXTURE_DIR_RUNTIME_WEBP = 'miku.2048webp/'
 
 // 首屏稳定后自动初始化看板娘的延迟（毫秒）；测试约束 ≤ 1000
 export const LIVE2D_AUTO_START_DELAY_MS = 600
@@ -59,19 +62,41 @@ function loadCore() {
 
 /* ---------- 贴图路径改写（降采样副本） ---------- */
 
+let webpTextureSupport = null
+
 /**
- * 把 model3.json 里的贴图路径指向降采样副本。
+ * 探测运行环境能否使用 WebP（canvas 编码探测，结果缓存）。
+ * 非浏览器环境（单测）没有 document，视为不支持，走 PNG 回退。
+ */
+export function supportsWebpTextures() {
+  if (webpTextureSupport === null) {
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 1
+      webpTextureSupport = canvas.toDataURL('image/webp').startsWith('data:image/webp')
+    } catch {
+      webpTextureSupport = false
+    }
+  }
+  return webpTextureSupport
+}
+
+/**
+ * 把 model3.json 里的贴图路径指向降采样副本（webp 时指向 WebP 副本）。
  * 只改内存中的配置对象，不触碰磁盘上的 model3.json 与原始贴图。
  * 找不到预期路径时原样返回，避免模型换版后静默加载失败。
  */
-export function useDownscaledTextures(settingsJson) {
+export function useDownscaledTextures(settingsJson, { webp = false } = {}) {
   const textures = settingsJson?.FileReferences?.Textures
   if (!Array.isArray(textures)) return settingsJson
-  settingsJson.FileReferences.Textures = textures.map(path =>
-    typeof path === 'string' && path.startsWith(TEXTURE_DIR_ORIGINAL)
-      ? TEXTURE_DIR_RUNTIME + path.slice(TEXTURE_DIR_ORIGINAL.length)
-      : path
-  )
+  settingsJson.FileReferences.Textures = textures.map(path => {
+    if (typeof path !== 'string' || !path.startsWith(TEXTURE_DIR_ORIGINAL)) return path
+    const rest = path.slice(TEXTURE_DIR_ORIGINAL.length)
+    if (webp && rest.toLowerCase().endsWith('.png')) {
+      return TEXTURE_DIR_RUNTIME_WEBP + rest.slice(0, -4) + '.webp'
+    }
+    return TEXTURE_DIR_RUNTIME + rest
+  })
   return settingsJson
 }
 
@@ -368,7 +393,7 @@ export async function initLive2d(canvas) {
   if (!res.ok) throw new Error('模型配置加载失败: ' + MODEL_URL)
   const settingsJson = await res.json()
   settingsJson.url = MODEL_URL
-  useDownscaledTextures(settingsJson)
+  useDownscaledTextures(settingsJson, { webp: supportsWebpTextures() })
   settingsJson.FileReferences.Expressions = EXPRESSIONS.map(name => ({
     Name: name,
     File: encodeURIComponent(name + '.exp3.json')
