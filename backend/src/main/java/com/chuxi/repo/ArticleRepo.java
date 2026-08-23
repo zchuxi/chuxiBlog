@@ -81,6 +81,14 @@ public interface ArticleRepo extends JpaRepository<Article, Long> {
            "ORDER BY CASE WHEN a.pinned = true THEN 0 ELSE 1 END, a.updatedAt DESC NULLS LAST")
     Page<ArticleLite> findPublishedLitePage(Pageable pageable);
 
+    /**
+     * 判断文章是否存在且已发布，不加载 LONGTEXT content。
+     * 用 count 而非返回 status 值：status 为 NULL 也算已发布，
+     * 而 Optional&lt;String&gt; 无法区分「行不存在」与「行存在但 status 为 NULL」。
+     */
+    @Query("SELECT COUNT(a) FROM Article a WHERE a.id = :id AND (a.status IS NULL OR a.status <> '草稿')")
+    long countPublishedById(@Param("id") Long id);
+
     @Query("SELECT a.id AS id, a.title AS title, a.summary AS summary, a.coverUrl AS coverUrl, " +
            "a.categoryId AS categoryId, a.categoryName AS categoryName, a.archiveCategory AS archiveCategory, " +
            "a.tags AS tags, a.pinned AS pinned, a.createdAt AS createdAt, a.updatedAt AS updatedAt " +

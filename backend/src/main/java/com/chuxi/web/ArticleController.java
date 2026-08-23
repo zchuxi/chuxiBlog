@@ -125,10 +125,7 @@ public class ArticleController {
     public R<Comment> addComment(@PathVariable Long id,
                                  @Valid @RequestBody CommentRequest req,
                                  HttpServletRequest request) {
-        boolean published = articleRepo.findById(id)
-                .map(article -> !"草稿".equals(article.getStatus()))
-                .orElse(false);
-        if (!published) {
+        if (articleRepo.countPublishedById(id) == 0) {
             return R.fail("文章不存在");
         }
         String ip = clientIpResolver.resolve(request);
