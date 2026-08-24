@@ -73,6 +73,18 @@ test('需要阅读的辅助文字不使用低对比度的 text-faint', async () 
   assert.doesNotMatch(extractBlock(css, css.lastIndexOf('.admin-pager-info {')), /opacity/)
 })
 
+test('引用的 --adm-* 令牌都有定义，不留悬空引用', async () => {
+  const css = await read('../../assets/css/admin.css')
+  // var() 引用未定义令牌且无 fallback 时，整条声明在计算值阶段失效、静默退回初始值。
+  // 删令牌时漏改引用就会这样：批次三删 --adm-input-bg 后 CxInput 后台皮肤丢了底色。
+  const defined = new Set(Array.from(css.matchAll(/(--adm-[a-z0-9-]+)\s*:/g), m => m[1]))
+  const dangling = new Set()
+  for (const [, token, next] of css.matchAll(/var\(\s*(--adm-[a-z0-9-]+)\s*([,)])/g)) {
+    if (next === ')' && !defined.has(token)) dangling.add(token)
+  }
+  assert.deepEqual([...dangling], [], '这些令牌被引用但没有定义，声明会静默失效')
+})
+
 test('小屏编辑弹窗使用全屏安全尺寸', async () => {
   const css = await read('../../assets/css/admin.css')
   const mediaBlocks = Array.from(css.matchAll(/@media\s*\(max-width:\s*900px\)/g), match =>

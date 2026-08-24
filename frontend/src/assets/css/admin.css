@@ -2169,6 +2169,117 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   }
 }
 
+/* ============================================================
+   共享 cx 组件的后台皮肤
+   CxInput / CxCheckbox 与前台共用同一组件与结构，仅在此改皮肤：
+   后台表单字段密集、常处于表格与弹窗内，前台的拟物内阴影和
+   focus-within 上浮 1px 会让整列输入框随焦点抖动，故走扁平分支。
+   ============================================================ */
+
+/* ---------- CxInput（variant="admin"） ---------- */
+
+/* 外壳退化为纯边框容器：撤掉前台的固定高度、内阴影与上浮 */
+.cx-input--admin {
+  height: auto;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  background-color: var(--input-bg);
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cx-input--admin:focus-within {
+  border-color: var(--adm-accent);
+  background-color: var(--input-bg);
+  box-shadow: var(--adm-focus-ring);
+  transform: none;
+}
+
+.cx-input--admin.is-disabled {
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* 内层控件承担 padding：前台 .cx-input__inner 的 height:100% 依赖外壳固定高度，
+   后台外壳高度由内容决定，必须改回 auto，否则 textarea 的 rows 失效 */
+.cx-input--admin .cx-input__inner {
+  height: auto;
+  padding: 9px 13px;
+  color: var(--adm-text);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  background: transparent;
+}
+
+.cx-input--admin .cx-input__inner::placeholder {
+  color: var(--adm-text-dim);
+  opacity: 1;
+}
+
+/* 焦点环画在外壳上，内层再画一次会成双环 */
+.admin-root .cx-input--admin .cx-input__inner:focus,
+.admin-root .cx-input--admin .cx-input__inner:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* textarea 分支：撤掉前台的渐变拟物底与大圆角 */
+.cx-input--admin.is-textarea {
+  min-height: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: var(--input-bg);
+  box-shadow: none;
+}
+
+.cx-input--admin.is-textarea:focus-within {
+  background: var(--input-bg);
+  box-shadow: var(--adm-focus-ring);
+}
+
+.cx-input--admin .cx-input__textarea {
+  min-height: 72px;
+  padding: 9px 13px;
+  border-radius: 12px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+/* 长文编辑（正文 markdown 等）：撑到半屏高 */
+.cx-input--admin.is-md .cx-input__textarea {
+  min-height: 50vh;
+  line-height: 1.7;
+}
+
+/* 数字输入：原生步进箭头是系统白底控件、无法换肤，统一隐藏；
+   仍可直接键入或用 ↑/↓ 方向键增减 */
+.cx-input--admin .cx-input__inner[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.cx-input--admin .cx-input__inner[type='number']::-webkit-outer-spin-button,
+.cx-input--admin .cx-input__inner[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 校验失败：错误色边框，焦点态仍保留焦点环 */
+.cx-input--admin:has(.cx-input__inner[aria-invalid='true']) {
+  border-color: var(--adm-danger);
+}
+
+/* ---------- CxCheckbox（后台令牌） ---------- */
+
+/* 组件本身不感知端，主题色经局部变量间接层改指 --adm-* */
+.admin-root .cx-checkbox {
+  --cx-check-accent: var(--adm-accent);
+  --cx-check-accent-strong: var(--adm-accent-strong);
+  --cx-check-soft: var(--adm-accent-soft);
+  --cx-check-ring: var(--adm-focus-ring);
+}
+
 /* 统一键盘焦点：放在所有交互态规则之后，确保 hover 与 focus-visible 同时存在时仍显示焦点环。 */
 .admin-root :is(button, a, input, textarea, select, [tabindex]):focus-visible {
   outline: none;
