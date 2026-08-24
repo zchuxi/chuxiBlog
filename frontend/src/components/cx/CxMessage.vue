@@ -91,7 +91,12 @@ html.dark .cx-message-error {
   transition: all 0.3s ease;
 }
 .cx-message-slide-leave-active {
+  position: absolute;
   transition: all 0.2s ease;
+}
+
+.cx-message-slide-move {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .cx-message-slide-enter-from {
   opacity: 0;

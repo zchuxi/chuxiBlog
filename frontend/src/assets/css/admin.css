@@ -19,8 +19,6 @@
   --adm-accent-strong: #33639a;
   --adm-accent-ink: #3f77b5;
   --adm-accent-soft: rgba(63, 119, 181, 0.12);
-  --adm-input-bg: #ffffff;
-  --adm-input-border: rgba(63, 119, 181, 0.3);
   --adm-danger: #c0564f;
   --adm-danger-soft: rgba(192, 86, 79, 0.12);
   --adm-error-bg: rgba(192, 86, 79, 0.1);
@@ -46,8 +44,6 @@ html.dark {
   --adm-accent-strong: #4d86c4;
   --adm-accent-ink: #8db8e8;
   --adm-accent-soft: rgba(95, 149, 207, 0.16);
-  --adm-input-bg: #121926;
-  --adm-input-border: rgba(255, 255, 255, 0.13);
   --adm-danger: #d98d8d;
   --adm-danger-soft: rgba(217, 141, 141, 0.14);
   --adm-error-bg: rgba(217, 141, 141, 0.12);
@@ -82,7 +78,7 @@ html.dark {
   border: none;
   background: none;
   padding: 3px 8px;
-  color: var(--adm-accent-ink);
+  color: var(--accent-strong);
   font-family: inherit;
   font-size: 14px;
   cursor: pointer;
@@ -122,19 +118,19 @@ html.dark {
 .admin-input {
   width: 100%;
   padding: 9px 13px;
-  border: 1px solid var(--adm-input-border);
+  border: 1px solid var(--input-border);
   border-radius: 12px;
-  background-color: var(--adm-input-bg);
+  background-color: var(--input-bg);
   color: var(--adm-text);
   font-family: inherit;
   font-size: 15px;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, background-color 0.24s ease;
 }
 
 .admin-input:focus {
-  border-color: var(--adm-accent);
+  border-color: var(--accent-solid);
   box-shadow: var(--adm-focus-ring);
 }
 
@@ -162,8 +158,8 @@ html.dark {
 .admin-input[type='date'],
 .admin-input[type='datetime-local'] {
   color-scheme: light;
-  background-color: var(--adm-input-bg);
-  border: 1px solid var(--adm-input-border);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 12px;
   padding: 9px 36px 9px 13px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
@@ -368,12 +364,6 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   min-width: 0;
 }
 
-.admin-img-pick {
-  flex-shrink: 0;
-  white-space: nowrap;
-  padding: 8px 14px;
-}
-
 /* ---------- 登录页 ---------- */
 
 .admin-login-wrap {
@@ -505,9 +495,9 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   height: 36px;
   margin: 12px 12px 0;
   padding: 0 11px;
-  border: 1px solid var(--adm-input-border);
+  border: 1px solid var(--input-border);
   border-radius: 10px;
-  background: var(--adm-input-bg);
+  background: var(--input-bg);
   /* 这里的 color 是搜索图标（svg 取 currentColor）；图标传达控件用途，
      按 WCAG 1.4.11 需 3:1，faint 只有 2.6:1，故用 dim */
   color: var(--adm-text-dim);
@@ -717,9 +707,9 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   align-items: center;
   width: min(280px, 34vw);
   min-width: 190px;
-  border: 1px solid var(--adm-input-border);
+  border: 1px solid var(--input-border);
   border-radius: 12px;
-  background-color: var(--adm-input-bg);
+  background-color: var(--input-bg);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -917,16 +907,24 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 /* 徽章原先 14.5px，比表格正文 14px 还大，"是/否"这类附属信息抢了主内容的视觉重量 */
 .admin-badge {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
+  padding: 4px 12px;
+  border-radius: 12px;
   font-size: 13px;
-  background-color: var(--adm-accent-soft);
-  color: var(--adm-accent-ink);
+  border: 1px solid #cadbee;
+  background: linear-gradient(135deg, #eef5fd, #e0ecf9);
+  color: #264968;
 }
 
 .admin-badge.off {
-  background-color: var(--adm-border-soft);
-  color: var(--adm-text-dim);
+  border-color: rgba(141, 154, 173, 0.2);
+  background: linear-gradient(135deg, rgba(84, 95, 110, 0.24), rgba(60, 69, 82, 0.34));
+  color: #e4ebf5;
+}
+
+html.dark .admin-badge {
+  border-color: rgba(126, 160, 198, 0.28);
+  background: linear-gradient(135deg, rgba(73, 104, 140, 0.22), rgba(52, 76, 104, 0.32));
+  color: #deebf8;
 }
 
 .admin-col-ops {
@@ -1337,7 +1335,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 
 .crop-ratio-btn {
   padding: 5px 12px;
-  border: 1px solid var(--adm-input-border);
+  border: 1px solid var(--input-border);
   border-radius: 999px;
   background-color: transparent;
   color: var(--adm-accent-ink);
@@ -1517,10 +1515,6 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   /* image 字段：输入框 + 图库按钮允许换行 */
   .admin-img-row {
     flex-wrap: wrap;
-  }
-
-  .admin-img-pick {
-    padding: 9px 14px;
   }
 
   /* 图片库 / 图库选择弹窗网格：3 列 */
@@ -2036,9 +2030,9 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   width: 18px;
   height: 18px;
   margin: 0;
-  border: 1.5px solid var(--adm-input-border);
+  border: 1.5px solid var(--input-border);
   border-radius: 6px;
-  background: var(--adm-input-bg);
+  background: var(--input-bg);
   cursor: pointer;
   vertical-align: middle;
   position: relative;

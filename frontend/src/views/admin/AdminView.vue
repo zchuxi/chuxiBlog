@@ -233,7 +233,7 @@ onMounted(async () => {
 
 // toast 复用 App.vue 挂载的全局 CxMessage 单例（与前台同款提示）
 function toast(text, type = 'success') {
-  ;(type === 'error' ? toastError : toastSuccess)(text)
+  (type === 'error' ? toastError : toastSuccess)(text)
 }
 
 async function onLogin() {
