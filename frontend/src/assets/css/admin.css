@@ -95,7 +95,17 @@ html.dark {
   box-shadow: var(--adm-focus-ring);
 }
 
+/* 暗色下全局 --accent-strong(#587699) 对比度约 3.4:1 低于 AA，回退到 --adm-accent-ink(约 7.7:1) */
+html.dark .admin-link {
+  color: var(--adm-accent-ink);
+}
+
 .admin-link.danger {
+  color: var(--adm-danger);
+}
+
+/* 上面暗色回退的特异性(0,2,1)高于 .admin-link.danger(0,2,0)，danger 需同级暗色规则保住红色 */
+html.dark .admin-link.danger {
   color: var(--adm-danger);
 }
 
@@ -162,7 +172,7 @@ html.dark {
   border: 1px solid var(--input-border);
   border-radius: 12px;
   padding: 9px 36px 9px 13px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, background-color 0.24s ease;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
@@ -175,7 +185,7 @@ html.dark .admin-input[type='datetime-local'] {
 /* 聚焦：主题色边框 + 光晕，与其他 admin-input:focus 一致 */
 .admin-input[type='date']:focus,
 .admin-input[type='datetime-local']:focus {
-  border-color: var(--adm-accent);
+  border-color: var(--accent-solid);
   box-shadow: var(--adm-focus-ring);
 }
 
@@ -501,11 +511,11 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   /* 这里的 color 是搜索图标（svg 取 currentColor）；图标传达控件用途，
      按 WCAG 1.4.11 需 3:1，faint 只有 2.6:1，故用 dim */
   color: var(--adm-text-dim);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
 }
 
 .admin-nav-search:focus-within {
-  border-color: var(--adm-accent);
+  border-color: var(--accent-solid);
   box-shadow: var(--adm-focus-ring);
   color: var(--adm-accent-ink);
 }
@@ -710,11 +720,11 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   border: 1px solid var(--input-border);
   border-radius: 12px;
   background-color: var(--input-bg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
 }
 
 .admin-list-search:focus-within {
-  border-color: var(--adm-accent);
+  border-color: var(--accent-solid);
   box-shadow: var(--adm-focus-ring);
 }
 
@@ -915,16 +925,24 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   color: #264968;
 }
 
+/* off 徽章基础态用亮色 neutral 值：原先误用暗色值，白卡上文字对比度不足 */
 .admin-badge.off {
-  border-color: rgba(141, 154, 173, 0.2);
-  background: linear-gradient(135deg, rgba(84, 95, 110, 0.24), rgba(60, 69, 82, 0.34));
-  color: #e4ebf5;
+  border-color: #d3dbe6;
+  background: linear-gradient(135deg, #f5f7fa, #e9eef5);
+  color: #42586f;
 }
 
 html.dark .admin-badge {
   border-color: rgba(126, 160, 198, 0.28);
   background: linear-gradient(135deg, rgba(73, 104, 140, 0.22), rgba(52, 76, 104, 0.32));
   color: #deebf8;
+}
+
+/* 不补这条的话 html.dark .admin-badge 会盖掉 off 的灰态区分 */
+html.dark .admin-badge.off {
+  border-color: rgba(141, 154, 173, 0.2);
+  background: linear-gradient(135deg, rgba(84, 95, 110, 0.24), rgba(60, 69, 82, 0.34));
+  color: #e4ebf5;
 }
 
 .admin-col-ops {
