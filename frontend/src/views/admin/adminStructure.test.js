@@ -34,12 +34,14 @@ test('后台具体控件不会覆盖统一键盘焦点，并收敛通用辅助�
   assert.match(css, /\.admin-login-sub\s*\{[^}]*font-size:\s*15px/)
 })
 
-test('统一键盘焦点规则以足够优先级覆盖按钮 hover 阴影', async () => {
+test('统一键盘焦点规则存在，且自建按钮样式已迁移到 cx-button', async () => {
   const css = await read('../../assets/css/admin.css')
   const selector = '.admin-root :is(button, a, input, textarea, select, [tabindex]):focus-visible'
   const focusIndex = css.lastIndexOf(selector)
-  assert.ok(focusIndex > css.lastIndexOf('.admin-btn:hover:not(:disabled)'))
-  assert.ok(focusIndex > css.lastIndexOf('.admin-btn-ghost:hover:not(:disabled)'))
+  assert.ok(focusIndex > 0)
+  // admin-btn/admin-switch 样式已由 CxButton/CxSwitch 取代，不允许回潮
+  assert.ok(!css.includes('.admin-btn'))
+  assert.ok(!css.includes('.admin-switch'))
   assert.match(extractBlock(css, focusIndex), /box-shadow:\s*var\(--adm-focus-ring\)/)
 })
 
@@ -182,7 +184,8 @@ test('字段组件和通用弹窗渲染说明、必填、错误及分组', async
   assert.match(field, /aria-invalid/)
   assert.match(field, /aria-describedby/)
   assert.match(field, /useId\(\)/)
-  assert.match(field, /aria-pressed/)
+  assert.match(field, /<CxSwitch[\s\S]*?:model-value="!!modelValue"/)
+  assert.match(field, /<CxSwitch[\s\S]*?@update:model-value="v => emit\('update:modelValue', v\)"/)
   assert.match(panel, /groupFields/)
   assert.match(panel, /fieldGroups/)
   assert.match(panel, /admin-form-section/)
@@ -235,7 +238,7 @@ test('字段调用端向自绘控件与布尔开关传递名称和必填语义',
   assert.match(select, /:name="field\.name"/)
   assert.match(select, /:aria-required="field\.required \? 'true' : undefined"/)
 
-  const booleanSwitch = field.match(/<!-- 布尔开关 -->[\s\S]*?<button[\s\S]*?>/)?.[0] || ''
+  const booleanSwitch = field.match(/<!-- 布尔开关 -->[\s\S]*?<CxSwitch[\s\S]*?\/>/)?.[0] || ''
   assert.match(booleanSwitch, /:aria-required="field\.required \? 'true' : undefined"/)
 })
 

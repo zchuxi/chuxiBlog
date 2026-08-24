@@ -9,10 +9,10 @@
         :placeholder="placeholder"
         @input="onInput"
       />
-      <button
+      <CxButton
         ref="triggerRef"
-        type="button"
-        class="admin-btn admin-btn-ghost adm-img-select-btn"
+        plain
+        class="adm-img-select-btn"
         :disabled="loading"
         :title="loading ? '加载中…' : '从图库选择'"
         @click="toggle"
@@ -23,11 +23,11 @@
         <svg v-else viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
           <path d="M2 4.5h12M2 8h12M2 11.5h12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
         </svg>
-      </button>
-      <button
+      </CxButton>
+      <CxButton
         v-if="canCrop"
-        type="button"
-        class="admin-btn admin-btn-ghost adm-img-select-btn"
+        plain
+        class="adm-img-select-btn"
         :disabled="fetching"
         :title="fetching ? '取回中…' : (ratio ? '按展示比例裁切' : '裁切')"
         @click="openCrop"
@@ -35,7 +35,7 @@
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
           <path d="M5 1.5v8.5a1 1 0 0 0 1 1H15M1.5 5H10a1 1 0 0 1 1 1v8.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-      </button>
+      </CxButton>
     </div>
 
     <CropDialog
@@ -75,6 +75,7 @@
 import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { mediaApi } from '../../api/admin'
 import CropDialog from './CropDialog.vue'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -150,7 +151,8 @@ async function loadImages() {
 }
 
 function place() {
-  const el = triggerRef.value
+  // ref 挂在 CxButton 组件上，取 $el 才是根 button 元素
+  const el = triggerRef.value?.$el || triggerRef.value
   if (!el) return
   const rect = el.getBoundingClientRect()
   const panelMax = 240
@@ -186,7 +188,7 @@ function pick(img) {
 
 function onPointerDown(e) {
   if (!open.value) return
-  const root = triggerRef.value?.closest('.adm-img-select')
+  const root = (triggerRef.value?.$el || triggerRef.value)?.closest('.adm-img-select')
   if (root?.contains(e.target) || panelRef.value?.contains(e.target)) return
   close()
 }

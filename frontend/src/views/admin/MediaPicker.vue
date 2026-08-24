@@ -5,9 +5,9 @@
         <header class="media-picker-head">
           <h3>从图库选择</h3>
           <div class="media-picker-actions">
-            <button class="admin-btn admin-btn-ghost" type="button" :disabled="uploading" @click="fileEl && fileEl.click()">
+            <CxButton plain :disabled="uploading" @click="fileEl && fileEl.click()">
               {{ uploading ? '上传中…' : '上传' }}
-            </button>
+            </CxButton>
             <input ref="fileEl" type="file" accept="image/*" style="display: none" @change="onUpload" />
             <button class="admin-drawer-close" type="button" @click="close">×</button>
           </div>
@@ -37,6 +37,7 @@
 <script setup>
 import { inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mediaApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false }

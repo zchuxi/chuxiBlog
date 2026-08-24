@@ -18,9 +18,9 @@
         </div>
         <p v-if="loginError" class="admin-login-error">{{ loginError }}</p>
 
-        <button class="admin-btn admin-btn-block" type="submit" :disabled="loggingIn">
+        <CxButton class="admin-block" native-type="submit" :disabled="loggingIn">
           {{ loggingIn ? '登录中…' : '登录' }}
-        </button>
+        </CxButton>
       </form>
     </div>
 
@@ -145,6 +145,7 @@ import resourceSchemas from './resourceSchemas'
 import { filterMenuGroups } from './adminUi'
 import { menuGroups } from './adminMenu'
 import SvgIcon from '../../components/SvgIcon.vue'
+import CxButton from '../../components/cx/CxButton.vue'
 import ResourcePanel from './ResourcePanel.vue'
 import MediaPanel from './MediaPanel.vue'
 import BackgroundPanel from './BackgroundPanel.vue'

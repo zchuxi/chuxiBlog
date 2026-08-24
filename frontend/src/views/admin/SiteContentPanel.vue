@@ -6,9 +6,9 @@
         <h2 class="scp-head-title">{{ meta.title }}</h2>
         <p class="scp-head-sub">{{ meta.desc }}</p>
       </div>
-      <button class="admin-btn" type="button" :disabled="saving || loading" @click="save">
+      <CxButton :disabled="saving || loading" @click="save">
         {{ saving ? '保存中…' : '保存' }}
-      </button>
+      </CxButton>
     </header>
 
     <div v-if="loading" class="scp-card admin-state">加载中…</div>
@@ -106,6 +106,7 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import { siteContentApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
+import CxButton from '../../components/cx/CxButton.vue'
 import AdminSelect from './AdminSelect.vue'
 import FieldInput from './FieldInput.vue'
 

@@ -25,8 +25,8 @@
             @click="searchQuery = ''"
           >×</button>
         </div>
-        <button class="admin-btn admin-btn-ghost" :disabled="loading" @click="load">刷新</button>
-        <button class="admin-btn" @click="openCreate">新建</button>
+        <CxButton plain :disabled="loading" @click="load">刷新</CxButton>
+        <CxButton @click="openCreate">新建</CxButton>
       </div>
     </header>
 
@@ -53,18 +53,18 @@
             :disabled="batching"
             @change="v => applyBatch(field, v)"
           />
-          <button
+          <CxButton
             v-else
-            class="admin-btn admin-btn-ghost"
+            plain
             :disabled="batching"
             @click="promptBatch(field)"
           >
             批量改{{ shortLabel(field) }}
-          </button>
+          </CxButton>
         </template>
-        <button class="admin-btn admin-btn-danger" :disabled="batching" @click="batchRemove">
+        <CxButton type="danger" :disabled="batching" @click="batchRemove">
           {{ batching ? '处理中…' : '批量删除' }}
-        </button>
+        </CxButton>
         <button class="admin-link" :disabled="batching" @click="clearSelection">取消选择</button>
       </div>
     </transition>
@@ -75,7 +75,7 @@
       <div v-else-if="loadError" class="admin-state admin-state-error" role="alert">
         <strong>列表加载失败</strong>
         <span>{{ loadError }}</span>
-        <button type="button" class="admin-btn admin-btn-ghost" @click="load">重新加载</button>
+        <CxButton plain @click="load">重新加载</CxButton>
       </div>
       <div v-else-if="rows.length === 0" class="admin-state">暂无数据，点击右上角「新建」添加一条吧</div>
       <div v-else-if="filteredRows.length === 0" class="admin-state">
@@ -235,15 +235,14 @@
             {{ saveError || (isDirty ? '有尚未保存的修改' : '当前内容已同步') }}
           </p>
           <div class="admin-modal-actions">
-            <button
-              type="button"
-              class="admin-btn admin-btn-ghost"
+            <CxButton
+              plain
               :disabled="saving"
               @click="closeDrawer"
-            >取消</button>
-            <button type="button" class="admin-btn" :disabled="saving || !isDirty" @click="onSave">
+            >取消</CxButton>
+            <CxButton :disabled="saving || !isDirty" @click="onSave">
               {{ saving ? '保存中…' : '保存 Ctrl+S' }}
-            </button>
+            </CxButton>
           </div>
         </footer>
       </aside>
@@ -254,6 +253,7 @@
 <script setup>
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import FieldInput from './FieldInput.vue'
 import AdminSelect from './AdminSelect.vue'
 import { createFormSnapshot, filterResourceRows, groupFields, isFormDirty, sortResourceRows } from './adminUi'

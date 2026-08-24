@@ -6,9 +6,9 @@
         <p class="scp-head-sub">管理各页面顶部文案、提示语和搜索框文字。每个 Tab 对应一个页面的可配置项，保存后立即生效。</p>
       </div>
       <div class="admin-toolbar-actions">
-        <button class="admin-btn admin-btn-ghost" :disabled="savingAny" @click="saveAll">
+        <CxButton plain :disabled="savingAny" @click="saveAll">
           {{ savingAny ? '保存中…' : '全部保存' }}
-        </button>
+        </CxButton>
       </div>
     </header>
 
@@ -33,9 +33,9 @@
       <div v-show="activeTab === 'timeline-hero'" class="scp-card">
         <div class="pcp-section-head">
           <h3>时间线页顶部文案</h3>
-          <button class="admin-btn" :disabled="saving['timeline-hero']" @click="saveKey('timeline-hero')">
+          <CxButton :disabled="saving['timeline-hero']" @click="saveKey('timeline-hero')">
             {{ saving['timeline-hero'] ? '保存中…' : '保存' }}
-          </button>
+          </CxButton>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">眉标（标题上方小字）</label>
@@ -55,9 +55,9 @@
       <div v-show="activeTab === 'treehole-config'" class="scp-card">
         <div class="pcp-section-head">
           <h3>树洞页配置</h3>
-          <button class="admin-btn" :disabled="saving['treehole-config']" @click="saveKey('treehole-config')">
+          <CxButton :disabled="saving['treehole-config']" @click="saveKey('treehole-config')">
             {{ saving['treehole-config'] ? '保存中…' : '保存' }}
-          </button>
+          </CxButton>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">输入框占位文字</label>
@@ -77,9 +77,9 @@
       <div v-show="activeTab === 'parallax-config'" class="scp-card">
         <div class="pcp-section-head">
           <h3>视差页配置</h3>
-          <button class="admin-btn" :disabled="saving['parallax-config']" @click="saveKey('parallax-config')">
+          <CxButton :disabled="saving['parallax-config']" @click="saveKey('parallax-config')">
             {{ saving['parallax-config'] ? '保存中…' : '保存' }}
-          </button>
+          </CxButton>
         </div>
         <p class="admin-field-tip">开场屏和告别屏的文案与背景图，背景图路径从站点根目录开始（如 /image/bg/Landscape/01.webp）</p>
         <div class="pcp-group-label">开场屏</div>
@@ -114,9 +114,9 @@
       <div v-show="activeTab === 'bangumi-hero'" class="scp-card">
         <div class="pcp-section-head">
           <h3>番剧页顶部文案</h3>
-          <button class="admin-btn" :disabled="saving['bangumi-hero']" @click="saveKey('bangumi-hero')">
+          <CxButton :disabled="saving['bangumi-hero']" @click="saveKey('bangumi-hero')">
             {{ saving['bangumi-hero'] ? '保存中…' : '保存' }}
-          </button>
+          </CxButton>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
@@ -136,9 +136,9 @@
       <div v-show="activeTab === 'calendar-hero'" class="scp-card">
         <div class="pcp-section-head">
           <h3>日历页顶部文案</h3>
-          <button class="admin-btn" :disabled="saving['calendar-hero']" @click="saveKey('calendar-hero')">
+          <CxButton :disabled="saving['calendar-hero']" @click="saveKey('calendar-hero')">
             {{ saving['calendar-hero'] ? '保存中…' : '保存' }}
-          </button>
+          </CxButton>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
@@ -154,9 +154,9 @@
       <div v-show="activeTab === 'tool-hero'" class="scp-card">
         <div class="pcp-section-head">
           <h3>工具页顶部文案</h3>
-          <button class="admin-btn" :disabled="saving['tool-hero']" @click="saveKey('tool-hero')">
+          <CxButton :disabled="saving['tool-hero']" @click="saveKey('tool-hero')">
             {{ saving['tool-hero'] ? '保存中…' : '保存' }}
-          </button>
+          </CxButton>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
@@ -178,6 +178,7 @@
 <script setup>
 import { inject, onMounted, reactive, ref } from 'vue'
 import { siteContentApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const TABS = [
   { key: 'timeline-hero', label: '时间线' },

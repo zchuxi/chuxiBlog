@@ -5,15 +5,15 @@
         <h2 class="scp-head-title">AI 配置</h2>
         <p class="scp-head-sub">配置站内 AI 的运行参数。保存后前台下一次对话立即使用新配置。</p>
       </div>
-      <button class="admin-btn" type="button" :disabled="saving || loading" @click="save">
+      <CxButton :disabled="saving || loading" @click="save">
         {{ saving ? '保存中…' : '保存' }}
-      </button>
+      </CxButton>
     </header>
 
     <div v-if="loading" class="scp-card admin-state">加载中…</div>
     <div v-else-if="loadError" class="scp-card admin-state-error">
       <p>{{ loadError }}</p>
-      <button class="admin-btn admin-btn-ghost" type="button" @click="load">重试</button>
+      <CxButton plain @click="load">重试</CxButton>
     </div>
 
     <template v-else>
@@ -24,17 +24,7 @@
             <strong>启用站内 AI</strong>
             <p class="admin-field-tip">关闭时仍可使用站内文章检索降级，不会调用外部模型。</p>
           </div>
-          <button
-            type="button"
-            class="admin-switch"
-            :class="{ on: form.enabled }"
-            role="switch"
-            :aria-checked="form.enabled"
-            aria-label="启用站内 AI"
-            @click="form.enabled = !form.enabled"
-          >
-            <span class="admin-switch-dot"></span>
-          </button>
+          <CxSwitch v-model="form.enabled" aria-label="启用站内 AI" />
         </div>
         <div class="ai-config-key-status" :class="{ configured: form.apiKeyConfigured }" role="status">
           <span class="ai-config-key-dot" aria-hidden="true"></span>
@@ -78,6 +68,8 @@
 <script setup>
 import { inject, onMounted, ref } from 'vue'
 import { adminApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
+import CxSwitch from '../../components/cx/CxSwitch.vue'
 
 const toast = inject('adminToast', () => {})
 const onUnauthorized = inject('adminUnauthorized', () => {})

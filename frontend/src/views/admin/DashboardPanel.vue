@@ -3,7 +3,7 @@
     <div v-if="loading" class="admin-state">加载概览中…</div>
     <div v-else-if="error" class="admin-state">
       {{ error }}
-      <p><button class="admin-btn admin-btn-ghost" @click="load">重试</button></p>
+      <p><CxButton plain @click="load">重试</CxButton></p>
     </div>
     <template v-else>
       <!-- 统计卡网格 -->
@@ -62,6 +62,7 @@
 import { computed, inject, onMounted, ref } from 'vue'
 import { overview } from '../../api/admin'
 import SvgIcon from '../../components/SvgIcon.vue'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const emit = defineEmits(['go'])
 

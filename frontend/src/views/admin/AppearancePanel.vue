@@ -5,9 +5,9 @@
         <h2 class="scp-head-title">外观设置</h2>
         <p class="scp-head-sub">管理主题色、默认主题与页面特效开关。保存后前台即时生效。</p>
       </div>
-      <button class="admin-btn" type="button" :disabled="saving || loading" @click="save">
+      <CxButton :disabled="saving || loading" @click="save">
         {{ saving ? '保存中…' : '保存' }}
-      </button>
+      </CxButton>
     </header>
 
     <div v-if="loading" class="scp-card admin-state">加载中…</div>
@@ -63,6 +63,7 @@
 <script setup>
 import { inject, onMounted, ref } from 'vue'
 import { siteContentApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import AdminSelect from './AdminSelect.vue'
 import { THEME_OPTIONS } from './constants'
 

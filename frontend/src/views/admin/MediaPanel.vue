@@ -7,10 +7,10 @@
         <p class="media-tip">上传图片并复制链接，可在各资源的图片字段中复用</p>
       </div>
       <div class="admin-toolbar-actions">
-        <button class="admin-btn admin-btn-ghost" :disabled="loading" @click="load">刷新</button>
-        <button class="admin-btn" :disabled="uploading" @click="fileEl && fileEl.click()">
+        <CxButton plain :disabled="loading" @click="load">刷新</CxButton>
+        <CxButton :disabled="uploading" @click="fileEl && fileEl.click()">
           {{ uploading ? '上传中…' : '上传图片' }}
-        </button>
+        </CxButton>
         <input ref="fileEl" type="file" accept="image/*" multiple style="display: none" @change="onUpload" />
       </div>
     </header>
@@ -51,6 +51,7 @@
 <script setup>
 import { inject, onMounted, ref } from 'vue'
 import { mediaApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import CropDialog from './CropDialog.vue'
 
 const toast = inject('adminToast', () => {})

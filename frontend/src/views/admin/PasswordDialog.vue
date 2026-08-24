@@ -21,8 +21,8 @@
         </div>
         <p v-if="error" class="pwd-error">{{ error }}</p>
         <footer class="pwd-foot">
-          <button class="admin-btn admin-btn-ghost" type="button" @click="$emit('close')">取消</button>
-          <button class="admin-btn" type="submit" :disabled="saving">{{ saving ? '保存中…' : '确认修改' }}</button>
+          <CxButton plain @click="$emit('close')">取消</CxButton>
+          <CxButton native-type="submit" :disabled="saving">{{ saving ? '保存中…' : '确认修改' }}</CxButton>
         </footer>
       </form>
     </div>
@@ -32,6 +32,7 @@
 <script setup>
 import { inject, reactive, ref } from 'vue'
 import { changePassword } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const emit = defineEmits(['close'])
 

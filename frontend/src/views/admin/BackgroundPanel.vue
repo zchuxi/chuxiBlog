@@ -8,10 +8,10 @@
         </p>
       </div>
       <div class="admin-toolbar-actions">
-        <button class="admin-btn admin-btn-ghost" :disabled="loading" @click="load">刷新</button>
-        <button class="admin-btn" :disabled="saving" @click="save">
+        <CxButton plain :disabled="loading" @click="load">刷新</CxButton>
+        <CxButton :disabled="saving" @click="save">
           {{ saving ? '保存中…' : '保存' }}
-        </button>
+        </CxButton>
       </div>
     </header>
 
@@ -53,17 +53,17 @@
             placeholder="粘贴图片 URL 后点添加，或直接上传 / 从图库选择"
             @keyup.enter="addDraft(group.key)"
           />
-          <button class="admin-btn admin-btn-ghost" @click="addDraft(group.key)">添加</button>
-          <button class="admin-btn admin-btn-ghost" :disabled="uploadingKey === group.key" @click="triggerUpload(group.key)">
+          <CxButton plain @click="addDraft(group.key)">添加</CxButton>
+          <CxButton plain :disabled="uploadingKey === group.key" @click="triggerUpload(group.key)">
             {{ uploadingKey === group.key ? '上传中…' : '上传图片' }}
-          </button>
-          <button class="admin-btn admin-btn-ghost" @click="pickerKey = group.key">从图库选择</button>
+          </CxButton>
+          <CxButton plain @click="pickerKey = group.key">从图库选择</CxButton>
         </div>
       </div>
 
       <p class="admin-field-tip">
         提示：两个列表都清空并保存时，前台会使用项目内置的默认背景；「恢复默认」可一键回填内置图。
-        <button class="admin-btn admin-btn-ghost bgl-reset-btn" @click="resetDefaults">恢复默认</button>
+        <CxButton plain class="bgl-reset-btn" @click="resetDefaults">恢复默认</CxButton>
       </p>
     </template>
 
@@ -83,6 +83,7 @@
 <script setup>
 import { inject, reactive, ref, onMounted } from 'vue'
 import { siteContentApi, mediaApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import { DEFAULT_LANDSCAPE, DEFAULT_VERTICAL } from '../../stores/settings'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'

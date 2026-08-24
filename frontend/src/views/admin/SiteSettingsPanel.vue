@@ -5,9 +5,9 @@
         <h2 class="scp-head-title">站点设置</h2>
         <p class="scp-head-sub">管理站名、副标题、SEO、社交链接与页脚信息。保存后前台即时生效。</p>
       </div>
-      <button class="admin-btn" type="button" :disabled="saving || loading" @click="save">
+      <CxButton :disabled="saving || loading" @click="save">
         {{ saving ? '保存中…' : '保存' }}
-      </button>
+      </CxButton>
     </header>
 
     <div v-if="loading" class="scp-card admin-state">加载中…</div>
@@ -91,6 +91,7 @@
 <script setup>
 import { inject, onMounted, ref } from 'vue'
 import { siteContentApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import ImageSelect from './ImageSelect.vue'
 
 const CONTENT_KEY = 'site-settings'

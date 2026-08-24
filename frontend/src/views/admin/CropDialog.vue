@@ -44,10 +44,10 @@
             {{ r.label }}
           </button>
           <span class="crop-format">输出：{{ outExt }} · {{ outPixelText }}</span>
-          <button class="admin-btn admin-btn-ghost" type="button" @click="emit('close')">取消</button>
-          <button class="admin-btn" type="button" :disabled="!ready || saving" @click="save">
+          <CxButton plain @click="emit('close')">取消</CxButton>
+          <CxButton :disabled="!ready || saving" @click="save">
             {{ saving ? '保存中…' : '保存为新图' }}
-          </button>
+          </CxButton>
         </footer>
       </div>
     </div>
@@ -57,6 +57,7 @@
 <script setup>
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { mediaApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const props = defineProps({
   item: { type: Object, required: true }, // { name, url }

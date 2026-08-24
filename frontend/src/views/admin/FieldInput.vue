@@ -6,23 +6,18 @@
     </label>
 
     <!-- 布尔开关 -->
-    <button
+    <CxSwitch
       v-if="field.type === 'boolean'"
-      type="button"
       :id="inputId"
       :name="field.name"
-      class="admin-switch"
-      :class="{ on: !!modelValue }"
-      :aria-pressed="!!modelValue"
+      :model-value="!!modelValue"
       :aria-label="field.label"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
       :aria-required="field.required ? 'true' : undefined"
       :disabled="disabled"
-      @click="emit('update:modelValue', !modelValue)"
-    >
-      <span class="admin-switch-dot"></span>
-    </button>
+      @update:model-value="v => emit('update:modelValue', v)"
+    />
 
     <!-- 多行文本 / Markdown -->
     <textarea
@@ -121,9 +116,9 @@
         @input="emit('update:modelValue', $event.target.value)"
       />
       <div class="admin-img-actions">
-        <button type="button" class="admin-btn admin-btn-ghost" :disabled="disabled || uploading" @click="fileRef?.click()">
+        <CxButton plain :disabled="disabled || uploading" @click="fileRef?.click()">
           {{ uploading ? `上传中…${uploadPercent}%` : '导入音频文件' }}
-        </button>
+        </CxButton>
         <audio v-if="modelValue" class="admin-audio-preview" :src="modelValue" controls preload="none"></audio>
       </div>
       <input ref="fileRef" type="file" accept="audio/*" :disabled="disabled" hidden @change="onUploadAudio" />
@@ -150,13 +145,13 @@
           @input="emit('update:modelValue', $event.target.value)"
         />
         <div class="admin-img-actions">
-          <button type="button" class="admin-btn admin-btn-ghost" :disabled="disabled || uploading" @click="fileRef?.click()">
+          <CxButton plain :disabled="disabled || uploading" @click="fileRef?.click()">
             {{ uploading ? '上传中…' : '上传图片' }}
-          </button>
-          <button type="button" class="admin-btn admin-btn-ghost" :disabled="disabled" @click="pickerOpen = true">从图库选择</button>
-          <button v-if="canCrop" type="button" class="admin-btn admin-btn-ghost" :disabled="disabled || fetching" @click="openCrop">
+          </CxButton>
+          <CxButton plain :disabled="disabled" @click="pickerOpen = true">从图库选择</CxButton>
+          <CxButton v-if="canCrop" plain :disabled="disabled || fetching" @click="openCrop">
             {{ fetching ? '取回中…' : '裁切' }}
-          </button>
+          </CxButton>
         </div>
         <input ref="fileRef" type="file" accept="image/*" :disabled="disabled" hidden @change="onUpload" />
       </div>
@@ -198,6 +193,8 @@ import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 import AdminSelect from './AdminSelect.vue'
 import CxDatePicker from '../../components/cx/CxDatePicker.vue'
+import CxSwitch from '../../components/cx/CxSwitch.vue'
+import CxButton from '../../components/cx/CxButton.vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({

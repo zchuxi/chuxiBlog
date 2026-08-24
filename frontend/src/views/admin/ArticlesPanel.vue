@@ -16,17 +16,17 @@
             {{ opt }}
           </button>
         </div>
-        <button class="admin-btn" type="button" @click="openCreate">+ 写新文章</button>
+        <CxButton @click="openCreate">+ 写新文章</CxButton>
       </header>
 
       <!-- 批量操作条：选中后浮现（复用通用 admin-batch-bar 样式） -->
       <div v-if="selected.size" class="admin-batch-bar">
         <span class="admin-batch-count">已选 {{ selected.size }} 篇</span>
-        <button class="admin-btn admin-btn-ghost" type="button" :disabled="batching" @click="applyBatchStatus('已发布')">设为已发布</button>
-        <button class="admin-btn admin-btn-ghost" type="button" :disabled="batching" @click="applyBatchStatus('草稿')">设为草稿</button>
-        <button class="admin-btn admin-btn-danger" type="button" :disabled="batching" @click="batchRemove">
+        <CxButton plain :disabled="batching" @click="applyBatchStatus('已发布')">设为已发布</CxButton>
+        <CxButton plain :disabled="batching" @click="applyBatchStatus('草稿')">设为草稿</CxButton>
+        <CxButton type="danger" :disabled="batching" @click="batchRemove">
           {{ batching ? '处理中…' : '批量删除' }}
-        </button>
+        </CxButton>
         <button class="admin-link" type="button" :disabled="batching" @click="selected = new Set()">取消选择</button>
       </div>
 
@@ -81,14 +81,14 @@
     <!-- ================= 编辑态（全页） ================= -->
     <template v-else>
       <header class="ap-editor-top">
-        <button class="admin-btn admin-btn-ghost" type="button" @click="backToList">← 返回</button>
+        <CxButton plain @click="backToList">← 返回</CxButton>
         <h2 class="ap-editor-heading">{{ editingId == null ? '写新文章' : '编辑文章' }}</h2>
-        <button class="admin-btn admin-btn-ghost" type="button" @click="showPreview = !showPreview">
+        <CxButton plain @click="showPreview = !showPreview">
           {{ showPreview ? '隐藏预览' : '显示预览' }}
-        </button>
-        <button class="admin-btn" type="button" :disabled="saving" @click="save">
+        </CxButton>
+        <CxButton :disabled="saving" @click="save">
           {{ saving ? '保存中…' : '保存' }}
-        </button>
+        </CxButton>
       </header>
 
       <div class="ap-editor-grid" :class="{ 'no-preview': !showPreview }">
@@ -135,13 +135,13 @@
             <img v-if="form.coverUrl" class="ap-cover-preview" :src="form.coverUrl" alt="封面预览" />
             <input v-model="form.coverUrl" class="admin-input" type="text" placeholder="封面图片 URL" />
             <div class="ap-cover-actions">
-              <button class="admin-btn admin-btn-ghost" type="button" :disabled="uploading" @click="fileEl && fileEl.click()">
+              <CxButton plain :disabled="uploading" @click="fileEl && fileEl.click()">
                 {{ uploading ? '上传中…' : '上传图片' }}
-              </button>
-              <button class="admin-btn admin-btn-ghost" type="button" @click="pickerOpen = true">从图库选择</button>
-              <button v-if="canCrop" class="admin-btn admin-btn-ghost" type="button" :disabled="fetching" @click="openCrop">
+              </CxButton>
+              <CxButton plain @click="pickerOpen = true">从图库选择</CxButton>
+              <CxButton v-if="canCrop" plain :disabled="fetching" @click="openCrop">
                 {{ fetching ? '取回中…' : '裁切' }}
-              </button>
+              </CxButton>
             </div>
           </div>
 
@@ -200,6 +200,7 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import { adminApi, mediaApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
+import CxButton from '../../components/cx/CxButton.vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 import AdminSelect from './AdminSelect.vue'

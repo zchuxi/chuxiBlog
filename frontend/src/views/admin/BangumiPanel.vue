@@ -11,12 +11,12 @@
           placeholder="输入番剧名，如：葬送的芙莉莲"
           @keyup.enter="doSearch"
         />
-        <button class="admin-btn" :disabled="searching" @click="doSearch">
+        <CxButton :disabled="searching" @click="doSearch">
           {{ searching ? '搜索中…' : '搜索' }}
-        </button>
-        <button class="admin-btn admin-btn-ghost" :disabled="cleaning" @click="cleanDuplicates">
+        </CxButton>
+        <CxButton plain :disabled="cleaning" @click="cleanDuplicates">
           {{ cleaning ? '清理中…' : '清理重复' }}
-        </button>
+        </CxButton>
       </div>
 
       <!-- 用 Bangumi 访问令牌同步个人收藏（token 只存本地浏览器，不入库不入仓） -->
@@ -28,9 +28,9 @@
           type="password"
           placeholder="粘贴 Bangumi 访问令牌（next.bgm.tv/demo/access-token 生成）"
         />
-        <button class="admin-btn" :disabled="syncing" @click="syncCollections">
+        <CxButton :disabled="syncing" @click="syncCollections">
           {{ syncing ? syncTip || '同步中…' : '同步收藏' }}
-        </button>
+        </CxButton>
       </div>
 
       <ul v-if="results.length" class="bgm-result-list">
@@ -51,9 +51,9 @@
               <template v-if="item.score != null"> · 评分 {{ item.score }}</template>
             </p>
           </div>
-          <button class="admin-btn admin-btn-ghost" :disabled="importingId === item.id" @click="importItem(item)">
+          <CxButton plain :disabled="importingId === item.id" @click="importItem(item)">
             {{ importingId === item.id ? '导入中…' : '导入' }}
-          </button>
+          </CxButton>
         </li>
       </ul>
       <p v-else-if="searched && !searching" class="bgm-result-empty">没有搜到相关条目，换个关键词试试</p>
@@ -67,6 +67,7 @@
 <script setup>
 import { inject, onMounted, ref } from 'vue'
 import { adminApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import ResourcePanel from './ResourcePanel.vue'
 import resourceSchemas from './resourceSchemas'
 
@@ -526,7 +527,7 @@ async function importItem(item) {
     flex: 1 1 160px;
   }
 
-  .bgm-result-item .admin-btn-ghost {
+  .bgm-result-item .cx-button.is-plain {
     margin-left: auto;
     padding: 8px 16px;
   }

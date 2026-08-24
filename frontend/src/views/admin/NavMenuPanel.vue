@@ -6,11 +6,11 @@
         <p class="scp-head-sub">管理前台顶部导航栏的菜单项：显示名称、路由路径、图标和可见性。保存后前台立即生效。</p>
       </div>
       <div class="admin-toolbar-actions">
-        <button class="admin-btn admin-btn-ghost" :disabled="loading" @click="load">刷新</button>
-        <button class="admin-btn admin-btn-ghost" @click="resetDefaults">恢复默认</button>
-        <button class="admin-btn" :disabled="saving || loading" @click="save">
+        <CxButton plain :disabled="loading" @click="load">刷新</CxButton>
+        <CxButton plain @click="resetDefaults">恢复默认</CxButton>
+        <CxButton :disabled="saving || loading" @click="save">
           {{ saving ? '保存中…' : '保存' }}
-        </button>
+        </CxButton>
       </div>
     </header>
 
@@ -54,14 +54,14 @@
           </div>
         </div>
         <div class="nmp-row-actions">
-          <button class="admin-btn admin-btn-ghost nmp-icon-btn" :disabled="i === 0" @click="moveUp(i)" title="上移">↑</button>
-          <button class="admin-btn admin-btn-ghost nmp-icon-btn" :disabled="i === items.length - 1" @click="moveDown(i)" title="下移">↓</button>
-          <button class="admin-btn admin-btn-ghost nmp-icon-btn nmp-remove-btn" @click="removeAt(i)" title="删除">×</button>
+          <CxButton plain class="nmp-icon-btn" :disabled="i === 0" @click="moveUp(i)" title="上移">↑</CxButton>
+          <CxButton plain class="nmp-icon-btn" :disabled="i === items.length - 1" @click="moveDown(i)" title="下移">↓</CxButton>
+          <CxButton plain class="nmp-icon-btn nmp-remove-btn" @click="removeAt(i)" title="删除">×</CxButton>
         </div>
       </div>
 
       <div class="nmp-add-row">
-        <button class="admin-btn admin-btn-ghost" @click="addItem">+ 添加菜单项</button>
+        <CxButton plain @click="addItem">+ 添加菜单项</CxButton>
       </div>
     </div>
   </section>
@@ -71,6 +71,7 @@
 import { inject, onMounted, ref } from 'vue'
 import router from '../../router'
 import { siteContentApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 
 const CONTENT_KEY = 'nav-menu'
 
@@ -245,6 +246,7 @@ onMounted(load)
 }
 .nmp-icon-btn {
   width: 32px;
+  min-width: 0;
   height: 32px;
   padding: 0 !important;
   display: inline-flex;

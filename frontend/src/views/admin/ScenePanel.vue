@@ -6,17 +6,17 @@
         <h2 class="scene-head-title">首屏场景轮播</h2>
         <p class="scene-head-sub">管理首页第一屏的场景卡片：文案、配图、排序与显示开关，前台只展示「显示中」的场景。</p>
       </div>
-      <button class="admin-btn" type="button" @click="openCreate">+ 新建场景</button>
+      <CxButton @click="openCreate">+ 新建场景</CxButton>
     </header>
 
     <!-- 批量删除条：选中若干后出现 -->
     <transition name="admin-fade">
       <div v-if="selectedIds.length" class="scene-batch">
         <span class="scene-batch-text">已选中 {{ selectedIds.length }} 个场景</span>
-        <button class="admin-btn scene-btn-danger" type="button" :disabled="batchBusy" @click="removeSelected">
+        <CxButton type="danger" :disabled="batchBusy" @click="removeSelected">
           {{ batchBusy ? '删除中…' : '批量删除' }}
-        </button>
-        <button class="admin-btn admin-btn-ghost" type="button" @click="selectedIds = []">取消选择</button>
+        </CxButton>
+        <CxButton plain @click="selectedIds = []">取消选择</CxButton>
       </div>
     </transition>
 
@@ -106,13 +106,13 @@
                 <img v-if="form.imageUrl" class="scene-img-preview" :src="form.imageUrl" alt="背景预览" />
                 <input v-model="form.imageUrl" class="admin-input" type="text" placeholder="图片 URL" />
                 <div class="scene-img-actions">
-                  <button class="admin-btn admin-btn-ghost" type="button" :disabled="uploading" @click="fileEl && fileEl.click()">
+                  <CxButton plain :disabled="uploading" @click="fileEl && fileEl.click()">
                     {{ uploading ? '上传中…' : '上传图片' }}
-                  </button>
-                  <button class="admin-btn admin-btn-ghost" type="button" @click="pickerOpen = true">从图库选择</button>
-                  <button v-if="canCrop" class="admin-btn admin-btn-ghost" type="button" :disabled="fetching" @click="openCrop">
+                  </CxButton>
+                  <CxButton plain @click="pickerOpen = true">从图库选择</CxButton>
+                  <CxButton v-if="canCrop" plain :disabled="fetching" @click="openCrop">
                     {{ fetching ? '取回中…' : '裁切' }}
-                  </button>
+                  </CxButton>
                 </div>
               </div>
               <div class="scene-form-grid">
@@ -131,10 +131,10 @@
               </label>
             </div>
             <footer class="scene-modal-foot">
-              <button class="admin-btn admin-btn-ghost" type="button" @click="closeModal">取消</button>
-              <button class="admin-btn" type="button" :disabled="saving" @click="save">
+              <CxButton plain @click="closeModal">取消</CxButton>
+              <CxButton :disabled="saving" @click="save">
                 {{ saving ? '保存中…' : '保存' }}
-              </button>
+              </CxButton>
             </footer>
           </div>
         </div>
@@ -156,6 +156,7 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
 import { adminApi, mediaApi } from '../../api/admin'
+import CxButton from '../../components/cx/CxButton.vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 
@@ -498,14 +499,6 @@ onMounted(load)
 .scene-batch-text {
   flex: 1;
   color: #c0564f;
-}
-
-.scene-btn-danger {
-  background-color: #c0564f;
-}
-
-.scene-btn-danger:hover:not(:disabled) {
-  background-color: #a84841;
 }
 
 .scene-card {
