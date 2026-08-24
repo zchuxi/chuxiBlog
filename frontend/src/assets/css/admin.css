@@ -23,7 +23,6 @@
   --adm-danger-soft: rgba(192, 86, 79, 0.12);
   --adm-error-bg: rgba(192, 86, 79, 0.1);
   --adm-success: #4caf87;
-  --adm-success-ink: #2e7d5b;
   --adm-focus-ring: 0 0 0 3px rgba(63, 119, 181, 0.2);
   --adm-sticky-bg: rgba(255, 255, 255, 0.96);
   --adm-shadow: 0 12px 32px rgba(63, 119, 181, 0.12);
@@ -48,7 +47,6 @@ html.dark {
   --adm-danger-soft: rgba(217, 141, 141, 0.14);
   --adm-error-bg: rgba(217, 141, 141, 0.12);
   --adm-success: #4caf87;
-  --adm-success-ink: #7fd0ac;
   --adm-focus-ring: 0 0 0 3px rgba(141, 184, 232, 0.22);
   --adm-sticky-bg: rgba(26, 34, 48, 0.96);
   --adm-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);

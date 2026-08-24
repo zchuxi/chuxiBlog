@@ -169,8 +169,6 @@ const loggingIn = ref(false)
 const loginError = ref('')
 const loginForm = reactive({ username: '', password: '' })
 
-
-
 const currentKey = ref('dashboard')
 const currentSchema = computed(() => resourceSchemas.find(s => s.key === currentKey.value))
 const menuQuery = ref('')
