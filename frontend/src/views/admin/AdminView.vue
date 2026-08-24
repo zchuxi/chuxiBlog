@@ -126,13 +126,6 @@
 
     <!-- 修改密码弹窗 -->
     <PasswordDialog v-if="pwdOpen" @close="pwdOpen = false" />
-
-    <!-- 右上角简易 toast -->
-    <div class="admin-toasts">
-      <transition-group name="admin-toast">
-        <div v-for="t in toasts" :key="t.id" class="admin-toast" :class="t.type">{{ t.text }}</div>
-      </transition-group>
-    </div>
   </div>
 </template>
 
@@ -141,6 +134,7 @@ import { computed, onMounted, provide, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { login, logout as logoutApi, me } from '../../api/admin'
 import { useSettingsStore } from '../../stores/settings'
+import { toastSuccess, toastError } from '../../utils/toast'
 import resourceSchemas from './resourceSchemas'
 import { filterMenuGroups } from './adminUi'
 import { menuGroups } from './adminMenu'
@@ -237,15 +231,9 @@ onMounted(async () => {
   }
 })
 
-// 简易 toast：右上角堆叠，自动消失
-const toasts = ref([])
-let toastSeq = 0
+// toast 复用 App.vue 挂载的全局 CxMessage 单例（与前台同款提示）
 function toast(text, type = 'success') {
-  const id = ++toastSeq
-  toasts.value.push({ id, text, type })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 2500)
+  ;(type === 'error' ? toastError : toastSuccess)(text)
 }
 
 async function onLogin() {

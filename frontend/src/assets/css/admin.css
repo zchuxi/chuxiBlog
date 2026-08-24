@@ -1071,45 +1071,6 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   transform: translateX(100%);
 }
 
-/* ---------- Toast ---------- */
-
-.admin-toasts {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 200;
-}
-
-.admin-toast {
-  padding: 11px 18px;
-  border-radius: 14px;
-  background-color: var(--adm-card);
-  border: 1px solid var(--adm-border-soft);
-  color: var(--adm-success-ink);
-  font-size: 16px;
-  box-shadow: var(--adm-shadow-lg);
-  border-left: 4px solid var(--adm-success);
-}
-
-.admin-toast.error {
-  color: var(--adm-danger);
-  border-left-color: var(--adm-danger);
-}
-
-.admin-toast-enter-active,
-.admin-toast-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.admin-toast-enter-from,
-.admin-toast-leave-to {
-  opacity: 0;
-  transform: translateX(16px);
-}
-
 /* ---------- 图片库面板（media-*） ---------- */
 
 .media-tip {
