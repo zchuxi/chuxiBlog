@@ -61,7 +61,7 @@
               {{ togglingId === row.id ? '切换中…' : isVisible(row) ? '显示中' : '已隐藏' }}
             </button>
             <div class="scene-ops">
-              <button class="admin-link" type="button" title="编辑" @click="openEdit(row)">✎ 编辑</button>
+              <button class="admin-link" type="button" title="编辑" @click="openEdit(row)">编辑</button>
               <button class="admin-link danger" type="button" @click="removeOne(row)">删除</button>
             </div>
           </li>

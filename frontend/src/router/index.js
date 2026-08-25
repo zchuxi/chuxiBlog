@@ -31,7 +31,12 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
     const main = document.querySelector('.app-shell-main')
-    if (main) main.scrollTop = 0
+    if (main) {
+      main.scrollTop = 0
+      // 入场动画的 3D rotateY 变换会瞬时撑大滚动容器包围盒，
+      // 浏览器可能残留水平滚动位导致整页左移裁切，需一并归零
+      main.scrollLeft = 0
+    }
     return { top: 0 }
   }
 })
