@@ -69,7 +69,7 @@
               <p class="ap-row-meta">更新于 {{ fmtTime(row.updatedAt) }}</p>
             </div>
               <div class="ap-row-ops">
-                <button class="admin-link" type="button" @click="openEdit(row)">✎ 编辑</button>
+                <button class="admin-link" type="button" @click="openEdit(row)">编辑</button>
                 <button class="admin-link danger" type="button" @click="removeOne(row)">删除</button>
               </div>
             </li>
