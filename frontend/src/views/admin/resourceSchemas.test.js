@@ -118,6 +118,19 @@ test('字段可选元数据 group/tip/required 类型合法', () => {
       if ('group' in field) assert.ok(isNonEmptyString(field.group), `[${schema.key}.${field.name}] group 必须为非空字符串`)
       if ('tip' in field) assert.ok(isNonEmptyString(field.tip), `[${schema.key}.${field.name}] tip 必须为非空字符串`)
       if ('required' in field) assert.equal(typeof field.required, 'boolean', `[${schema.key}.${field.name}] required 必须为布尔值`)
+      if ('readonly' in field) assert.equal(typeof field.readonly, 'boolean', `[${schema.key}.${field.name}] readonly 必须为布尔值`)
+    }
+  }
+})
+
+test('系统时间戳字段（createdAt/updatedAt）统一标记 readonly', () => {
+  // readonly 字段渲染为只读展示块，防止误改系统记录；
+  // 漏标会让系统字段混在可编辑输入框里，视觉上无法区分
+  for (const schema of resourceSchemas) {
+    for (const field of schema.fields) {
+      if (field.name === 'createdAt' || field.name === 'updatedAt') {
+        assert.equal(field.readonly, true, `[${schema.key}.${field.name}] 系统时间戳字段必须标记 readonly: true`)
+      }
     }
   }
 })

@@ -11,11 +11,12 @@
       <div class="admin-toolbar-actions">
         <div class="admin-list-search">
           <label class="sr-only" :for="`resource-search-${schema.key}`">搜索{{ schema.label }}</label>
-          <input
+          <CxInput
             :id="`resource-search-${schema.key}`"
-            v-model.trim="searchQuery"
-            class="admin-input"
+            v-model="searchQuery"
+            variant="admin"
             type="search"
+            model-modifier="trim"
             placeholder="搜索当前列表"
           />
           <button
@@ -87,11 +88,10 @@
           <thead>
             <tr>
               <th class="admin-col-check">
-                <input
-                  type="checkbox"
-                  class="admin-check"
-                  :checked="pagedRows.length > 0 && pagedRows.every(r => selected.has(r.id))"
-                  :indeterminate.prop="pagedRows.some(r => selected.has(r.id)) && !pagedRows.every(r => selected.has(r.id))"
+                <CxCheckbox
+                  :model-value="pagedRows.length > 0 && pagedRows.every(r => selected.has(r.id))"
+                  :indeterminate="pagedRows.some(r => selected.has(r.id)) && !pagedRows.every(r => selected.has(r.id))"
+                  aria-label="全选本页"
                   @change="toggleAll"
                 />
               </th>
@@ -117,10 +117,9 @@
           <tbody>
             <tr v-for="row in pagedRows" :key="row.id" :class="{ 'is-checked': selected.has(row.id) }">
               <td class="admin-col-check">
-                <input
-                  type="checkbox"
-                  class="admin-check"
-                  :checked="selected.has(row.id)"
+                <CxCheckbox
+                  :model-value="selected.has(row.id)"
+                  aria-label="选中该行"
                   @change="toggleRow(row)"
                 />
               </td>
@@ -181,7 +180,7 @@
 
     <!-- 编辑弹窗：居中卡片 + 双列紧凑表单 -->
     <transition name="admin-fade">
-      <div v-if="drawerOpen" class="admin-mask" @click.self="closeDrawer"></div>
+      <div v-if="drawerOpen" class="admin-mask" @click.self="onMaskClick"></div>
     </transition>
     <transition name="admin-pop">
       <aside
@@ -193,12 +192,16 @@
         :aria-labelledby="`resource-editor-title-${schema.key}`"
       >
         <header class="admin-modal-head">
+          <div class="admin-modal-icon" aria-hidden="true">
+            <SvgIcon :name="menuIcon" size="18px" />
+          </div>
           <div class="admin-modal-title">
             <h3 :id="`resource-editor-title-${schema.key}`">
               {{ editingId == null ? '新建' : '编辑' }}{{ schema.label.replace(/管理$/, '') }}
             </h3>
-            <span v-if="isDirty" class="admin-unsaved-mark">未保存</span>
+            <p class="admin-modal-sub">{{ editingId == null ? '填写信息创建新记录' : '修改内容后点击保存生效' }}，带 * 为必填</p>
           </div>
+          <span v-if="isDirty" class="admin-unsaved-mark">未保存</span>
           <button
             class="admin-modal-close"
             type="button"
@@ -208,7 +211,12 @@
           >×</button>
         </header>
         <div class="admin-modal-body">
-          <section v-for="group in fieldGroups" :key="group.key" class="admin-form-section">
+          <section
+            v-for="group in fieldGroups"
+            :key="group.key"
+            class="admin-form-section"
+            :class="{ 'admin-form-section--system': group.key === '系统信息' }"
+          >
             <header class="admin-form-section-head">
               <h4>{{ group.label }}</h4>
             </header>
@@ -254,8 +262,12 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { adminApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxCheckbox from '../../components/cx/CxCheckbox.vue'
+import CxInput from '../../components/cx/CxInput.vue'
+import SvgIcon from '../../components/SvgIcon.vue'
 import FieldInput from './FieldInput.vue'
 import AdminSelect from './AdminSelect.vue'
+import { menuGroups } from './adminMenu'
 import { createFormSnapshot, filterResourceRows, groupFields, isFormDirty, sortResourceRows } from './adminUi'
 
 // 宽字段独占整行，短字段两列并排——与番剧弹窗的紧凑排布一致
@@ -289,6 +301,15 @@ const batching = ref(false)
 let latestRequestId = 0
 
 const api = computed(() => adminApi[props.schema.key])
+// 弹窗头部图标：复用侧栏菜单的 icon 元数据，key 一致直接查；
+// 菜单里没有的 schema（理论上不存在）退回通用图标
+const menuIcon = computed(() => {
+  for (const group of menuGroups) {
+    const item = group.items.find(i => i.key === props.schema.key)
+    if (item) return item.icon
+  }
+  return 'common-component'
+})
 const columns = computed(() =>
   props.schema.columns.map(name => {
     const field = props.schema.fields.find(f => f.name === name)
@@ -535,6 +556,18 @@ function openEdit(row) {
 
 function closeDrawer() {
   requestClose()
+}
+
+// 点击弹窗外（遮罩）一律先提示确认再关闭，与右上角关闭/取消按钮/Esc
+// 的「仅脏才确认」策略分开处理，避免用户在未留意情况下误关弹窗
+function onMaskClick() {
+  if (!drawerOpen.value || saving.value) return
+  const tip = isDirty.value
+    ? '当前修改尚未保存，确定放弃并关闭吗？'
+    : '确定关闭当前弹窗吗？'
+  if (!window.confirm(tip)) return
+  drawerOpen.value = false
+  saveError.value = ''
 }
 
 function requestClose() {

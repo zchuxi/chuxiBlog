@@ -3,6 +3,8 @@
 // columns 为表格展示列（3-5 个代表字段）；wide 表示编辑用宽抽屉
 // image 字段可配 ratio（宽/高）：站内图裁切时按该比例锁定，与前台显示比例对齐
 // batch: true 的字段参与列表多选后的批量修改（select/boolean 下拉，number/text 弹窗输入）
+// readonly: true 的字段（如 createdAt/updatedAt）渲染为只读展示块，
+//   值仍保留在 form 中随 payload 整体提交（后端 update 是整体替换，不能漏字段）
 
 export const resourceSchemas = [
   {
@@ -25,8 +27,8 @@ export const resourceSchemas = [
       { name: 'coverUrl', label: '封面图', type: 'image', ratio: 16 / 10 },
       { name: 'categoryId', label: '栏目 ID', type: 'number' },
       { name: 'categoryName', label: '栏目名', type: 'text' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -44,8 +46,8 @@ export const resourceSchemas = [
       { name: 'kicker', label: '眉标 Kicker（如 PERSPECTIVE）', type: 'text', group: '基本信息' },
       { name: 'badge', label: '角标 Badge（如 04/19）', type: 'text', group: '基本信息' },
       { name: 'visible', label: '在首页显示', type: 'boolean', batch: true, group: '状态与排序' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true }
     ]
   },
   {
@@ -59,8 +61,8 @@ export const resourceSchemas = [
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'imageUrl', label: '图片（横版 3:2）', type: 'image', ratio: 3 / 2 },
       { name: 'sortIndex', label: '排序值', type: 'number' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -76,8 +78,8 @@ export const resourceSchemas = [
       { name: 'roleLabel', label: '角色名', type: 'text' },
       { name: 'position', label: '职位', type: 'text' },
       { name: 'description', label: '介绍', type: 'textarea' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -100,8 +102,8 @@ export const resourceSchemas = [
       { name: 'title', label: '标题', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'imageUrl', label: '图片（横版 3:2）', type: 'image', ratio: 3 / 2 },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -114,8 +116,8 @@ export const resourceSchemas = [
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'imageUrl', label: '图片（横版 3:2）', type: 'image', ratio: 3 / 2 },
       { name: 'timelineDate', label: '事件日期', type: 'date' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -148,8 +150,8 @@ export const resourceSchemas = [
       { name: 'tags', label: '标签', type: 'tags', group: '基本信息', tip: '多个标签使用逗号分隔' },
       { name: 'highlight', label: '亮点', type: 'text', group: '内容与媒体' },
       { name: 'featured', label: '是否推荐', type: 'boolean', batch: true, group: '状态与排序' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true }
     ]
   },
   {
@@ -163,8 +165,8 @@ export const resourceSchemas = [
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'likeCount', label: '点赞数', type: 'number' },
       { name: 'liked', label: '已点赞', type: 'boolean' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -181,8 +183,8 @@ export const resourceSchemas = [
       { name: 'readTime', label: '阅读时长', type: 'text', group: '基本信息' },
       { name: 'sortIndex', label: '排序值', type: 'number', group: '状态与排序', tip: '数值越小越靠前' },
       { name: 'audioUrl', label: '音频（可导入本地文件）', type: 'audio', group: '内容与媒体', tip: '可粘贴音频 URL，或导入本地音频文件' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true }
     ]
   },
   {
@@ -197,7 +199,7 @@ export const resourceSchemas = [
       { name: 'coverUrl', label: '封面', type: 'image', ratio: 1, group: '内容与媒体', tip: '用于歌曲封面，建议使用 1:1 方形图片' },
       { name: 'musicUrl', label: '音频（可导入本地文件）', type: 'audio', group: '内容与媒体', required: true, tip: '可粘贴音频 URL，或导入本地音频文件' },
       { name: 'lyric', label: '歌词', type: 'textarea', group: '内容与媒体' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true }
     ]
   },
   {
@@ -209,7 +211,7 @@ export const resourceSchemas = [
       { name: 'nickname', label: '昵称', type: 'text' },
       { name: 'content', label: '内容', type: 'textarea' },
       { name: 'likeCount', label: '点赞数', type: 'number' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true }
     ]
   },
   {
@@ -224,8 +226,8 @@ export const resourceSchemas = [
       { name: 'description', label: '站点描述', type: 'text', group: '内容与媒体' },
       { name: 'sortIndex', label: '排序', type: 'number', group: '状态与排序', tip: '数值越小越靠前' },
       { name: 'visible', label: '可见', type: 'boolean', default: true, batch: true, group: '状态与排序' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', group: '系统信息', tip: '由系统记录，编辑时仅供查看', readonly: true }
     ]
   },
   {
@@ -251,8 +253,8 @@ export const resourceSchemas = [
       { name: 'platform', label: '放送形态（TV / 剧场版 / OVA）', type: 'text' },
       { name: 'rank', label: 'bgm 排名（可空）', type: 'number' },
       { name: 'ratingTotal', label: 'bgm 评分人数（可空）', type: 'number' },
-      { name: 'createdAt', label: '创建时间', type: 'datetime' },
-      { name: 'updatedAt', label: '更新时间', type: 'datetime' }
+      { name: 'createdAt', label: '创建时间', type: 'datetime', readonly: true },
+      { name: 'updatedAt', label: '更新时间', type: 'datetime', readonly: true }
     ]
   }
 ]

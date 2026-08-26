@@ -27,10 +27,13 @@ test('后台样式使用可读中文系统字体和统一 focus-visible 令牌',
 
 test('后台具体控件不会覆盖统一键盘焦点，并收敛通用辅助文字字号', async () => {
   const css = await read('../../assets/css/admin.css')
+  // .admin-input 仅剩 AdminSelect 的下拉触发按钮在用
   assert.match(css, /\.admin-input:focus\s*\{[^}]*box-shadow:\s*var\(--adm-focus-ring\)/)
-  assert.match(css, /\.admin-input\[type='datetime-local'\]:focus\s*\{[^}]*box-shadow:\s*var\(--adm-focus-ring\)/)
-  assert.match(css, /\.admin-check:focus-visible\s*\{[^}]*box-shadow:\s*var\(--adm-focus-ring\)/)
-  assert.match(css, /\.admin-input\[type='datetime-local'\]::-webkit-datetime-edit\s*\{[^}]*font-size:\s*15px/)
+  // 输入框已换 CxInput：焦点环画在外壳上（内层再画一次会成双环）
+  assert.match(css, /\.cx-input--admin:focus-within\s*\{[^}]*box-shadow:\s*var\(--adm-focus-ring\)/)
+  // 复选框已换 CxCheckbox，焦点环经 --cx-check-ring 间接层改指后台令牌
+  assert.match(css, /\.admin-root \.cx-checkbox\s*\{[^}]*--cx-check-ring:\s*var\(--adm-focus-ring\)/)
+  assert.match(css, /\.cx-input--admin \.cx-input__inner\s*\{[^}]*font-size:\s*15px/)
   assert.match(css, /\.admin-login-sub\s*\{[^}]*font-size:\s*15px/)
 })
 
@@ -39,9 +42,12 @@ test('统一键盘焦点规则存在，且自建按钮样式已迁移到 cx-butt
   const selector = '.admin-root :is(button, a, input, textarea, select, [tabindex]):focus-visible'
   const focusIndex = css.lastIndexOf(selector)
   assert.ok(focusIndex > 0)
-  // admin-btn/admin-switch 样式已由 CxButton/CxSwitch 取代，不允许回潮
+  // 自建控件样式已由 cx 组件取代，不允许回潮
   assert.ok(!css.includes('.admin-btn'))
   assert.ok(!css.includes('.admin-switch'))
+  assert.ok(!css.includes('.admin-check'), '复选框样式已迁到 cx-checkbox.css')
+  assert.ok(!css.includes('.admin-textarea'), '多行输入样式已迁到 .cx-input--admin .cx-input__textarea')
+  assert.ok(!css.includes(".admin-input[type='date']"), '日期输入已换 CxDatePicker，原生日期皮肤不再需要')
   assert.match(extractBlock(css, focusIndex), /box-shadow:\s*var\(--adm-focus-ring\)/)
 })
 
@@ -125,7 +131,10 @@ test('侧栏搜索只由外层 focus-within 绘制焦点环', async () => {
 
 test('ResourcePanel 区分加载失败、空数据和搜索无结果', async () => {
   const source = await read('./ResourcePanel.vue')
-  assert.match(source, /v-model\.trim="searchQuery"/)
+  // 搜索框已换 CxInput：v-model.trim 的等价写法是 model-modifier="trim"
+  // （修饰符只作用于原生元素，组件上要由 props 声明），去空格行为必须保留
+  assert.match(source, /v-model="searchQuery"/)
+  assert.match(source, /model-modifier="trim"/)
   assert.match(source, /filteredRows/)
   assert.match(source, /loadError/)
   assert.match(source, /重新加载/)
@@ -203,6 +212,26 @@ test('字段组件和通用弹窗渲染说明、必填、错误及分组', async
   assert.match(panel, /admin-form-section/)
 })
 
+test('只读字段渲染为展示块且不参与输入，样式与可编辑输入框区分', async () => {
+  const field = await read('./FieldInput.vue')
+  // readonly 分支必须排在所有输入控件之前（v-if 抢在 CxSwitch 的 v-else-if 前面）
+  const readonlyIndex = field.indexOf('v-if="field.readonly"')
+  const switchIndex = field.indexOf('v-else-if="field.type === \'boolean\'"')
+  assert.ok(readonlyIndex > -1, '缺少 field.readonly 只读分支')
+  assert.ok(switchIndex > readonlyIndex, 'readonly 分支必须位于布尔开关之前')
+  assert.match(field, /admin-field-readonly/)
+  assert.match(field, /readonlyDisplay/)
+  // 只读块必须是 div 而非 input：任何 input 都不应绑定 readonly 展示值
+  assert.doesNotMatch(field, /<input[^>]*readonlyDisplay/)
+  // 样式虚线框 + 次级底色，与可编辑输入框区分
+  const css = await read('../../assets/css/admin.css')
+  const roIndex = css.indexOf('.admin-field-readonly')
+  assert.ok(roIndex >= 0, '缺少 .admin-field-readonly 样式')
+  const block = extractBlock(css, roIndex)
+  assert.match(block, /border:\s*1px dashed/)
+  assert.match(block, /var\(--adm-card-2\)/)
+})
+
 test('字段分组使用一级边界且适配小屏，不创建嵌套卡片阴影', async () => {
   const css = await read('../../assets/css/admin.css')
   const sectionIndex = css.indexOf('.admin-form-section')
@@ -266,6 +295,23 @@ test('通用编辑弹窗保护未保存内容并支持快捷保存', async () =>
   assert.match(source, /:disabled="saving \|\| \(field\.name === 'id' && editingId != null\)"/)
 })
 
+test('点击弹窗外的遮罩总先确认再关闭，未修改时也提示', async () => {
+  const source = await read('./ResourcePanel.vue')
+  // 遮罩点击单独走 onMaskClick，不能复用 requestClose（仅脏才确认）
+  const maskOpenMatch = source.match(/<div v-if="drawerOpen" class="admin-mask"[^>]*?@click\.self="onMaskClick"[^>]*?><\/div>/)
+  assert.ok(maskOpenMatch, '弹窗遮罩点击应绑定 onMaskClick')
+  assert.doesNotMatch(source, /admin-mask"\s+@click\.self="closeDrawer"/)
+  assert.match(source, /function onMaskClick\(\)/)
+  // 文案区分两种状态：脏时提示放弃修改，未脏时仍提示一次避免误关
+  const onMaskBlock = extractBlock(source, source.lastIndexOf('function onMaskClick()'))
+  assert.match(onMaskBlock, /当前修改尚未保存，确定放弃并关闭吗/)
+  assert.match(onMaskBlock, /确定关闭当前弹窗吗/)
+  assert.match(onMaskBlock, /window\.confirm/)
+  // 关闭按钮、取消按钮、Esc 仍走 requestClose（脏才确认），与 mask 路径区分
+  const closeDrawerBlock = extractBlock(source, source.lastIndexOf('function closeDrawer()'))
+  assert.match(closeDrawerBlock, /requestClose\(\)/)
+})
+
 test('编辑器让已打开的子弹层独占 Escape 和 Ctrl+S', async () => {
   const panel = await read('./ResourcePanel.vue')
   const select = await read('./AdminSelect.vue')
@@ -314,4 +360,26 @@ test('后台入口不残留调试代码，默认停在概览面板', async () =>
   assert.match(view, /const currentKey = ref\('dashboard'\)/)
   assert.doesNotMatch(view, /data-test-debug/)
   assert.doesNotMatch(view, /onErrorCaptured/)
+})
+
+test('日期弹层定位 top/bottom 互斥，上翻时清除样式表兑底的 top', async () => {
+  const source = await read('../../components/cx/CxDatePicker.vue')
+  // 样式表给未定位态兑底 top: calc(100% + 8px)。上翻时只设 bottom 不清 top，
+  // 两条同时生效会把面板压扁在视口底部（曾渲染成 30px 细条，看似下方被截断）。
+  assert.match(source, /openUp[\s\S]*?top:\s*'auto'[\s\S]*?bottom:/)
+  assert.match(source, /\{\s*top:\s*`\$\{rootRect\.bottom \+ gap\}px`,\s*bottom:\s*'auto'\s*\}/)
+})
+
+test('长文编辑面板的 textarea 定高选择器带 .admin-root 前缀，不被基础规则覆盖', async () => {
+  // 打包后 admin.css 排在组件样式之后，同优先级的
+  // .cx-input--admin .cx-input__textarea（min-height:72px）会盖掉面板定高，
+  // 正文框只剩三行高；带 .admin-root 前缀提特异性后才能稳定生效。
+  const articles = await read('./ArticlesPanel.vue')
+  const siteContent = await read('./SiteContentPanel.vue')
+  assert.match(articles, /\.admin-root \.ap-content-input \.cx-input__textarea\s*\{[^}]*min-height:\s*62vh/)
+  assert.match(articles, /\.admin-root \.ap-content-input \.cx-input__textarea\s*\{[^}]*min-height:\s*46vh/)
+  assert.doesNotMatch(articles, /\n\.ap-content-input \.cx-input__textarea/)
+  assert.match(siteContent, /\.admin-root \.scp-md-input \.cx-input__textarea\s*\{[^}]*min-height:\s*62vh/)
+  assert.match(siteContent, /\.admin-root \.scp-md-input \.cx-input__textarea\s*\{[^}]*min-height:\s*46vh/)
+  assert.doesNotMatch(siteContent, /\n\.scp-md-input \.cx-input__textarea/)
 })

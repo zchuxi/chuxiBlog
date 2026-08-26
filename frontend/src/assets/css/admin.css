@@ -23,6 +23,10 @@
   --adm-danger-soft: rgba(192, 86, 79, 0.12);
   --adm-error-bg: rgba(192, 86, 79, 0.1);
   --adm-success: #4caf87;
+  /* 未保存标记等「提醒但非错误」场景：琥珀色系，与 danger 拉开语义。
+     亮色取值在软底合成色上对比度约 4.66:1，满足 AA 正文（12px 粗体非大字号） */
+  --adm-warning: #8f5f1a;
+  --adm-warning-soft: rgba(168, 114, 42, 0.14);
   --adm-focus-ring: 0 0 0 3px rgba(63, 119, 181, 0.2);
   --adm-sticky-bg: rgba(255, 255, 255, 0.96);
   --adm-shadow: 0 12px 32px rgba(63, 119, 181, 0.12);
@@ -47,6 +51,8 @@ html.dark {
   --adm-danger-soft: rgba(217, 141, 141, 0.14);
   --adm-error-bg: rgba(217, 141, 141, 0.12);
   --adm-success: #4caf87;
+  --adm-warning: #e0b56a;
+  --adm-warning-soft: rgba(224, 181, 106, 0.16);
   --adm-focus-ring: 0 0 0 3px rgba(141, 184, 232, 0.22);
   --adm-sticky-bg: rgba(26, 34, 48, 0.96);
   --adm-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
@@ -147,161 +153,6 @@ html.dark .admin-link.danger {
   cursor: not-allowed;
 }
 
-/* 数字输入：原生步进箭头是系统白底控件、无法换肤，与主题冲突，统一隐藏；
-   仍可直接键入或用 ↑/↓ 方向键增减 */
-.admin-input[type='number'] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-.admin-input[type='number']::-webkit-outer-spin-button,
-.admin-input[type='number']::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* 日期/日期时间输入：日历弹层是浏览器控件无法自绘，
-   用 color-scheme 让弹层跟随明暗主题，避免暗色下弹出刺眼白底；
-   输入框本身叠加主题色边框、日历图标等视觉增强，与 admin 卡片风格统一 */
-.admin-input[type='date'],
-.admin-input[type='datetime-local'] {
-  color-scheme: light;
-  background-color: var(--input-bg);
-  border: 1px solid var(--input-border);
-  border-radius: 12px;
-  padding: 9px 36px 9px 13px;
-  transition: border-color 0.24s ease, box-shadow 0.24s ease, background-color 0.24s ease;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-html.dark .admin-input[type='date'],
-html.dark .admin-input[type='datetime-local'] {
-  color-scheme: dark;
-}
-
-/* 聚焦：主题色边框 + 光晕，与其他 admin-input:focus 一致 */
-.admin-input[type='date']:focus,
-.admin-input[type='datetime-local']:focus {
-  border-color: var(--accent-solid);
-  box-shadow: var(--adm-focus-ring);
-}
-
-/* 悬停：边框变亮，提示可交互 */
-.admin-input[type='date']:hover:not(:focus):not(:disabled),
-.admin-input[type='datetime-local']:hover:not(:focus):not(:disabled) {
-  border-color: var(--adm-accent);
-}
-
-/* 日历图标：默认半透明，悬停/聚焦时高亮 */
-.admin-input[type='date']::-webkit-calendar-picker-indicator,
-.admin-input[type='datetime-local']::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.45;
-  scale: 1.1;
-  border-radius: 6px;
-  padding: 2px;
-  margin-right: -4px;
-  transition: opacity 0.2s ease, filter 0.2s ease;
-  /* 让图标在暗色下不会太白 */
-  filter: var(--adm-date-icon-filter, none);
-}
-
-html.dark .admin-input[type='date']::-webkit-calendar-picker-indicator,
-html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator {
-  filter: invert(0.7) brightness(1.1);
-}
-
-.admin-input[type='date']::-webkit-calendar-picker-indicator:hover,
-.admin-input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
-  opacity: 0.9;
-  filter: var(--adm-date-icon-filter, none);
-}
-
-html.dark .admin-input[type='date']::-webkit-calendar-picker-indicator:hover,
-html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
-  filter: invert(0.85) brightness(1.2) drop-shadow(0 0 4px var(--adm-accent-soft));
-}
-
-/* 禁用态 */
-.admin-input[type='date']:disabled,
-.admin-input[type='datetime-local']:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 日期/时间文字显示区域：与 admin-input 字体一致 */
-.admin-input[type='date']::-webkit-datetime-edit,
-.admin-input[type='datetime-local']::-webkit-datetime-edit {
-  font-family: inherit;
-  font-size: 15px;
-  color: var(--adm-text);
-  letter-spacing: 0.03em;
-}
-
-/* 年/月/日/时/分/秒 各段统一间距 */
-.admin-input[type='datetime-local']::-webkit-datetime-edit-year-field,
-.admin-input[type='datetime-local']::-webkit-datetime-edit-month-field,
-.admin-input[type='datetime-local']::-webkit-datetime-edit-day-field,
-.admin-input[type='datetime-local']::-webkit-datetime-edit-hour-field,
-.admin-input[type='datetime-local']::-webkit-datetime-edit-minute-field,
-.admin-input[type='datetime-local']::-webkit-datetime-edit-second-field {
-  padding: 2px 3px;
-  border-radius: 4px;
-  transition: background-color 0.15s ease;
-}
-
-/* 悬停时各字段轻微高亮 */
-.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-year-field,
-.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-month-field,
-.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-day-field,
-.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-hour-field,
-.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-minute-field,
-.admin-input[type='datetime-local']:hover::-webkit-datetime-edit-second-field {
-  background-color: var(--adm-accent-soft);
-}
-
-/* 分隔符（/、:、空格）淡化 */
-.admin-input[type='datetime-local']::-webkit-datetime-edit-text,
-.admin-input[type='datetime-local']::-webkit-datetime-edit-literal-field {
-  color: var(--adm-text-faint);
-}
-
-/* 清除按钮（部分浏览器在值非空时显示） */
-.admin-input[type='date']::-webkit-clear-button,
-.admin-input[type='datetime-local']::-webkit-clear-button {
-  appearance: none;
-  -webkit-appearance: none;
-  border: none;
-  background: var(--adm-accent-soft);
-  color: var(--adm-accent-ink);
-  border-radius: 6px;
-  padding: 0 6px;
-  font-size: 13px;
-  cursor: pointer;
-  margin-right: 4px;
-  transition: background-color 0.15s ease;
-}
-
-.admin-input[type='date']::-webkit-clear-button:hover,
-.admin-input[type='datetime-local']::-webkit-clear-button:hover {
-  background: var(--adm-danger-soft);
-  color: var(--adm-danger);
-}
-
-.admin-textarea {
-  resize: vertical;
-  min-height: 72px;
-  line-height: 1.6;
-  font-size: 15px;
-}
-
-.admin-md {
-  min-height: 50vh;
-  font-size: 15px;
-  line-height: 1.7;
-}
-
 /* 表单字段 */
 
 .admin-field {
@@ -360,16 +211,19 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   object-fit: cover;
 }
 
-/* image 字段：输入框 + 图库按钮同行 */
-
-.admin-img-row {
+/* 只读字段展示块（createdAt/updatedAt 等系统元数据）：
+   虚线框 + 次级底色，与可编辑输入框（实线框 + 输入底色）一眼区分 */
+.admin-field-readonly {
   display: flex;
-  gap: 8px;
-}
-
-.admin-img-row .admin-input {
-  flex: 1;
-  min-width: 0;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 13px;
+  border: 1px dashed var(--adm-border);
+  border-radius: 12px;
+  background: var(--adm-card-2);
+  color: var(--adm-text-dim);
+  font-size: 14.5px;
+  box-sizing: border-box;
 }
 
 /* ---------- 登录页 ---------- */
@@ -482,6 +336,17 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   background-color: var(--adm-accent);
   box-shadow: 0 0 10px var(--adm-accent);
   flex-shrink: 0;
+  animation: adm-brand-pulse 2.4s ease-in-out infinite;
+}
+
+/* 品牌点轻微呼吸：侧栏唯一动效锚点，克制不抢眼 */
+@keyframes adm-brand-pulse {
+  0%, 100% { box-shadow: 0 0 6px var(--adm-accent); }
+  50% { box-shadow: 0 0 13px var(--adm-accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-brand-dot { animation: none; }
 }
 
 .admin-root .sr-only {
@@ -577,6 +442,7 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 }
 
 .admin-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -603,9 +469,28 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   color: var(--adm-text);
 }
 
+/* 激活态：左指示条 + 浅主色底 + 主色文字。
+   实心蓝底白字在整栏只有一个焦点时视觉过重，且与 hover 态
+   只能靠色深浅区分；指示条 + 字重 + 主色文字三重信号更轻更清晰 */
 .admin-nav-item.active {
-  background-color: var(--adm-accent);
-  color: #fff;
+  background-color: var(--adm-accent-soft);
+  color: var(--adm-accent-ink);
+  font-weight: 600;
+}
+
+.admin-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--adm-accent);
+}
+
+.admin-nav-item.active .svg-icon {
+  opacity: 1;
 }
 
 .admin-sidebar-foot {
@@ -664,6 +549,12 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   object-fit: cover;
   border: 2px solid var(--adm-border);
   background-color: var(--adm-card-2);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.admin-avatar:hover {
+  box-shadow: var(--adm-focus-ring);
+  transform: scale(1.06);
 }
 
 .admin-content {
@@ -726,7 +617,11 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   box-shadow: var(--adm-focus-ring);
 }
 
-.admin-list-search .admin-input {
+/* 搜索框的边框与焦点环由外层容器绘制（容器里还并排放着清空按钮），
+   内嵌的 CxInput 必须退化为透明无框，否则出现内外双边框 + 双焦点环 */
+.admin-list-search .cx-input--admin,
+.admin-list-search .cx-input--admin:focus-within {
+  flex: 1;
   min-width: 0;
   border: 0;
   background: transparent;
@@ -799,10 +694,12 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: 12px 14px;
+  padding: 10px 14px;
   text-align: left;
-  font-size: 14px;
-  color: var(--adm-accent-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--adm-text-dim);
   background: var(--adm-sticky-bg);
   white-space: nowrap;
 }
@@ -859,7 +756,8 @@ html.dark .admin-input[type='datetime-local']::-webkit-calendar-picker-indicator
 }
 
 .admin-th-sort.is-active {
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--adm-accent-ink);
 }
 
 .admin-th-sort.is-active .admin-sort-mark {
@@ -1528,11 +1426,6 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
     padding: 9px 10px;
   }
 
-  /* image 字段：输入框 + 图库按钮允许换行 */
-  .admin-img-row {
-    flex-wrap: wrap;
-  }
-
   /* 图片库 / 图库选择弹窗网格：3 列 */
   .media-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1630,22 +1523,36 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 .admin-modal-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 12px;
+  gap: 12px;
+  padding: 18px 24px 12px;
 }
-.admin-modal-title {
+.admin-modal-icon {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent-ink);
+}
+.admin-modal-title {
+  flex: 1;
   min-width: 0;
-  gap: 10px;
 }
 .admin-modal-head h3 { margin: 0; font-size: 21px; color: var(--adm-text); }
+.admin-modal-sub {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--adm-text-dim);
+}
 .admin-unsaved-mark {
   flex: 0 0 auto;
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--adm-danger-soft);
-  color: var(--adm-danger);
+  background: var(--adm-warning-soft);
+  color: var(--adm-warning);
   font-size: 12px;
   font-weight: 700;
 }
@@ -1702,10 +1609,30 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 }
 
 .admin-form-section-head h4 {
+  position: relative;
   margin: 0;
+  padding-left: 11px;
   color: var(--adm-text);
   font-size: 15px;
   font-weight: 700;
+}
+
+/* 分组标题左侧色条：可编辑分组用主色，快速锚定视线落点 */
+.admin-form-section-head h4::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--adm-accent);
+}
+
+/* 系统信息组是纯只读元数据，视觉权重低于可编辑分组，色条降级为装饰灰 */
+.admin-form-section--system .admin-form-section-head h4::before {
+  background: var(--adm-text-faint);
 }
 
 /* 双列网格：短字段并排，长字段整行 */
@@ -2039,89 +1966,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   text-align: center;
 }
 
-/* 复选框：自绘圆角样式，两套主题跟随 --adm 变量（原生 accent-color 在暗色下是突兀的白方块） */
-.admin-check {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  border: 1.5px solid var(--input-border);
-  border-radius: 6px;
-  background: var(--input-bg);
-  cursor: pointer;
-  vertical-align: middle;
-  position: relative;
-  flex-shrink: 0;
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
-}
-
-.admin-check:hover {
-  border-color: var(--adm-accent);
-}
-
-.admin-check:active {
-  transform: scale(0.9);
-}
-
-.admin-check:focus-visible {
-  outline: none;
-  box-shadow: var(--adm-focus-ring);
-}
-
-/* 选中：主题色底 + 白勾（border 画 L 形旋转 45°） */
-.admin-check:checked {
-  border-color: var(--adm-accent);
-  background: linear-gradient(135deg, var(--adm-accent), var(--adm-accent-strong));
-  box-shadow: 0 3px 10px var(--adm-accent-soft);
-}
-
-.admin-check:checked::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  border-radius: 1px;
-  /* 勾的视觉重心偏下，垂直上移多一点才是视觉居中 */
-  transform: translate(-50%, -58%) rotate(45deg);
-}
-
-/* 半选（表头跨页部分选中）：主题色底 + 白色短横 */
-.admin-check:indeterminate {
-  border-color: var(--adm-accent);
-  background: linear-gradient(135deg, var(--adm-accent), var(--adm-accent-strong));
-}
-
-.admin-check:indeterminate::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 8px;
-  height: 2px;
-  border-radius: 999px;
-  background: #fff;
-  transform: translate(-50%, -50%);
-}
-
-/* 小尺寸复选框：表单内联用途，16px */
-.admin-check-sm {
-  width: 16px;
-  height: 16px;
-}
-
-.admin-check-sm:checked::after {
-  width: 4px;
-  height: 8px;
-}
-
-.admin-check-sm:indeterminate::after {
-  width: 7px;
-}
+/* 复选框已统一为 CxCheckbox（cx-checkbox.css）；后台令牌改指见文件末尾 */
 
 .admin-table tbody tr.is-checked {
   background-color: var(--adm-accent-soft);
@@ -2135,13 +1980,18 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   margin-bottom: 14px;
   padding: 10px 16px;
   border: 1px solid var(--adm-border-soft);
+  border-left: 3px solid var(--adm-accent);
   border-radius: 14px;
   background-color: var(--adm-card);
   box-shadow: var(--adm-shadow);
 }
 
+/* 计数徽章化：批量条里最核心的信息是「影响几条记录」，胶囊让它从控件堆里跳出来 */
 .admin-batch-count {
-  font-size: 14.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--adm-accent-soft);
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--adm-accent-ink);
   white-space: nowrap;
