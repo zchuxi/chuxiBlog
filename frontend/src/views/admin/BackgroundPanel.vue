@@ -46,10 +46,9 @@
         </div>
 
         <div class="bgl-add-row">
-          <input
+          <CxInput
             v-model="drafts[group.key]"
-            class="admin-input"
-            type="text"
+            variant="admin"
             placeholder="粘贴图片 URL 后点添加，或直接上传 / 从图库选择"
             @keyup.enter="addDraft(group.key)"
           />
@@ -84,6 +83,7 @@
 import { inject, reactive, ref, onMounted } from 'vue'
 import { siteContentApi, mediaApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import { DEFAULT_LANDSCAPE, DEFAULT_VERTICAL } from '../../stores/settings'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
@@ -360,7 +360,8 @@ onMounted(load)
   gap: 8px;
   flex-wrap: wrap;
 }
-.bgl-add-row .admin-input {
+/* CxInput 的根元素是外壳 div，弹性尺寸要给外壳，给内层 input 不生效 */
+.bgl-add-row .cx-input {
   flex: 1;
   min-width: 220px;
 }

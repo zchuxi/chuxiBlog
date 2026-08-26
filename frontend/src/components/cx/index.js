@@ -1,4 +1,6 @@
 export { default as CxButton } from './CxButton.vue'
+export { default as CxInput } from './CxInput.vue'
+export { default as CxCheckbox } from './CxCheckbox.vue'
 export { default as CxTag } from './CxTag.vue'
 export { default as CxSwitch } from './CxSwitch.vue'
 export { default as CxRadio } from './CxRadio.vue'

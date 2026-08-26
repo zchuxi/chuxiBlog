@@ -1,13 +1,13 @@
 <template>
   <div class="adm-img-select" :class="{ 'is-open': open }">
     <div class="adm-img-select-row">
-      <input
+      <CxInput
         ref="inputRef"
-        class="admin-input adm-img-select-input"
-        type="text"
-        :value="modelValue"
+        class="adm-img-select-input"
+        variant="admin"
+        :model-value="modelValue"
         :placeholder="placeholder"
-        @input="onInput"
+        @update:model-value="onInput"
       />
       <CxButton
         ref="triggerRef"
@@ -76,6 +76,7 @@ import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { mediaApi } from '../../api/admin'
 import CropDialog from './CropDialog.vue'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -135,8 +136,9 @@ const loading = ref(false)
 const images = ref([])
 const panelStyle = ref({})
 
-function onInput(e) {
-  emit('update:modelValue', e.target.value)
+// CxInput 的 update:model-value 直接给值，不是原生 Event
+function onInput(value) {
+  emit('update:modelValue', value)
 }
 
 async function loadImages() {

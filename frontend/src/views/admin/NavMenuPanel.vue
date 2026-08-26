@@ -26,14 +26,13 @@
         <div class="nmp-row-fields">
           <div class="admin-field">
             <label class="admin-field-label">名称</label>
-            <input v-model="item.label" class="admin-input" type="text" placeholder="菜单显示文字" />
+            <CxInput v-model="item.label" variant="admin" placeholder="菜单显示文字" />
           </div>
           <div class="admin-field">
             <label class="admin-field-label">路径</label>
-            <input
+            <CxInput
               v-model="item.path"
-              class="admin-input"
-              type="text"
+              variant="admin"
               placeholder="/path"
               :list="`nmp-route-list-${i}`"
             />
@@ -43,14 +42,11 @@
           </div>
           <div class="admin-field">
             <label class="admin-field-label">图标</label>
-            <input v-model="item.icon" class="admin-input" type="text" placeholder="common-xxx" />
+            <CxInput v-model="item.icon" variant="admin" placeholder="common-xxx" />
           </div>
           <div class="admin-field nmp-visible-field">
             <label class="admin-field-label">显示</label>
-            <label class="nmp-switch">
-              <input v-model="item.visible" type="checkbox" />
-              <span class="nmp-switch-slider"></span>
-            </label>
+            <CxSwitch v-model="item.visible" :aria-label="`显示「${item.label || '未命名'}」`" />
           </div>
         </div>
         <div class="nmp-row-actions">
@@ -72,6 +68,8 @@ import { inject, onMounted, ref } from 'vue'
 import router from '../../router'
 import { siteContentApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxSwitch from '../../components/cx/CxSwitch.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 
 const CONTENT_KEY = 'nav-menu'
 
@@ -265,45 +263,7 @@ onMounted(load)
   margin-top: 4px;
 }
 
-/* 开关 */
-.nmp-switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 22px;
-  cursor: pointer;
-}
-.nmp-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-.nmp-switch-slider {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: rgba(127, 127, 127, 0.25);
-  transition: background 0.2s ease;
-}
-.nmp-switch-slider::before {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-.nmp-switch input:checked + .nmp-switch-slider {
-  background: #3f77b5;
-}
-.nmp-switch input:checked + .nmp-switch-slider::before {
-  transform: translateX(18px);
-}
+/* 显隐开关已改用 CxSwitch，原自建滑块样式随之删除 */
 
 /* 暗色 */
 html.dark .nmp-row {
@@ -312,12 +272,6 @@ html.dark .nmp-row {
 html.dark .nmp-row-index {
   background: rgba(232, 239, 250, 0.1);
   color: #e8effa;
-}
-html.dark .nmp-switch-slider {
-  background: rgba(255, 255, 255, 0.15);
-}
-html.dark .nmp-switch input:checked + .nmp-switch-slider {
-  background: #7fb4e8;
 }
 
 /* 移动端 */

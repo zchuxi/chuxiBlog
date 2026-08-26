@@ -10,11 +10,11 @@
         <p class="admin-login-sub">请登录后进入工作台</p>
         <div class="admin-field">
           <label class="admin-field-label">账号</label>
-          <input v-model.trim="loginForm.username" class="admin-input" type="text" autocomplete="username" />
+          <CxInput v-model="loginForm.username" variant="admin" model-modifier="trim" autocomplete="username" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">密码</label>
-          <input v-model.trim="loginForm.password" class="admin-input" type="password" autocomplete="current-password" />
+          <CxInput v-model="loginForm.password" type="password" variant="admin" model-modifier="trim" autocomplete="current-password" />
         </div>
         <p v-if="loginError" class="admin-login-error">{{ loginError }}</p>
 
@@ -140,6 +140,7 @@ import { filterMenuGroups } from './adminUi'
 import { menuGroups } from './adminMenu'
 import SvgIcon from '../../components/SvgIcon.vue'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import ResourcePanel from './ResourcePanel.vue'
 import MediaPanel from './MediaPanel.vue'
 import BackgroundPanel from './BackgroundPanel.vue'

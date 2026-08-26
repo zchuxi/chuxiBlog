@@ -17,24 +17,24 @@
     <div v-else-if="contentKey === 'home-landing'" class="scp-card">
       <div class="admin-field">
         <label class="admin-field-label">主标题</label>
-        <input v-model="form.title" class="admin-input" type="text" placeholder="首页大标题" />
+        <CxInput v-model="form.title" variant="admin" placeholder="首页大标题" />
       </div>
       <div class="admin-field">
         <label class="admin-field-label">副标题</label>
-        <input v-model="form.subtitle" class="admin-input" type="text" placeholder="标题下方的一句话" />
+        <CxInput v-model="form.subtitle" variant="admin" placeholder="标题下方的一句话" />
       </div>
       <div class="admin-field">
         <label class="admin-field-label">欢迎语（每行一条，会轮流展示）</label>
-        <textarea v-model="form.welcomeText" class="admin-input admin-textarea" rows="5" placeholder="第一行是一条&#10;第二行是另一条"></textarea>
+        <CxInput v-model="form.welcomeText" type="textarea" variant="admin" :rows="5" placeholder="第一行是一条&#10;第二行是另一条" />
       </div>
       <div class="scp-grid-2">
         <div class="admin-field">
           <label class="admin-field-label">主按钮文字</label>
-          <input v-model="form.primaryBtn" class="admin-input" type="text" placeholder="如：开始探索" />
+          <CxInput v-model="form.primaryBtn" variant="admin" placeholder="如：开始探索" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">次按钮文字</label>
-          <input v-model="form.secondaryBtn" class="admin-input" type="text" placeholder="如：了解更多" />
+          <CxInput v-model="form.secondaryBtn" variant="admin" placeholder="如：了解更多" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">主按钮跳转目标</label>
@@ -51,19 +51,19 @@
     <div v-else-if="contentKey === 'archive-hero'" class="scp-card">
       <div class="admin-field">
         <label class="admin-field-label">眉标（标题上方的小字）</label>
-        <input v-model="form.eyebrow" class="admin-input" type="text" placeholder="如 ARCHIVE" />
+        <CxInput v-model="form.eyebrow" variant="admin" placeholder="如 ARCHIVE" />
       </div>
       <div class="admin-field">
         <label class="admin-field-label">标题</label>
-        <input v-model="form.title" class="admin-input" type="text" placeholder="归档页标题" />
+        <CxInput v-model="form.title" variant="admin" placeholder="归档页标题" />
       </div>
       <div class="admin-field">
         <label class="admin-field-label">描述</label>
-        <textarea v-model="form.description" class="admin-input admin-textarea" rows="3" placeholder="归档页顶部的介绍文字"></textarea>
+        <CxInput v-model="form.description" type="textarea" variant="admin" :rows="3" placeholder="归档页顶部的介绍文字" />
       </div>
       <div class="admin-field">
         <label class="admin-field-label">要点（每行一条）</label>
-        <textarea v-model="form.notesText" class="admin-input admin-textarea" rows="4" placeholder="第一条要点&#10;第二条要点"></textarea>
+        <CxInput v-model="form.notesText" type="textarea" variant="admin" :rows="4" placeholder="第一条要点&#10;第二条要点" />
       </div>
     </div>
 
@@ -78,17 +78,19 @@
       <div class="scp-card">
         <div class="admin-field">
           <label class="admin-field-label">页面标题</label>
-          <input v-model="form.title" class="admin-input" type="text" placeholder="关于页标题" />
+          <CxInput v-model="form.title" variant="admin" placeholder="关于页标题" />
         </div>
       </div>
       <div class="scp-about-grid">
         <div class="scp-card">
           <p class="scp-col-label">正文（Markdown）</p>
-          <textarea
+          <CxInput
             v-model="form.markdown"
-            class="admin-input admin-textarea scp-md-input"
+            type="textarea"
+            variant="admin"
+            class="scp-md-input"
             placeholder="# 关于我&#10;&#10;在这里介绍你自己…"
-          ></textarea>
+          />
         </div>
         <div class="scp-card scp-preview-card">
           <p class="scp-col-label">实时预览</p>
@@ -107,6 +109,7 @@ import { siteContentApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import AdminSelect from './AdminSelect.vue'
 import FieldInput from './FieldInput.vue'
 
@@ -395,8 +398,10 @@ onMounted(load)
   margin: 10px 0 0;
 }
 
-/* 双类选择器压过 admin.css 的 .admin-textarea{min-height:72px}（同特异性按加载顺序取胜会失效） */
-.admin-textarea.scp-md-input {
+/* 类名落在 CxInput 外壳上，定高必须下到内层 textarea——外壳高度由内容决定。
+   选择器带 .admin-root 前缀提特异性：打包后 admin.css 排在组件样式之后，
+   同优先级的 .cx-input--admin .cx-input__textarea（min-height:72px）会把本规则盖掉。 */
+.admin-root .scp-md-input .cx-input__textarea {
   min-height: 62vh;
   font-size: 14.5px;
   line-height: 1.7;
@@ -455,7 +460,7 @@ html.dark .scp-head-sub {
     padding: 14px 16px;
   }
 
-  .admin-textarea.scp-md-input {
+  .admin-root .scp-md-input .cx-input__textarea {
     min-height: 46vh;
   }
 }

@@ -38,11 +38,10 @@
         <template v-else>
           <div class="ap-list-head">
             <label class="ap-select-all">
-              <input
-                type="checkbox"
-                class="admin-check admin-check-sm"
-                :checked="filteredRows.length > 0 && selected.size === filteredRows.length"
-                :indeterminate.prop="selected.size > 0 && selected.size < filteredRows.length"
+              <CxCheckbox
+                size="small"
+                :model-value="filteredRows.length > 0 && selected.size === filteredRows.length"
+                :indeterminate="selected.size > 0 && selected.size < filteredRows.length"
                 @change="toggleAll"
               />
               <span>全选</span>
@@ -51,10 +50,11 @@
           </div>
           <ul class="ap-list">
             <li v-for="row in filteredRows" :key="row.id" class="ap-row" :class="{ 'is-checked': selected.has(row.id) }">
-              <input
-                type="checkbox"
-                class="admin-check admin-check-sm ap-row-check"
-                :checked="selected.has(row.id)"
+              <CxCheckbox
+                size="small"
+                class="ap-row-check"
+                :model-value="selected.has(row.id)"
+                :aria-label="`选中《${row.title}》`"
                 @change="toggleRow(row)"
               />
               <div class="ap-row-main">
@@ -96,12 +96,12 @@
         <div class="ap-card ap-editor-form">
           <div class="admin-field">
             <label class="admin-field-label">文章标题</label>
-            <input v-model="form.title" class="admin-input ap-title-input" type="text" placeholder="给这篇文章起个名字" />
+            <CxInput v-model="form.title" class="ap-title-input" variant="admin" placeholder="给这篇文章起个名字" />
           </div>
 
           <div class="admin-field">
             <label class="admin-field-label">摘要</label>
-            <textarea v-model="form.summary" class="admin-input admin-textarea" rows="3" placeholder="列表页展示的一小段介绍"></textarea>
+            <CxInput v-model="form.summary" type="textarea" variant="admin" :rows="3" placeholder="列表页展示的一小段介绍" />
           </div>
 
           <div class="ap-row-2col">
@@ -112,11 +112,11 @@
                 class="ap-select"
                 :options="[...categoryOptions, { label: '自定义…', value: CUSTOM_CATEGORY }]"
               />
-              <input
+              <CxInput
                 v-if="form.categoryPick === CUSTOM_CATEGORY"
                 v-model="form.customCategory"
-                class="admin-input ap-custom-cat"
-                type="text"
+                class="ap-custom-cat"
+                variant="admin"
                 placeholder="输入新分类名"
               />
             </div>
@@ -124,7 +124,7 @@
               <label class="admin-field-label">状态</label>
               <AdminSelect v-model="form.status" class="ap-select" :options="['已发布', '草稿']" />
               <label class="ap-pin-check">
-                <input v-model="form.pinned" type="checkbox" class="admin-check admin-check-sm" />
+                <CxCheckbox v-model="form.pinned" size="small" />
                 <span>置顶到首页文章列表</span>
               </label>
             </div>
@@ -133,7 +133,7 @@
           <div class="admin-field">
             <label class="admin-field-label">封面图</label>
             <img v-if="form.coverUrl" class="ap-cover-preview" :src="form.coverUrl" alt="封面预览" />
-            <input v-model="form.coverUrl" class="admin-input" type="text" placeholder="封面图片 URL" />
+            <CxInput v-model="form.coverUrl" variant="admin" placeholder="封面图片 URL" />
             <div class="ap-cover-actions">
               <CxButton plain :disabled="uploading" @click="fileEl && fileEl.click()">
                 {{ uploading ? '上传中…' : '上传图片' }}
@@ -163,11 +163,13 @@
 
           <div class="admin-field">
             <label class="admin-field-label">正文（Markdown）</label>
-            <textarea
+            <CxInput
               v-model="form.content"
-              class="admin-input admin-textarea ap-content-input"
+              class="ap-content-input"
+              type="textarea"
+              variant="admin"
               placeholder="# 从这里开始写正文…"
-            ></textarea>
+            />
           </div>
         </div>
 
@@ -201,6 +203,8 @@ import { adminApi, mediaApi } from '../../api/admin'
 import { renderMarkdown } from '../../utils/markdown'
 import { useSettingsStore } from '../../stores/settings'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxCheckbox from '../../components/cx/CxCheckbox.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 import AdminSelect from './AdminSelect.vue'
@@ -775,7 +779,8 @@ onMounted(async () => {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.ap-title-input {
+/* 类名落在 CxInput 根 div 上，字号与内边距要写到内层 input 才生效 */
+.ap-title-input .cx-input__inner {
   font-size: 20px;
   padding: 12px 14px;
 }
@@ -798,7 +803,7 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-/* ap-check 已统一使用 admin-check + admin-check-sm 全局样式 */
+/* ap-check 已统一使用 CxCheckbox（size="small"） */
 
 .ap-cover-preview {
   display: block;
@@ -861,7 +866,11 @@ onMounted(async () => {
   padding: 4px 0;
 }
 
-.admin-textarea.ap-content-input {
+/* 同理：定高作用在内层 textarea 上。
+   选择器必须带 .admin-root 前缀提特异性：打包后 admin.css 排在组件样式之后，
+   同优先级的 .cx-input--admin .cx-input__textarea（min-height:72px）会把本规则盖掉，
+   正文框只剩三行高。 */
+.admin-root .ap-content-input .cx-input__textarea {
   min-height: 62vh;
   font-size: 15px;
   line-height: 1.85;
@@ -1048,7 +1057,7 @@ html.dark .ap-cover-preview {
     flex: 1 1 auto;
   }
 
-  .admin-textarea.ap-content-input {
+  .admin-root .ap-content-input .cx-input__textarea {
     min-height: 46vh;
   }
 

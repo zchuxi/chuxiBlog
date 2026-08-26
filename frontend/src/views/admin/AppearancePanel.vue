@@ -20,7 +20,7 @@
             <label class="admin-field-label">主题色</label>
             <div class="appearance-color-row">
               <input v-model="form.primaryColor" type="color" class="appearance-color-input" />
-              <input v-model="form.primaryColor" class="admin-input" type="text" placeholder="#ff6b81" />
+              <CxInput v-model="form.primaryColor" variant="admin" placeholder="#ff6b81" />
             </div>
           </div>
           <div class="admin-field">
@@ -38,21 +38,21 @@
               <strong>樱花飘落</strong>
               <p>粉色花瓣飘落动效</p>
             </span>
-            <input v-model="form.sakuraEnabled" type="checkbox" class="admin-check" />
+            <CxCheckbox v-model="form.sakuraEnabled" />
           </label>
           <label class="appearance-switch-item">
             <span>
               <strong>看板娘</strong>
               <p>页面右下角 Live2D 角色</p>
             </span>
-            <input v-model="form.live2dEnabled" type="checkbox" class="admin-check" />
+            <CxCheckbox v-model="form.live2dEnabled" />
           </label>
           <label class="appearance-switch-item">
             <span>
               <strong>音乐播放器</strong>
               <p>底部音乐播放条</p>
             </span>
-            <input v-model="form.musicEnabled" type="checkbox" class="admin-check" />
+            <CxCheckbox v-model="form.musicEnabled" />
           </label>
         </div>
       </div>
@@ -64,6 +64,8 @@
 import { inject, onMounted, ref } from 'vue'
 import { siteContentApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
+import CxCheckbox from '../../components/cx/CxCheckbox.vue'
 import AdminSelect from './AdminSelect.vue'
 import { THEME_OPTIONS } from './constants'
 

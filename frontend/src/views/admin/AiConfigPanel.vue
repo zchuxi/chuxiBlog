@@ -37,12 +37,12 @@
         <p class="scp-section-label">模型服务</p>
         <div class="admin-field">
           <label class="admin-field-label" for="ai-base-url">兼容接口地址</label>
-          <input id="ai-base-url" v-model.trim="form.baseUrl" class="admin-input" type="url" autocomplete="url" placeholder="https://api.deepseek.com/v1" />
+          <CxInput id="ai-base-url" v-model="form.baseUrl" type="url" variant="admin" model-modifier="trim" autocomplete="url" placeholder="https://api.deepseek.com/v1" />
           <p class="admin-field-tip">填写 OpenAI-compatible API 的基础地址，系统会自动追加 /chat/completions。</p>
         </div>
         <div class="admin-field">
           <label class="admin-field-label" for="ai-model">模型名称</label>
-          <input id="ai-model" v-model.trim="form.model" class="admin-input" type="text" autocomplete="off" placeholder="deepseek-chat" />
+          <CxInput id="ai-model" v-model="form.model" variant="admin" model-modifier="trim" autocomplete="off" placeholder="deepseek-chat" />
         </div>
       </div>
 
@@ -51,12 +51,12 @@
         <div class="scp-grid-2">
           <div class="admin-field">
             <label class="admin-field-label" for="ai-timeout">请求超时（秒）</label>
-            <input id="ai-timeout" v-model.number="form.timeoutSeconds" class="admin-input" type="number" min="1" max="120" step="1" />
+            <CxInput id="ai-timeout" v-model="form.timeoutSeconds" type="number" variant="admin" model-modifier="number" min="1" max="120" step="1" />
             <p class="admin-field-tip">范围 1-120 秒。</p>
           </div>
           <div class="admin-field">
             <label class="admin-field-label" for="ai-context">文章上下文数量</label>
-            <input id="ai-context" v-model.number="form.maxContextArticles" class="admin-input" type="number" min="1" max="8" step="1" />
+            <CxInput id="ai-context" v-model="form.maxContextArticles" type="number" variant="admin" model-modifier="number" min="1" max="8" step="1" />
             <p class="admin-field-tip">每次对话最多检索 1-8 篇已发布文章。</p>
           </div>
         </div>
@@ -70,6 +70,7 @@ import { inject, onMounted, ref } from 'vue'
 import { adminApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
 import CxSwitch from '../../components/cx/CxSwitch.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 
 const toast = inject('adminToast', () => {})
 const onUnauthorized = inject('adminUnauthorized', () => {})

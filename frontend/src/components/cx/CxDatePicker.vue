@@ -219,9 +219,12 @@ function positionPanel() {
   panelStyle.value = {
     position: 'fixed',
     left: `${Math.max(8, Math.min(rootRect.left, window.innerWidth - panelRect.width - 8))}px`,
+    // top 与 bottom 必须互斥：样式表给未定位态兜底了 top: calc(100% + 8px)，
+    // 上翻时若只设 bottom 不清 top，两条同时生效会把面板压扁在视口底部
+    // （实测渲染成 30px 高的细条，看起来就是「弹窗下方被截断」）。
     ...(openUp
-      ? { bottom: `${window.innerHeight - rootRect.top + gap}px` }
-      : { top: `${rootRect.bottom + gap}px` })
+      ? { top: 'auto', bottom: `${window.innerHeight - rootRect.top + gap}px` }
+      : { top: `${rootRect.bottom + gap}px`, bottom: 'auto' })
   }
 }
 

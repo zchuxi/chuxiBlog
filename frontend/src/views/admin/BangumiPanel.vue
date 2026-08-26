@@ -4,10 +4,11 @@
     <section class="admin-table-card bgm-import-card">
       <div class="bgm-import-row">
         <span class="bgm-import-label">从 Bangumi 导入</span>
-        <input
-          v-model.trim="keyword"
-          class="admin-input bgm-import-input"
-          type="text"
+        <CxInput
+          v-model="keyword"
+          class="bgm-import-input"
+          variant="admin"
+          model-modifier="trim"
           placeholder="输入番剧名，如：葬送的芙莉莲"
           @keyup.enter="doSearch"
         />
@@ -22,10 +23,12 @@
       <!-- 用 Bangumi 访问令牌同步个人收藏（token 只存本地浏览器，不入库不入仓） -->
       <div class="bgm-import-row bgm-sync-row">
         <span class="bgm-import-label">同步我的收藏</span>
-        <input
-          v-model.trim="bgmToken"
-          class="admin-input bgm-import-input"
+        <CxInput
+          v-model="bgmToken"
+          class="bgm-import-input"
+          variant="admin"
           type="password"
+          model-modifier="trim"
           placeholder="粘贴 Bangumi 访问令牌（next.bgm.tv/demo/access-token 生成）"
         />
         <CxButton :disabled="syncing" @click="syncCollections">
@@ -68,6 +71,7 @@
 import { inject, onMounted, ref } from 'vue'
 import { adminApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import ResourcePanel from './ResourcePanel.vue'
 import resourceSchemas from './resourceSchemas'
 

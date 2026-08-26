@@ -8,16 +8,16 @@
       <form class="pwd-body" @submit.prevent="onSubmit">
         <div class="admin-field">
           <label class="admin-field-label">旧密码</label>
-          <input v-model.trim="form.oldPassword" class="admin-input" type="password" autocomplete="current-password" />
+          <CxInput v-model="form.oldPassword" type="password" variant="admin" model-modifier="trim" autocomplete="current-password" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">新密码</label>
-          <input v-model.trim="form.newPassword" class="admin-input" type="password" autocomplete="new-password" />
+          <CxInput v-model="form.newPassword" type="password" variant="admin" model-modifier="trim" autocomplete="new-password" />
           <p class="admin-field-tip">至少 16 位，修改后立即生效</p>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">确认新密码</label>
-          <input v-model.trim="form.confirmPassword" class="admin-input" type="password" autocomplete="new-password" />
+          <CxInput v-model="form.confirmPassword" type="password" variant="admin" model-modifier="trim" autocomplete="new-password" />
         </div>
         <p v-if="error" class="pwd-error">{{ error }}</p>
         <footer class="pwd-foot">
@@ -33,6 +33,7 @@
 import { inject, reactive, ref } from 'vue'
 import { changePassword } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 
 const emit = defineEmits(['close'])
 

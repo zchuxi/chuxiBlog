@@ -18,11 +18,11 @@
         <p class="scp-section-label">基本信息</p>
         <div class="admin-field">
           <label class="admin-field-label">站名</label>
-          <input v-model="form.siteName" class="admin-input" type="text" placeholder="如：初曦的窝" />
+          <CxInput v-model="form.siteName" variant="admin" placeholder="如：初曦的窝" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">副标题</label>
-          <input v-model="form.subtitle" class="admin-input" type="text" placeholder="站点副标题 / 标语" />
+          <CxInput v-model="form.subtitle" variant="admin" placeholder="站点副标题 / 标语" />
         </div>
         <div class="scp-grid-2">
           <div class="admin-field">
@@ -45,11 +45,11 @@
         <p class="scp-section-label">SEO</p>
         <div class="admin-field">
           <label class="admin-field-label">页面描述</label>
-          <textarea v-model="form.seoDescription" class="admin-input admin-textarea" rows="3" placeholder="搜索引擎摘要描述"></textarea>
+          <CxInput v-model="form.seoDescription" type="textarea" variant="admin" :rows="3" placeholder="搜索引擎摘要描述" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">关键词</label>
-          <input v-model="form.seoKeywords" class="admin-input" type="text" placeholder="用英文逗号分隔，如：博客,追番,工具" />
+          <CxInput v-model="form.seoKeywords" variant="admin" placeholder="用英文逗号分隔，如：博客,追番,工具" />
         </div>
       </div>
 
@@ -59,16 +59,16 @@
         <div class="scp-grid-2">
           <div class="admin-field">
             <label class="admin-field-label">GitHub</label>
-            <input v-model="form.githubUrl" class="admin-input" type="text" placeholder="https://github.com/..." />
+            <CxInput v-model="form.githubUrl" variant="admin" placeholder="https://github.com/..." />
           </div>
           <div class="admin-field">
             <label class="admin-field-label">微博</label>
-            <input v-model="form.weiboUrl" class="admin-input" type="text" placeholder="https://weibo.com/..." />
+            <CxInput v-model="form.weiboUrl" variant="admin" placeholder="https://weibo.com/..." />
           </div>
         </div>
         <div class="admin-field">
           <label class="admin-field-label">QQ</label>
-          <input v-model="form.qqUrl" class="admin-input" type="text" placeholder="QQ 链接或群号" />
+          <CxInput v-model="form.qqUrl" variant="admin" placeholder="QQ 链接或群号" />
         </div>
       </div>
 
@@ -77,11 +77,11 @@
         <p class="scp-section-label">页脚</p>
         <div class="admin-field">
           <label class="admin-field-label">页脚文案</label>
-          <input v-model="form.footerText" class="admin-input" type="text" placeholder="页脚版权 / 标语" />
+          <CxInput v-model="form.footerText" variant="admin" placeholder="页脚版权 / 标语" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">备案号</label>
-          <input v-model="form.footerIcp" class="admin-input" type="text" placeholder="如：京ICP备XXXXXXXX号" />
+          <CxInput v-model="form.footerIcp" variant="admin" placeholder="如：京ICP备XXXXXXXX号" />
         </div>
       </div>
     </template>
@@ -92,6 +92,7 @@
 import { inject, onMounted, ref } from 'vue'
 import { siteContentApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import ImageSelect from './ImageSelect.vue'
 
 const CONTENT_KEY = 'site-settings'

@@ -27,17 +27,17 @@
       <template v-else>
         <div class="scene-list-head">
           <label class="scene-check-label">
-            <input type="checkbox" class="admin-check admin-check-sm" :checked="allSelected" @change="toggleAll" />
+            <CxCheckbox size="small" :model-value="allSelected" @change="toggleAll" />
             <span>全选</span>
           </label>
           <span class="scene-count">共 {{ rows.length }} 个场景</span>
         </div>
         <ul class="scene-list">
           <li v-for="(row, idx) in rows" :key="row.id" class="scene-row" :class="{ off: !isVisible(row) }">
-            <input
-              type="checkbox"
-              class="admin-check admin-check-sm"
-              :checked="selectedIds.includes(row.id)"
+            <CxCheckbox
+              size="small"
+              :model-value="selectedIds.includes(row.id)"
+              :aria-label="`选中「${row.title || '未命名场景'}」`"
               @change="toggleSelect(row.id)"
             />
             <div class="scene-thumb">
@@ -82,29 +82,29 @@
               <div class="scene-form-grid">
                 <div class="admin-field">
                   <label class="admin-field-label">编号标签（留空自动按序号，如 SCENE 01）</label>
-                  <input v-model="form.sceneLabel" class="admin-input" type="text" placeholder="SCENE 01" />
+                  <CxInput v-model="form.sceneLabel" variant="admin" placeholder="SCENE 01" />
                 </div>
                 <div class="admin-field">
                   <label class="admin-field-label">眉标 Kicker（留空默认 PERSPECTIVE）</label>
-                  <input v-model="form.kicker" class="admin-input" type="text" placeholder="PERSPECTIVE" />
+                  <CxInput v-model="form.kicker" variant="admin" placeholder="PERSPECTIVE" />
                 </div>
               </div>
               <div class="admin-field">
                 <label class="admin-field-label">标题</label>
-                <input v-model="form.title" class="admin-input" type="text" placeholder="场景大标题" />
+                <CxInput v-model="form.title" variant="admin" placeholder="场景大标题" />
               </div>
               <div class="admin-field">
                 <label class="admin-field-label">副标题</label>
-                <textarea v-model="form.description" class="admin-input admin-textarea" rows="2" placeholder="标题下方的一句话"></textarea>
+                <CxInput v-model="form.description" type="textarea" variant="admin" :rows="2" placeholder="标题下方的一句话" />
               </div>
               <div class="admin-field">
                 <label class="admin-field-label">描述</label>
-                <textarea v-model="form.content" class="admin-input admin-textarea" rows="3" placeholder="更长的场景介绍文字"></textarea>
+                <CxInput v-model="form.content" type="textarea" variant="admin" :rows="3" placeholder="更长的场景介绍文字" />
               </div>
               <div class="admin-field">
                 <label class="admin-field-label">背景图片</label>
                 <img v-if="form.imageUrl" class="scene-img-preview" :src="form.imageUrl" alt="背景预览" />
-                <input v-model="form.imageUrl" class="admin-input" type="text" placeholder="图片 URL" />
+                <CxInput v-model="form.imageUrl" variant="admin" placeholder="图片 URL" />
                 <div class="scene-img-actions">
                   <CxButton plain :disabled="uploading" @click="fileEl && fileEl.click()">
                     {{ uploading ? '上传中…' : '上传图片' }}
@@ -118,15 +118,15 @@
               <div class="scene-form-grid">
                 <div class="admin-field">
                   <label class="admin-field-label">角标 Badge（留空自动推导，如 04/19）</label>
-                  <input v-model="form.badge" class="admin-input" type="text" placeholder="04/19" />
+                  <CxInput v-model="form.badge" variant="admin" placeholder="04/19" />
                 </div>
                 <div class="admin-field">
                   <label class="admin-field-label">排序（数字越小越靠前）</label>
-                  <input v-model="form.sortIndex" class="admin-input" type="number" />
+                  <CxInput v-model="form.sortIndex" type="number" variant="admin" />
                 </div>
               </div>
               <label class="scene-visible-check">
-                <input v-model="form.visible" type="checkbox" class="admin-check admin-check-sm" />
+                <CxCheckbox v-model="form.visible" size="small" />
                 <span>在首页显示该场景</span>
               </label>
             </div>
@@ -154,9 +154,11 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { adminApi, mediaApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxCheckbox from '../../components/cx/CxCheckbox.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import MediaPicker from './MediaPicker.vue'
 import CropDialog from './CropDialog.vue'
 
@@ -174,6 +176,13 @@ const modalOpen = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
 const form = ref(emptyForm())
+// 打开弹窗时的初始快照：点遮罩/取消前据此判断是否有未保存修改
+const initialSnapshot = ref('')
+
+function snapshotOf(model) {
+  return JSON.stringify(model)
+}
+const isDirty = computed(() => modalOpen.value && snapshotOf(form.value) !== initialSnapshot.value)
 
 const pickerOpen = ref(false)
 const cropOpen = ref(false)
@@ -337,6 +346,7 @@ function openCreate() {
   editingId.value = null
   const next = rows.value.reduce((max, r) => Math.max(max, r.sortIndex == null ? 0 : r.sortIndex), 0) + 1
   form.value = { ...emptyForm(), sortIndex: next }
+  initialSnapshot.value = snapshotOf(form.value)
   modalOpen.value = true
 }
 
@@ -353,12 +363,22 @@ function openEdit(row) {
     sortIndex: row.sortIndex == null ? '' : row.sortIndex,
     visible: isVisible(row)
   }
+  initialSnapshot.value = snapshotOf(form.value)
   modalOpen.value = true
 }
 
 function closeModal() {
+  requestClose()
+}
+
+// 遮罩点击/×/取消共用同一守卫：有未保存修改先确认，保存中直接拒绝
+function requestClose() {
+  if (!modalOpen.value) return true
+  if (saving.value) return false
+  if (isDirty.value && !window.confirm('当前修改尚未保存，确定放弃并关闭吗？')) return false
   modalOpen.value = false
   cropOpen.value = false
+  return true
 }
 
 async function save() {
@@ -450,7 +470,25 @@ function onCropSaved(data) {
   }
 }
 
+// 弹层（图库/裁切）打开时把 Escape 让给子弹层，不触发主弹窗守卫
+function hasOpenSubOverlay() {
+  return pickerOpen.value || cropOpen.value
+}
+
+function onModalKeydown(event) {
+  if (!modalOpen.value || event.key !== 'Escape') return
+  if (hasOpenSubOverlay()) return
+  event.preventDefault()
+  requestClose()
+}
+
+watch(modalOpen, open => {
+  if (open) window.addEventListener('keydown', onModalKeydown)
+  else window.removeEventListener('keydown', onModalKeydown)
+})
+
 onMounted(load)
+onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
 </script>
 
 <style>
@@ -525,7 +563,7 @@ onMounted(load)
   cursor: pointer;
 }
 
-/* scene-check 已统一使用 admin-check 全局样式 */
+/* scene-check 已统一使用 CxCheckbox（size="small"） */
 
 .scene-list {
   list-style: none;
@@ -844,7 +882,7 @@ html.dark .scene-img-preview {
     align-items: center;
   }
 
-  .scene-row > .admin-check {
+  .scene-row > .cx-checkbox {
     grid-area: check;
   }
 

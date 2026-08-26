@@ -1,0 +1,103 @@
+/* ============================================================
+   cx-checkbox —— 全站通用复选框组件（前台 + 后台共用）
+   原生 checkbox 只能靠 accent-color 换色，暗色下是突兀的白方块，
+   所以 appearance:none 自绘：::after 画勾（L 形边框旋转 45°）与半选横线。
+   主题色走局部变量间接层：后台在 admin.css 里改指 --adm-* 令牌，
+   组件本身不感知是哪一端。
+   状态：:checked / :indeterminate / :disabled，尺寸：默认 18px、small 16px
+   ============================================================ */
+
+.cx-checkbox {
+  /* 前台默认取站点主题令牌；后台覆盖见 admin.css */
+  --cx-check-accent: var(--accent-solid);
+  --cx-check-accent-strong: var(--accent-strong, var(--accent-solid));
+  --cx-check-soft: color-mix(in srgb, var(--accent-solid) 22%, transparent);
+  --cx-check-ring: 0 0 0 3px color-mix(in srgb, var(--accent-solid) 20%, transparent);
+
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--input-border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.cx-checkbox:hover:not(:disabled) {
+  border-color: var(--cx-check-accent);
+}
+
+.cx-checkbox:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.cx-checkbox:focus-visible {
+  outline: none;
+  box-shadow: var(--cx-check-ring);
+}
+
+/* 选中：主题色底 + 白勾 */
+.cx-checkbox:checked {
+  border-color: var(--cx-check-accent);
+  background: linear-gradient(135deg, var(--cx-check-accent), var(--cx-check-accent-strong));
+  box-shadow: 0 3px 10px var(--cx-check-soft);
+}
+
+.cx-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  border-radius: 1px;
+  /* 勾的视觉重心偏下，垂直上移多一点才是视觉居中 */
+  transform: translate(-50%, -58%) rotate(45deg);
+}
+
+/* 半选（表头跨页部分选中）：主题色底 + 白色短横 */
+.cx-checkbox:indeterminate {
+  border-color: var(--cx-check-accent);
+  background: linear-gradient(135deg, var(--cx-check-accent), var(--cx-check-accent-strong));
+}
+
+.cx-checkbox:indeterminate::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.cx-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 小尺寸：表单内联用途 */
+.cx-checkbox--small {
+  width: 16px;
+  height: 16px;
+}
+
+.cx-checkbox--small:checked::after {
+  width: 4px;
+  height: 8px;
+}
+
+.cx-checkbox--small:indeterminate::after {
+  width: 7px;
+}

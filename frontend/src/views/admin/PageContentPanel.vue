@@ -39,15 +39,15 @@
         </div>
         <div class="admin-field">
           <label class="admin-field-label">眉标（标题上方小字）</label>
-          <input v-model="forms['timeline-hero'].eyebrow" class="admin-input" type="text" />
+          <CxInput v-model="forms['timeline-hero'].eyebrow" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
-          <input v-model="forms['timeline-hero'].title" class="admin-input" type="text" />
+          <CxInput v-model="forms['timeline-hero'].title" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">描述</label>
-          <textarea v-model="forms['timeline-hero'].description" class="admin-input admin-textarea" rows="3"></textarea>
+          <CxInput v-model="forms['timeline-hero'].description" type="textarea" variant="admin" :rows="3" />
         </div>
       </div>
 
@@ -61,15 +61,15 @@
         </div>
         <div class="admin-field">
           <label class="admin-field-label">输入框占位文字</label>
-          <input v-model="forms['treehole-config'].placeholder" class="admin-input" type="text" />
+          <CxInput v-model="forms['treehole-config'].placeholder" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">情绪选项（每行一个，对应弹幕情绪标签）</label>
-          <textarea v-model="forms['treehole-config'].moodOptionsText" class="admin-input admin-textarea" rows="4" placeholder="轻声&#10;鼓劲&#10;拥抱&#10;放空"></textarea>
+          <CxInput v-model="forms['treehole-config'].moodOptionsText" type="textarea" variant="admin" :rows="4" placeholder="轻声&#10;鼓劲&#10;拥抱&#10;放空" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">底部备注（可选，显示在输入框下方）</label>
-          <input v-model="forms['treehole-config'].backgroundNote" class="admin-input" type="text" />
+          <CxInput v-model="forms['treehole-config'].backgroundNote" variant="admin" />
         </div>
       </div>
 
@@ -85,28 +85,28 @@
         <div class="pcp-group-label">开场屏</div>
         <div class="admin-field">
           <label class="admin-field-label">开场标题</label>
-          <input v-model="forms['parallax-config'].introTitle" class="admin-input" type="text" />
+          <CxInput v-model="forms['parallax-config'].introTitle" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">开场副标题</label>
-          <textarea v-model="forms['parallax-config'].introSubtitle" class="admin-input admin-textarea" rows="2"></textarea>
+          <CxInput v-model="forms['parallax-config'].introSubtitle" type="textarea" variant="admin" :rows="2" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">开场背景图路径</label>
-          <input v-model="forms['parallax-config'].introBg" class="admin-input" type="text" />
+          <CxInput v-model="forms['parallax-config'].introBg" variant="admin" />
         </div>
         <div class="pcp-group-label">告别屏</div>
         <div class="admin-field">
           <label class="admin-field-label">告别标题</label>
-          <input v-model="forms['parallax-config'].outroTitle" class="admin-input" type="text" />
+          <CxInput v-model="forms['parallax-config'].outroTitle" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">告别副标题</label>
-          <textarea v-model="forms['parallax-config'].outroSubtitle" class="admin-input admin-textarea" rows="2"></textarea>
+          <CxInput v-model="forms['parallax-config'].outroSubtitle" type="textarea" variant="admin" :rows="2" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">告别背景图路径</label>
-          <input v-model="forms['parallax-config'].outroBg" class="admin-input" type="text" />
+          <CxInput v-model="forms['parallax-config'].outroBg" variant="admin" />
         </div>
       </div>
 
@@ -120,15 +120,15 @@
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
-          <input v-model="forms['bangumi-hero'].title" class="admin-input" type="text" />
+          <CxInput v-model="forms['bangumi-hero'].title" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">副标题</label>
-          <textarea v-model="forms['bangumi-hero'].subtitle" class="admin-input admin-textarea" rows="2"></textarea>
+          <CxInput v-model="forms['bangumi-hero'].subtitle" type="textarea" variant="admin" :rows="2" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">空态提示（无番剧时显示）</label>
-          <input v-model="forms['bangumi-hero'].emptyText" class="admin-input" type="text" />
+          <CxInput v-model="forms['bangumi-hero'].emptyText" variant="admin" />
         </div>
       </div>
 
@@ -142,11 +142,11 @@
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
-          <input v-model="forms['calendar-hero'].title" class="admin-input" type="text" />
+          <CxInput v-model="forms['calendar-hero'].title" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">副标题</label>
-          <textarea v-model="forms['calendar-hero'].subtitle" class="admin-input admin-textarea" rows="2"></textarea>
+          <CxInput v-model="forms['calendar-hero'].subtitle" type="textarea" variant="admin" :rows="2" />
         </div>
       </div>
 
@@ -160,15 +160,15 @@
         </div>
         <div class="admin-field">
           <label class="admin-field-label">标题</label>
-          <input v-model="forms['tool-hero'].title" class="admin-input" type="text" />
+          <CxInput v-model="forms['tool-hero'].title" variant="admin" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">描述</label>
-          <textarea v-model="forms['tool-hero'].description" class="admin-input admin-textarea" rows="3"></textarea>
+          <CxInput v-model="forms['tool-hero'].description" type="textarea" variant="admin" :rows="3" />
         </div>
         <div class="admin-field">
           <label class="admin-field-label">搜索框占位文字</label>
-          <input v-model="forms['tool-hero'].searchPlaceholder" class="admin-input" type="text" />
+          <CxInput v-model="forms['tool-hero'].searchPlaceholder" variant="admin" />
         </div>
       </div>
     </template>
@@ -179,6 +179,7 @@
 import { inject, onMounted, reactive, ref } from 'vue'
 import { siteContentApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 
 const TABS = [
   { key: 'timeline-hero', label: '时间线' },

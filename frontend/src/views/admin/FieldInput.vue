@@ -5,9 +5,18 @@
       <span v-if="field.required" class="admin-field-required" aria-hidden="true">*</span>
     </label>
 
+    <!-- 只读字段：系统记录的元数据（createdAt/updatedAt），纯展示块。
+         值仍保留在 form 中随 payload 整体提交，后端整体替换不会漏字段 -->
+    <div
+      v-if="field.readonly"
+      :id="inputId"
+      class="admin-field-readonly"
+      :aria-describedby="describedBy"
+    >{{ readonlyDisplay }}</div>
+
     <!-- 布尔开关 -->
     <CxSwitch
-      v-if="field.type === 'boolean'"
+      v-else-if="field.type === 'boolean'"
       :id="inputId"
       :name="field.name"
       :model-value="!!modelValue"
@@ -20,34 +29,35 @@
     />
 
     <!-- 多行文本 / Markdown -->
-    <textarea
+    <CxInput
       v-else-if="field.type === 'textarea' || field.type === 'markdown'"
       :id="inputId"
       :name="field.name"
-      class="admin-input admin-textarea"
-      :class="{ 'admin-md': field.type === 'markdown' }"
-      :value="modelValue"
+      type="textarea"
+      variant="admin"
+      :class="{ 'is-md': field.type === 'markdown' }"
+      :model-value="modelValue"
       :rows="field.type === 'markdown' ? 20 : 3"
-      :required="field.required"
       :disabled="disabled"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
-      @input="emit('update:modelValue', $event.target.value)"
-    ></textarea>
+      :aria-required="field.required ? 'true' : undefined"
+      @update:model-value="v => emit('update:modelValue', v)"
+    />
 
-    <!-- 数字 -->
-    <input
+    <!-- 数字：仍按字符串回传，与原生 input 的行为一致（后端接收后再转型） -->
+    <CxInput
       v-else-if="field.type === 'number'"
       :id="inputId"
       :name="field.name"
-      class="admin-input"
       type="number"
-      :value="modelValue"
-      :required="field.required"
+      variant="admin"
+      :model-value="modelValue"
       :disabled="disabled"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="describedBy"
-      @input="emit('update:modelValue', $event.target.value)"
+      :aria-required="field.required ? 'true' : undefined"
+      @update:model-value="v => emit('update:modelValue', v)"
     />
 
     <!-- 日期时间 / 日期：自绘日历（原生弹层不受站点主题控制，且在管理端弹窗内会溢出） -->
@@ -89,31 +99,30 @@
         :aria-required="field.required ? 'true' : undefined"
         @update:model-value="v => emit('update:modelValue', v)"
       />
-      <input
+      <CxInput
         v-if="field.allowCustom && isCustomCategory"
-        class="admin-input cx-field-custom-input"
-        type="text"
-        :value="customCategoryText"
+        class="cx-field-custom-input"
+        variant="admin"
+        :model-value="customCategoryText"
         :placeholder="`输入新的${field.label || '选项'}`"
         :disabled="disabled"
-        @input="e => emit('update:modelValue', e.target.value)"
+        @update:model-value="v => emit('update:modelValue', v)"
       />
     </template>
 
     <!-- 音频：试听 + URL 输入 + 导入音频文件 -->
     <div v-else-if="field.type === 'audio'" class="admin-audio-field">
-      <input
+      <CxInput
         :id="inputId"
         :name="field.name"
-        class="admin-input"
-        type="text"
-        :value="modelValue"
-        :required="field.required"
+        variant="admin"
+        :model-value="modelValue"
         :disabled="disabled"
         :aria-invalid="error ? 'true' : undefined"
         :aria-describedby="describedBy"
+        :aria-required="field.required ? 'true' : undefined"
         placeholder="音频 URL，可直接粘贴或点击下方导入"
-        @input="emit('update:modelValue', $event.target.value)"
+        @update:model-value="v => emit('update:modelValue', v)"
       />
       <div class="admin-img-actions">
         <CxButton plain :disabled="disabled || uploading" @click="fileRef?.click()">
@@ -131,18 +140,17 @@
         <span v-else>暂无图片</span>
       </div>
       <div class="admin-img-side">
-        <input
+        <CxInput
           :id="inputId"
           :name="field.name"
-          class="admin-input"
-          type="text"
-          :value="modelValue"
+          variant="admin"
+          :model-value="modelValue"
           :placeholder="placeholder"
-          :required="field.required"
           :disabled="disabled"
           :aria-invalid="error ? 'true' : undefined"
           :aria-describedby="describedBy"
-          @input="emit('update:modelValue', $event.target.value)"
+          :aria-required="field.required ? 'true' : undefined"
+          @update:model-value="v => emit('update:modelValue', v)"
         />
         <div class="admin-img-actions">
           <CxButton plain :disabled="disabled || uploading" @click="fileRef?.click()">
@@ -167,18 +175,17 @@
 
     <!-- 其余类型统一为文本输入（tags 带提示） -->
     <template v-else>
-      <input
+      <CxInput
         :id="inputId"
         :name="field.name"
-        class="admin-input"
-        type="text"
-        :value="modelValue"
+        variant="admin"
+        :model-value="modelValue"
         :placeholder="placeholder"
-        :required="field.required"
         :disabled="disabled"
         :aria-invalid="error ? 'true' : undefined"
         :aria-describedby="describedBy"
-        @input="emit('update:modelValue', $event.target.value)"
+        :aria-required="field.required ? 'true' : undefined"
+        @update:model-value="v => emit('update:modelValue', v)"
       />
     </template>
 
@@ -195,6 +202,7 @@ import AdminSelect from './AdminSelect.vue'
 import CxDatePicker from '../../components/cx/CxDatePicker.vue'
 import CxSwitch from '../../components/cx/CxSwitch.vue'
 import CxButton from '../../components/cx/CxButton.vue'
+import CxInput from '../../components/cx/CxInput.vue'
 import { mediaApi } from '../../api/admin'
 
 const props = defineProps({
@@ -326,6 +334,15 @@ async function onUploadAudio(e) {
 const dateValue = computed(() => {
   const v = typeof props.modelValue === 'string' ? props.modelValue : ''
   return props.field.type === 'date' ? v.slice(0, 10) : v.slice(0, 19)
+})
+
+// 只读字段的展示值：空值显示占位符，日期时间裁到秒并把 T 换成空格更易读
+const readonlyDisplay = computed(() => {
+  const v = props.modelValue
+  if (v == null || v === '') return '保存后由系统生成'
+  if (props.field.type === 'datetime') return String(v).slice(0, 19).replace('T', ' ')
+  if (props.field.type === 'date') return String(v).slice(0, 10)
+  return String(v)
 })
 
 const placeholder = computed(() => {
