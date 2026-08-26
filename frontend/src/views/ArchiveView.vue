@@ -20,7 +20,16 @@
                 <p v-for="(note, ni) in heroCopy.notes" :key="ni" class="archive-hero-note">{{ note }}</p>
               </div>
             </div>
-            <article v-if="featured" class="archive-hero-feature-card" @click="openArticle(featured.id)">
+            <article
+              v-if="featured"
+              class="archive-hero-feature-card"
+              tabindex="0"
+              role="link"
+              :aria-label="`本季聚焦：${featured.title}`"
+              @click="openArticle(featured.id)"
+              @keydown.enter.prevent="openArticle(featured.id)"
+              @keydown.space.prevent="openArticle(featured.id)"
+            >
               <div class="archive-hero-feature-head">
                 <span class="archive-hero-feature-badge">本季聚焦</span>
                 <span class="archive-hero-feature-date">{{ mmdd(featured.publishedAt) }} · {{ featured.readingTime }}</span>
@@ -120,8 +129,7 @@
                               <span
                                 v-for="t in e.tags"
                                 :key="t"
-                                class="cx-tag cx-tag--primary cx-tag--small is-round is-plain archive-entry-card-tag"
-                                style="--cx-tag-text: var(--archive-tag-text); --cx-tag-border: var(--archive-tag-border); --cx-tag-background: var(--archive-tag-background);"
+                                class="cx-tag cx-tag--primary cx-tag--small is-round is-plain cx-tag--soft-palette archive-entry-card-tag"
                               >
                                 <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ t }}</span></span>
                               </span>

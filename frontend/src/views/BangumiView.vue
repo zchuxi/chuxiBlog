@@ -57,7 +57,12 @@
           :key="r.id"
           v-reveal="(i % 6) * 60"
           class="bangumi-card"
+          tabindex="0"
+          role="link"
+          :aria-label="r.nameCn || r.name"
           @click="openDetail(r)"
+          @keydown.enter.prevent="openDetail(r)"
+          @keydown.space.prevent="openDetail(r)"
         >
           <div class="bangumi-cover">
             <img
@@ -520,6 +525,16 @@ html.dark .bangumi-bar {
 .bangumi-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 22px 44px var(--accent-glow), var(--nested-middle-card-shadow);
+}
+/* 按压回压到上浮量的一半：浮起→按下回落的物理手感 */
+.bangumi-card:active {
+  transform: translateY(-3px);
+}
+/* 键盘可达后焦点必须可见：沿用 hover 的高亮体系，外叠焦点环 */
+.bangumi-card:focus-visible {
+  outline: none;
+  transform: translateY(-6px);
+  box-shadow: 0 0 0 3px var(--accent-glow), 0 22px 44px var(--accent-glow), var(--nested-middle-card-shadow);
 }
 
 /* 2:3 封面与渐变占位 */

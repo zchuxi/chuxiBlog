@@ -13,16 +13,16 @@
           </div>
         </div>
         <div class="music-bar-controls">
-          <button type="button" class="control-btn" @click="prevTrack">
+          <button type="button" class="control-btn" title="上一首" aria-label="上一首" @click="prevTrack">
             <SvgIcon name="music-pre" size="16px" />
           </button>
-          <button type="button" class="control-btn is-play" @click="togglePlay">
+          <button type="button" class="control-btn is-play" :title="playing ? '暂停' : '播放'" :aria-label="playing ? '暂停' : '播放'" @click="togglePlay">
             <SvgIcon :name="playing ? 'music-pause' : 'music-play'" size="18px" />
           </button>
-          <button type="button" class="control-btn" @click="nextTrack">
+          <button type="button" class="control-btn" title="下一首" aria-label="下一首" @click="nextTrack">
             <SvgIcon name="music-next" size="16px" />
           </button>
-          <button type="button" class="control-btn" title="停止" @click="stopTrack">
+          <button type="button" class="control-btn" title="停止" aria-label="停止" @click="stopTrack">
             <span class="music-stop-square"></span>
           </button>
         </div>
@@ -34,11 +34,12 @@
           :max="duration || 0"
           step="0.1"
           :value="currentTime"
+          aria-label="播放进度"
           @input="onSeek"
         />
         <span class="music-time-tag">{{ formatTime(duration) }}</span>
         <div class="music-bar-volume">
-          <button type="button" class="control-btn" :title="muted ? '取消静音' : '静音'" @click="toggleMute">
+          <button type="button" class="control-btn" :title="muted ? '取消静音' : '静音'" :aria-label="muted ? '取消静音' : '静音'" @click="toggleMute">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none" />
               <template v-if="!muted">
@@ -58,16 +59,17 @@
             max="1"
             step="0.01"
             :value="muted ? 0 : volume"
+            aria-label="音量"
             @input="onVolumeInput"
           />
         </div>
-        <button type="button" class="control-btn" title="播放模式" @click="cyclePlayMode">
+        <button type="button" class="control-btn" title="播放模式" aria-label="播放模式" @click="cyclePlayMode">
           <SvgIcon :name="playModeIcon" size="16px" />
         </button>
-        <button type="button" class="control-btn music-rate-btn" title="播放速度" @click="cycleRate">{{ rateLabel }}</button>
+        <button type="button" class="control-btn music-rate-btn" title="播放速度" aria-label="播放速度" @click="cycleRate">{{ rateLabel }}</button>
         <div class="cx-popover-wrapper">
           <div class="cx-popover-trigger">
-            <button type="button" class="control-btn" @click="togglePlaylist">
+            <button type="button" class="control-btn" title="播放列表" aria-label="播放列表" @click="togglePlaylist">
               <SvgIcon name="music-list" size="18px" />
             </button>
           </div>
@@ -93,7 +95,7 @@
             </transition>
           </Teleport>
         </div>
-        <button type="button" class="control-btn bottom-bar-close-btn" @click="musicBarOpen = false">
+        <button type="button" class="control-btn bottom-bar-close-btn" title="收起音乐条" aria-label="收起音乐条" @click="musicBarOpen = false">
           <!-- 用细线描边的 common-close：common-big-close 是实心填充字形
                （viewBox 1216×1312、无 stroke），混在整排 2px 细线控件里显得格外粗重 -->
           <SvgIcon name="common-close" size="16px" />

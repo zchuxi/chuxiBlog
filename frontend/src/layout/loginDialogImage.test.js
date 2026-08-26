@@ -31,3 +31,15 @@ test('登录弹窗图片支持循环切换并持久化选择', async () => {
   assert.match(side, /<SvgIcon name="common-exchange"/)
   assert.match(source, /function changeAuthSideImage\(\)[\s\S]*?settings\.verticalImages[\s\S]*?settings\.update\(\{ selectedVerticalImage: nextImage \}\)/)
 })
+
+test('auth 对话框移动版规则不得使用 !important（特异性治理已清零）', async () => {
+  // 历史上移动版用 8 处 !important 对抗桌面版滑动动画规则。
+  // 重构后：7 处靠「同特异性 + 源码顺序」胜出（媒体查询块在文件尾部），
+  // is-forgot 冲突场景用 .auth-panel.auth-panel 双写类提到 (0,5,0)，均不再需要 !important。
+  const css = await readFile(new URL('../assets/css/layout.css', import.meta.url), 'utf8')
+  const authRules = css.match(/\.auth[a-zA-Z0-9_.:\-\s]*\{[^}]*\}/g) || []
+  const offenders = authRules.filter(rule => rule.includes('!important'))
+  assert.deepEqual(offenders, [], `auth 规则不得回潮 !important：${offenders.join(' | ')}`)
+  // is-forgot 的 display:none 必须用双写类保住（对抗 is-register 的 display:flex，不能依赖规则顺序）
+  assert.match(css, /\.auth-dialog__shell\.is-forgot \.auth-panel\.auth-panel\{display:none\}/)
+})

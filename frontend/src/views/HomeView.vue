@@ -196,7 +196,12 @@
                       v-reveal="80 + ci * 70"
                       class="article-gallery-card"
                       :class="layoutClass(row.length, ci)"
+                      tabindex="0"
+                      role="link"
+                      :aria-label="a.title"
                       @click="openArticle(a.id)"
+                      @keydown.enter.prevent="openArticle(a.id)"
+                      @keydown.space.prevent="openArticle(a.id)"
                     >
                       <div class="article-gallery-card-frame">
                         <div class="article-gallery-card-media">

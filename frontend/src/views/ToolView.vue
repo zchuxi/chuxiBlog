@@ -99,8 +99,7 @@
                       <span
                         v-for="tag in t.tags"
                         :key="tag"
-                        class="cx-tag cx-tag--primary cx-tag--small is-round is-plain tool-spotlight-card-tag"
-                        style="--cx-tag-text: var(--archive-tag-text); --cx-tag-border: var(--archive-tag-border); --cx-tag-background: var(--archive-tag-background);"
+                        class="cx-tag cx-tag--primary cx-tag--small is-round is-plain cx-tag--soft-palette tool-spotlight-card-tag"
                       >
                         <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ tag }}</span></span>
                       </span>
@@ -157,8 +156,7 @@
                       <span
                         v-for="tag in t.tags"
                         :key="tag"
-                        class="cx-tag cx-tag--primary cx-tag--small is-round is-plain tool-site-card-tag"
-                        style="--cx-tag-text: var(--archive-tag-text); --cx-tag-border: var(--archive-tag-border); --cx-tag-background: var(--archive-tag-background);"
+                        class="cx-tag cx-tag--primary cx-tag--small is-round is-plain cx-tag--soft-palette tool-site-card-tag"
                       >
                         <span class="cx-tag__content"><span class="cx-tag__prefix">#</span><span class="cx-tag__label">{{ tag }}</span></span>
                       </span>

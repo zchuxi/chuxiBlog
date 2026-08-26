@@ -176,7 +176,12 @@
               v-for="r in others"
               :key="r.id"
               class="bangumi-detail-more-card"
+              tabindex="0"
+              role="link"
+              :aria-label="r.nameCn || r.name"
               @click="router.push('/bangumi/' + r.id)"
+              @keydown.enter.prevent="router.push('/bangumi/' + r.id)"
+              @keydown.space.prevent="router.push('/bangumi/' + r.id)"
             >
               <div class="bangumi-detail-more-cover">
                 <img
@@ -1022,6 +1027,17 @@ html.dark .bangumi-detail-dist-bar {
 }
 .bangumi-detail-more-card:hover {
   transform: translateY(-4px);
+}
+/* 按压回压到上浮量的一半 */
+.bangumi-detail-more-card:active {
+  transform: translateY(-2px);
+}
+/* 键盘可达后焦点必须可见：与 hover 同步上浮，外叠焦点环 */
+.bangumi-detail-more-card:focus-visible {
+  outline: none;
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  border-radius: 14px;
 }
 .bangumi-detail-more-cover {
   aspect-ratio: 2 / 3;

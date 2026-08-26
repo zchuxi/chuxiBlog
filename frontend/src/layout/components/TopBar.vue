@@ -85,7 +85,16 @@
           <div v-show="pawProgress > 0" class="paw-rope">
             <div class="paw-rope__sway">
               <span class="paw-rope__line" :style="ropeLineStyle"></span>
-              <span class="paw-rope__paw" title="返回顶部" @click="$emit('scroll-to-top')">
+              <span
+                class="paw-rope__paw"
+                title="返回顶部"
+                role="button"
+                tabindex="0"
+                aria-label="返回顶部"
+                @click="$emit('scroll-to-top')"
+                @keydown.enter.prevent="$emit('scroll-to-top')"
+                @keydown.space.prevent="$emit('scroll-to-top')"
+              >
                 <SvgIcon name="common-paw" size="22px" />
               </span>
             </div>

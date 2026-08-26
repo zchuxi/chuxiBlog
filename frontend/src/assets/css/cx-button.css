@@ -36,7 +36,7 @@
   background: var(--btn-bg);
   box-shadow: var(--btn-shadow), inset 0 1px 0 var(--btn-highlight);
   color: var(--btn-text);
-  font-size: 15.5px;
+  font-size: var(--text-md, 15.5px);
   line-height: 1;
   font-weight: 600;
   backdrop-filter: blur(8px);
