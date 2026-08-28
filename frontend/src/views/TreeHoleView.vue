@@ -249,7 +249,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* 弹幕悬停暂停：方便阅读与点赞（原 CSS 里 .dm.move 是 running，这里悬停时覆盖） */
 .tree-hole-danmaku-stage-inner .dm:hover {
   animation-play-state: paused !important;

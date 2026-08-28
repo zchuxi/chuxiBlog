@@ -491,7 +491,7 @@ onMounted(load)
 onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
 </script>
 
-<style>
+<style scoped>
 /* ---------- 首屏场景面板（scene-*，明暗双主题） ---------- */
 
 .scene-panel {
@@ -514,7 +514,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
 .scene-head-title {
   margin: 0 0 4px;
   font-size: 20px;
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .scene-head-sub {
@@ -630,7 +630,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
 .scene-title {
   margin: 0 0 2px;
   font-size: 16.5px;
-  color: #1f3148;
+  color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -651,7 +651,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
   border-radius: 999px;
   font-size: 13px;
   background-color: rgba(63, 119, 181, 0.12);
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .scene-visible {
@@ -660,7 +660,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
   border-radius: 999px;
   border: 1px solid rgba(63, 119, 181, 0.35);
   background-color: rgba(63, 119, 181, 0.08);
-  color: #3f77b5;
+  color: var(--accent-strong);
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
@@ -719,7 +719,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown))
 .scene-modal-head h3 {
   margin: 0;
   font-size: 17.5px;
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .scene-modal-body {

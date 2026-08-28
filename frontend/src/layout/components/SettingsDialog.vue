@@ -286,7 +286,7 @@ html.dark .setting-dialog .theme-pick-card {
 }
 .theme-pick-card:hover {
   transform: translateY(-2px);
-  border-color: #5f95cf;
+  border-color: var(--accent-solid);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 .theme-pick-card.is-active {
@@ -321,6 +321,7 @@ html.dark .setting-dialog .theme-pick-card {
 }
 .theme-pick-preview--dark i {
   background: rgba(38, 50, 70, 0.9);
+  /* token-guard-ignore 暗色主题预览卡是刻意的暗色设计，不属于 html.dark 上下文 */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   left: auto;
   right: 10%;

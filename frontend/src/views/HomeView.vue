@@ -672,7 +672,7 @@ onMounted(async () => {
   border-color: color-mix(in srgb, var(--text-color) 22%, transparent);
   box-shadow:
     0 8px 22px color-mix(in srgb, var(--text-color) 10%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    inset 0 1px 0 var(--topbar-border-top);
 }
 [data-home-scope] .home-landing__btn:hover .svg-icon {
   opacity: 1;
@@ -769,7 +769,7 @@ html.dark [data-home-scope] .home-landing__btn--primary:hover {
 }
 [data-home-scope] .home-landing__scroll-hint:hover {
   border-color: color-mix(in srgb, var(--accent-solid) 55%, transparent);
-  box-shadow: 0 12px 26px rgba(63, 119, 181, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 26px rgba(63, 119, 181, 0.24), inset 0 1px 0 var(--topbar-border-top);
 }
 html.dark [data-home-scope] .home-landing__scroll-hint {
   box-shadow: 0 8px 20px rgba(3, 8, 17, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);

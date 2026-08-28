@@ -334,7 +334,7 @@ watch(
 onMounted(load)
 </script>
 
-<style>
+<style scoped>
 /* ---------- 站点文案面板（scp-*，明暗双主题） ---------- */
 
 .scp-panel {
@@ -357,7 +357,7 @@ onMounted(load)
 .scp-head-title {
   margin: 0 0 4px;
   font-size: 20px;
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .scp-head-sub {
@@ -399,9 +399,9 @@ onMounted(load)
 }
 
 /* 类名落在 CxInput 外壳上，定高必须下到内层 textarea——外壳高度由内容决定。
-   选择器带 .admin-root 前缀提特异性：打包后 admin.css 排在组件样式之后，
-   同优先级的 .cx-input--admin .cx-input__textarea（min-height:72px）会把本规则盖掉。 */
-.admin-root .scp-md-input .cx-input__textarea {
+   scoped 下用 :deep() 穿透；组件样式经 PostCSS 重排后排在 admin.css 的
+   .cx-input--admin .cx-input__textarea(min-height:72px) 之后，同特异性即可盖过。 */
+.scp-md-input :deep(.cx-input__textarea) {
   min-height: 62vh;
   font-size: 14.5px;
   line-height: 1.7;
@@ -460,7 +460,7 @@ html.dark .scp-head-sub {
     padding: 14px 16px;
   }
 
-  .admin-root .scp-md-input .cx-input__textarea {
+  .scp-md-input :deep(.cx-input__textarea) {
     min-height: 46vh;
   }
 }

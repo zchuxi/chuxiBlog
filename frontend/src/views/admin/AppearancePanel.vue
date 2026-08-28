@@ -148,7 +148,7 @@ async function save() {
 onMounted(load)
 </script>
 
-<style>
+<style scoped>
 .appearance-color-row {
   display: flex;
   align-items: center;

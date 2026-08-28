@@ -241,7 +241,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* 独立搜索工具栏：容器本身即输入边界，避免重复卡片嵌套。 */
 .tool-search-toolbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;min-height:58px;padding:10px 12px 10px 18px;border:1px solid var(--nested-outer-card-border);border-radius:20px;background:var(--nested-outer-card-bg);box-shadow:var(--nested-outer-card-shadow);transition:border-color .2s ease,box-shadow .2s ease}
 .tool-search-toolbar:focus-within{border-color:color-mix(in srgb,var(--tool-page-chip-text) 42%,var(--nested-outer-card-border));box-shadow:var(--nested-outer-card-shadow),0 0 0 3px color-mix(in srgb,var(--tool-page-chip-text) 10%,transparent)}

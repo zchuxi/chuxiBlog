@@ -140,7 +140,7 @@ async function save() {
 onMounted(load)
 </script>
 
-<style>
+<style scoped>
 .ai-config-status-row {
   display: flex;
   align-items: center;

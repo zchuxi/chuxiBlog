@@ -36,7 +36,8 @@ test('auth 对话框移动版规则不得使用 !important（特异性治理已�
   // 历史上移动版用 8 处 !important 对抗桌面版滑动动画规则。
   // 重构后：7 处靠「同特异性 + 源码顺序」胜出（媒体查询块在文件尾部），
   // is-forgot 冲突场景用 .auth-panel.auth-panel 双写类提到 (0,5,0)，均不再需要 !important。
-  const css = await readFile(new URL('../assets/css/layout.css', import.meta.url), 'utf8')
+  // auth 规则在 layout.css 拆分后归入 layout/auth.css（P3-2）
+  const css = await readFile(new URL('../assets/css/layout/auth.css', import.meta.url), 'utf8')
   const authRules = css.match(/\.auth[a-zA-Z0-9_.:\-\s]*\{[^}]*\}/g) || []
   const offenders = authRules.filter(rule => rule.includes('!important'))
   assert.deepEqual(offenders, [], `auth 规则不得回潮 !important：${offenders.join(' | ')}`)

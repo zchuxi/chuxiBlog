@@ -198,7 +198,7 @@ function resetDefaults() {
 onMounted(load)
 </script>
 
-<style>
+<style scoped>
 /* ===== 导航菜单面板（nmp- 前缀） ===== */
 .nmp-row {
   display: flex;
@@ -218,7 +218,7 @@ onMounted(load)
   justify-content: center;
   border-radius: 8px;
   background: rgba(63, 119, 181, 0.08);
-  color: #3f77b5;
+  color: var(--accent-strong);
   font-size: 13px;
   font-weight: 600;
   margin-top: 22px;

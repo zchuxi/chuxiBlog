@@ -267,7 +267,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* ===== 每日放送页（calendar- 前缀，非 scoped） ===== */
 .calendar-page {
   min-height: 100%;
@@ -522,6 +522,7 @@ onMounted(async () => {
   -webkit-backdrop-filter: blur(16px);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  /* token-guard-ignore 追番提示弹窗为固定深色设计，亮暗主题下均为深色浮层 */
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 

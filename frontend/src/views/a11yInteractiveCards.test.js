@@ -51,7 +51,8 @@ test('可点击卡片的 hover 与 :focus-visible 焦点样式齐全', async () 
 })
 
 test('搜索浮层主输入框焦点经 shell :focus-within 可见', async () => {
-  const layout = await read('../assets/css/layout.css')
+  // 搜索浮层规则在 layout.css 拆分后归入 layout/search.css（P3-2）
+  const layout = await read('../assets/css/layout/search.css')
   // input 本体 outline:none 是允许的，但外壳必须接管焦点反馈
   assert.match(layout, /\.layout-article-search-input-shell:focus-within\{[^}]*box-shadow/)
 })
@@ -67,7 +68,8 @@ test('音乐条控制按钮全部带 aria-label，且 :focus-visible 有焦点�
   assert.match(bar, /class="music-bar-progress"[\s\S]*?aria-label="播放进度"/)
   assert.match(bar, /aria-label="音量"/)
 
-  const layout = await read('../assets/css/layout.css')
+  // 音乐条规则在 layout.css 拆分后归入 layout/music.css（P3-2）
+  const layout = await read('../assets/css/layout/music.css')
   assert.match(layout, /\.control-btn:focus-visible\{[^}]*box-shadow/)
 })
 
@@ -79,6 +81,7 @@ test('猫爪返回顶部是键盘可达的真按钮语义', async () => {
   assert.match(tag, /aria-label="返回顶部"/)
   assert.match(tag, /@keydown\.enter\.prevent=/)
 
-  const layout = await read('../assets/css/layout.css')
+  // 猫爪规则在 layout.css 拆分后归入 layout/topbar.css（P3-2）
+  const layout = await read('../assets/css/layout/topbar.css')
   assert.match(layout, /\.paw-rope__paw:focus-visible\{[^}]*var\(--accent-glow\)/)
 })

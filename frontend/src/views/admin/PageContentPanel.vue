@@ -325,7 +325,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* ===== 页面文案面板（pcp- 前缀） ===== */
 .pcp-tabs {
   display: flex;
@@ -338,7 +338,7 @@ onMounted(async () => {
   border: 1px solid var(--accent-border, rgba(63, 119, 181, 0.3));
   border-radius: 999px;
   background: var(--card-bg, #fff);
-  color: var(--accent-text, #3f77b5);
+  color: var(--accent-text, var(--accent-strong));
   font-family: inherit;
   font-size: 14px;
   cursor: pointer;
@@ -349,8 +349,8 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(63, 119, 181, 0.12);
 }
 .pcp-tab.active {
-  background: var(--accent-solid, #3f77b5);
-  border-color: var(--accent-solid, #3f77b5);
+  background: var(--accent-solid, var(--accent-strong));
+  border-color: var(--accent-solid, var(--accent-strong));
   color: #fff;
   box-shadow: 0 6px 16px rgba(63, 119, 181, 0.22);
 }
@@ -365,7 +365,7 @@ onMounted(async () => {
 .pcp-section-head h3 {
   margin: 0;
   font-size: 16px;
-  color: var(--text-color, #1f3148);
+  color: var(--text-color, var(--text-color));
 }
 
 .pcp-group-label {

@@ -335,7 +335,7 @@ defineExpose({ updateIndicator })
   bottom: 2px;
   height: 3px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(109, 155, 214, 0.35), #3f77b5 45%, rgba(109, 155, 214, 0.35));
+  background: linear-gradient(90deg, rgba(109, 155, 214, 0.35), var(--accent-strong) 45%, rgba(109, 155, 214, 0.35));
   box-shadow: 0 2px 8px rgba(63, 119, 181, 0.4);
   opacity: 0;
   pointer-events: none;

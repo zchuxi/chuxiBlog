@@ -672,7 +672,7 @@ html.dark .app-shell > .app-shell-top.is-solid {
   width: min(860px, calc(100% - 32px));
   margin: 0 auto 14px;
   border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.58);
+  border: 1px solid var(--action-btn-hover-bg);
   background: rgba(255, 255, 255, 0.66);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);

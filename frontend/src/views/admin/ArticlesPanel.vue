@@ -582,7 +582,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* ---------- 文章管理面板（ap-*，明暗双主题） ---------- */
 
 .ap-panel {
@@ -605,7 +605,7 @@ onMounted(async () => {
   flex: 1;
   margin: 0;
   font-size: 20px;
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .ap-filter {
@@ -626,8 +626,8 @@ onMounted(async () => {
 }
 
 .ap-filter-btn.active {
-  background-color: #3f77b5;
-  border-color: #3f77b5;
+  background-color: var(--accent-strong);
+  border-color: var(--accent-strong);
   color: #fff;
 }
 
@@ -709,7 +709,7 @@ onMounted(async () => {
 .ap-row-title {
   margin: 0;
   font-size: 16.5px;
-  color: #1f3148;
+  color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -724,7 +724,7 @@ onMounted(async () => {
 
 .ap-badge-cat {
   background-color: rgba(63, 119, 181, 0.12);
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .ap-badge-pub {
@@ -765,7 +765,7 @@ onMounted(async () => {
   flex: 1;
   margin: 0;
   font-size: 17.5px;
-  color: #3f77b5;
+  color: var(--accent-strong);
 }
 
 .ap-editor-grid {
@@ -780,7 +780,7 @@ onMounted(async () => {
 }
 
 /* 类名落在 CxInput 根 div 上，字号与内边距要写到内层 input 才生效 */
-.ap-title-input .cx-input__inner {
+.ap-title-input :deep(.cx-input__inner) {
   font-size: 20px;
   padding: 12px 14px;
 }
@@ -840,7 +840,7 @@ onMounted(async () => {
   padding: 2px 8px;
   border-radius: 999px;
   background-color: rgba(63, 119, 181, 0.12);
-  color: #3f77b5;
+  color: var(--accent-strong);
   font-size: 13px;
 }
 
@@ -867,10 +867,10 @@ onMounted(async () => {
 }
 
 /* 同理：定高作用在内层 textarea 上。
-   选择器必须带 .admin-root 前缀提特异性：打包后 admin.css 排在组件样式之后，
-   同优先级的 .cx-input--admin .cx-input__textarea（min-height:72px）会把本规则盖掉，
-   正文框只剩三行高。 */
-.admin-root .ap-content-input .cx-input__textarea {
+   scoped 下用 :deep() 穿透 CxInput 子组件；因组件样式经 PostCSS 重排后
+   排在 admin.css 的 .cx-input--admin .cx-input__textarea(min-height:72px) 之后，
+   同特异性即可盖过后者，无需再借 .admin-root 全局前缀提权。 */
+.ap-content-input :deep(.cx-input__textarea) {
   min-height: 62vh;
   font-size: 15px;
   line-height: 1.85;
@@ -895,7 +895,7 @@ onMounted(async () => {
 .ap-preview-title {
   margin: 0 0 14px;
   font-size: 24px;
-  color: #1f3148;
+  color: var(--text-color);
 }
 
 @media (max-width: 960px) {
@@ -1057,7 +1057,7 @@ html.dark .ap-cover-preview {
     flex: 1 1 auto;
   }
 
-  .admin-root .ap-content-input .cx-input__textarea {
+  .ap-content-input :deep(.cx-input__textarea) {
     min-height: 46vh;
   }
 

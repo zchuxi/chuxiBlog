@@ -370,16 +370,43 @@ test('日期弹层定位 top/bottom 互斥，上翻时清除样式表兑底的 t
   assert.match(source, /\{\s*top:\s*`\$\{rootRect\.bottom \+ gap\}px`,\s*bottom:\s*'auto'\s*\}/)
 })
 
-test('长文编辑面板的 textarea 定高选择器带 .admin-root 前缀，不被基础规则覆盖', async () => {
-  // 打包后 admin.css 排在组件样式之后，同优先级的
-  // .cx-input--admin .cx-input__textarea（min-height:72px）会盖掉面板定高，
-  // 正文框只剩三行高；带 .admin-root 前缀提特异性后才能稳定生效。
+test('长文编辑面板的 textarea 定高用 :deep() 穿透，不被基础规则覆盖', async () => {
+  // scoped 化后用 :deep() 穿透 CxInput 子组件：组件样式经 PostCSS 重排后
+  // 排在 admin.css 的 .cx-input--admin .cx-input__textarea（min-height:72px）之后，
+  // 同特异性下以后者（组件内 :deep 规则）生效，无需再借 .admin-root 全局前缀提权。
+  // 这里守护两点：① 必须是 :deep() 穿透 ② 不许退回 .admin-root 全局写法（scoped 下会失效）。
   const articles = await read('./ArticlesPanel.vue')
   const siteContent = await read('./SiteContentPanel.vue')
-  assert.match(articles, /\.admin-root \.ap-content-input \.cx-input__textarea\s*\{[^}]*min-height:\s*62vh/)
-  assert.match(articles, /\.admin-root \.ap-content-input \.cx-input__textarea\s*\{[^}]*min-height:\s*46vh/)
-  assert.doesNotMatch(articles, /\n\.ap-content-input \.cx-input__textarea/)
-  assert.match(siteContent, /\.admin-root \.scp-md-input \.cx-input__textarea\s*\{[^}]*min-height:\s*62vh/)
-  assert.match(siteContent, /\.admin-root \.scp-md-input \.cx-input__textarea\s*\{[^}]*min-height:\s*46vh/)
-  assert.doesNotMatch(siteContent, /\n\.scp-md-input \.cx-input__textarea/)
+  assert.match(articles, /\.ap-content-input :deep\(\.cx-input__textarea\)\s*\{[^}]*min-height:\s*62vh/)
+  assert.match(articles, /\.ap-content-input :deep\(\.cx-input__textarea\)\s*\{[^}]*min-height:\s*46vh/)
+  assert.doesNotMatch(articles, /\.admin-root \.ap-content-input/)
+  assert.match(siteContent, /\.scp-md-input :deep\(\.cx-input__textarea\)\s*\{[^}]*min-height:\s*62vh/)
+  assert.match(siteContent, /\.scp-md-input :deep\(\.cx-input__textarea\)\s*\{[^}]*min-height:\s*46vh/)
+  assert.doesNotMatch(siteContent, /\.admin-root \.scp-md-input/)
+})
+
+test('全局层级遵守样式规约，图片预览不覆盖全局反馈', async () => {
+  const sources = await Promise.all([
+    read('../../assets/css/admin.css'),
+    read('../../assets/css/article.css'),
+    read('../../assets/css/cx-date-picker.css'),
+    read('../../assets/css/cx-popover.css'),
+    read('../../assets/css/layout/music.css'),
+    read('../../assets/css/layout/shell.css'),
+    read('../../assets/css/layout/ai-chat.css'),
+    read('../../assets/css/layout/sidebar.css'),
+    read('../../assets/css/layout/topbar.css'),
+    read('../../assets/css/layout/search.css'),
+    read('../../assets/css/layout/auth.css'),
+    read('../../assets/css/layout/dialogs.css'),
+    read('../../assets/css/layout/live2d.css'),
+    read('../../assets/css/preview.css'),
+    read('../../components/cx/CxMessage.vue'),
+    read('../../layout/LayoutView.vue')
+  ])
+  for (const source of sources) {
+    assert.doesNotMatch(source, /z-index\s*:\s*\d{6,}/, 'z-index 不得使用六位及以上数值')
+  }
+  assert.match(sources[13], /\.medium-zoom-overlay,\.medium-zoom-image--opened\{z-index:10000\}/)
+  assert.match(sources[14], /z-index:\s*99999/)
 })

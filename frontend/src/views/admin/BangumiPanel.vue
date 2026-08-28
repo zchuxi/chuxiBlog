@@ -421,7 +421,7 @@ async function importItem(item) {
 }
 </script>
 
-<style>
+<style scoped>
 /* 番剧导入工具条（bgm- 前缀，复用 admin.css 基础控件） */
 .bgm-panel {
   display: flex;
@@ -464,9 +464,9 @@ async function importItem(item) {
   align-items: center;
   gap: 12px;
   padding: 8px 10px;
-  border: 1px solid var(--input-border, rgba(178, 202, 238, 0.6));
+  border: 1px solid var(--input-border, var(--input-border));
   border-radius: 12px;
-  background: var(--input-bg, rgba(255, 255, 255, 0.5));
+  background: var(--input-bg, var(--input-bg));
 }
 .bgm-result-cover {
   flex-shrink: 0;

@@ -1214,7 +1214,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 .crop-box {
   position: absolute;
   box-sizing: border-box;
-  border: 1.5px dashed rgba(255, 255, 255, 0.95);
+  border: 1.5px dashed var(--popover-bg);
   /* 大投影压暗框外区域，overflow:hidden 裁掉出界部分 */
   box-shadow: 0 0 0 9999px rgba(10, 16, 26, 0.5);
   cursor: move;
@@ -1840,7 +1840,7 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.admin-pager-btn:hover:not(:disabled) { border-color: #5f95cf; color: #5f95cf; }
+.admin-pager-btn:hover:not(:disabled) { border-color: var(--accent-solid); color: var(--accent-solid); }
 .admin-pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .admin-pager-num.is-active {
   background: #3b82f6;

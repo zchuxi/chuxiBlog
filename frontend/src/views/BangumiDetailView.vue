@@ -481,7 +481,7 @@ watch(
 )
 </script>
 
-<style>
+<style scoped>
 /* ===== 番剧详情页（bangumi-detail- 前缀，非 scoped） ===== */
 .bangumi-detail-page {
   min-height: 100%;

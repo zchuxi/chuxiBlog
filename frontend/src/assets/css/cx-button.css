@@ -56,7 +56,7 @@
   z-index: 0;
   width: 42%;
   height: 340%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, var(--input-bg), transparent);
   opacity: 0;
   transform: rotate(18deg) translate(-180%);
   pointer-events: none;

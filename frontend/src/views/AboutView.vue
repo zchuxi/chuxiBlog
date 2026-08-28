@@ -143,7 +143,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 .about-page .about-shell {
   display: flex;
   flex-direction: column;
@@ -160,7 +160,7 @@ onMounted(async () => {
   border-radius: 28px;
   overflow: hidden;
   /* 亮色轻透：低白色浆 + 极轻模糊，与设置弹窗同语言，背景图案可透出 */
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--input-bg);
   background: rgba(255, 255, 255, 0.32);
   backdrop-filter: blur(8px) saturate(1.15);
   -webkit-backdrop-filter: blur(8px) saturate(1.15);
@@ -345,7 +345,7 @@ onMounted(async () => {
   gap: 14px;
   padding: 18px 20px;
   border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--input-bg);
   background: rgba(255, 255, 255, 0.34);
   backdrop-filter: blur(8px) saturate(1.15);
   -webkit-backdrop-filter: blur(8px) saturate(1.15);
@@ -457,7 +457,7 @@ onMounted(async () => {
   gap: 14px;
   padding: 16px 18px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--input-bg);
   background: rgba(255, 255, 255, 0.34);
   backdrop-filter: blur(8px) saturate(1.15);
   -webkit-backdrop-filter: blur(8px) saturate(1.15);

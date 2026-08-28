@@ -247,7 +247,7 @@ function onPicked(url) {
 onMounted(load)
 </script>
 
-<style>
+<style scoped>
 /* ===== 背景图库面板（bgl- 前缀） ===== */
 .bgl-card {
   margin-bottom: 16px;

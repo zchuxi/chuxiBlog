@@ -188,7 +188,7 @@ async function save() {
 onMounted(load)
 </script>
 
-<style>
+<style scoped>
 .scp-section-label {
   margin: 0 0 14px;
   font-size: 13px;

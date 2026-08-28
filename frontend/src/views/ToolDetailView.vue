@@ -217,7 +217,7 @@ onMounted(async () => {
 onBeforeUnmount(() => clearTimeout(copiedTimer))
 </script>
 
-<style>
+<style scoped>
 .tool-detail-page{--tool-detail-text-primary: var(--text-color);--tool-detail-text-secondary: color-mix(in srgb, var(--text-color) 68%, transparent);--tool-detail-text-muted: #6f8093;width:min(1180px,100%);margin:0 auto;padding:12px 0 40px;scrollbar-gutter:stable}
 html.dark .tool-detail-page{--tool-detail-text-muted: rgba(226, 232, 240, .72)}
 .tool-detail-shell{display:flex;flex-direction:column;gap:28px}
@@ -308,7 +308,7 @@ html.dark .tool-detail-empty-icon{color:#9db4cd}
   .tool-detail-hero-icon{width:56px;height:56px;border-radius:16px}
   .tool-detail-hero-title{font-size:24px}
   .tool-detail-hero-actions{flex-direction:column;align-items:stretch}
-  .tool-detail-hero-actions .cx-button{width:100%}
+  .tool-detail-hero-actions :deep(.cx-button){width:100%}
   .tool-detail-visit-btn{width:100%;min-width:0}
   .tool-detail-card{padding:16px 14px}
   .tool-detail-related-card{flex-basis:180px}

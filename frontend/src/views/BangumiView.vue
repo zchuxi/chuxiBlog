@@ -256,7 +256,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 /* ===== 番剧记录页（bangumi- 前缀，非 scoped） ===== */
 .bangumi-page {
   min-height: 100%;
