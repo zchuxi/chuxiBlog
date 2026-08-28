@@ -88,7 +88,10 @@
                     @click="navigate"
                   >
                     <div class="tool-spotlight-card-brand">
-                      <div class="tool-spotlight-card-icon"><SvgIcon name="common-web" size="28px" /></div>
+                      <div class="tool-spotlight-card-icon">
+                        <img v-if="t.iconUrl && !iconFailed.has(t.id)" :src="t.iconUrl" :alt="t.websiteName" loading="lazy" @error="markIconFailed(t.id)" />
+                        <SvgIcon v-else name="common-web" size="28px" />
+                      </div>
                       <div>
                         <h3 class="tool-spotlight-card-title">{{ t.websiteName }}</h3>
                         <p class="tool-spotlight-card-address">{{ t.websiteUrl }}</p>
@@ -142,7 +145,10 @@
                   <div class="tool-site-card-content">
                     <div class="tool-site-card-header">
                       <div class="tool-site-card-brand">
-                        <div class="tool-site-card-icon"><SvgIcon name="common-web" size="28px" /></div>
+                        <div class="tool-site-card-icon">
+                          <img v-if="t.iconUrl && !iconFailed.has(t.id)" :src="t.iconUrl" :alt="t.websiteName" loading="lazy" @error="markIconFailed(t.id)" />
+                          <SvgIcon v-else name="common-web" size="28px" />
+                        </div>
                         <div class="tool-site-card-brand-copy">
                           <h3 class="tool-site-card-title">{{ t.websiteName }}</h3>
                           <p class="tool-site-card-address">{{ t.websiteUrl }}</p>
@@ -191,6 +197,12 @@ const SPOTLIGHT_VARIANTS = ['primary', 'secondary', 'tertiary', 'tertiary']
 const tools = ref([])
 const keyword = ref('')
 const activeCategory = ref('')
+// 图标加载失败的站点 id：回退到默认 SvgIcon，避免破图
+const iconFailed = ref(new Set())
+
+function markIconFailed(id) {
+  iconFailed.value = new Set(iconFailed.value).add(id)
+}
 
 const categories = computed(() => [...new Set(tools.value.map(t => t.category))])
 const featuredCount = computed(() => tools.value.filter(t => t.featured).length)
@@ -258,7 +270,8 @@ onMounted(async () => {
 .tool-empty-reset{padding:6px 16px;border:1px solid var(--nested-inner-card-border);border-radius:999px;background:var(--nested-inner-card-bg);color:var(--tool-page-chip-text);font:inherit;font-size:14px;cursor:pointer;transition:color .2s ease,transform .2s ease}
 .tool-empty-reset:hover{color:var(--tool-page-text-primary);transform:translateY(-1px)}
 .tool-empty-reset:focus-visible{outline:2px solid var(--tool-page-chip-text);outline-offset:2px}
-/* 卡片上的小外链按钮（不影响原布局） */
+/* 卡片图标：自定义图片图标填充容器，回退时仍用 SvgIcon */
+.tool-site-card-icon img,.tool-spotlight-card-icon img{display:block;width:28px;height:28px;border-radius:8px;object-fit:cover}
 .tool-card-open-btn{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;padding:0;border:1px solid var(--nested-inner-card-border);border-radius:12px;background:var(--nested-inner-card-bg);box-shadow:var(--nested-inner-card-shadow);color:var(--tool-page-chip-text);cursor:pointer;transition:transform .2s ease,color .2s ease}
 .tool-card-open-btn:hover{transform:translateY(-2px);color:var(--tool-page-text-primary)}
 .tool-spotlight-card-tag-list .tool-card-open-btn{margin-left:auto;align-self:flex-end}

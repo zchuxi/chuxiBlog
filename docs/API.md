@@ -443,7 +443,31 @@ GET /api/admin/media
 
 > OSS 对象 + 本地文件合并列表，按 `lastModified` 降序
 
-### 5.4 删除媒体文件
+### 5.4 覆盖媒体文件
+
+```
+POST /api/admin/media/{name}/replace
+```
+
+**认证**: 需要 Bearer Token
+
+**请求**: `multipart/form-data`，字段 `file`（管理端裁切后「覆盖原图」用）
+
+**响应**:
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": { "name": "xxx.png", "url": "/api/uploads/xxx.png?v=1756351234567", "size": 12345 }
+}
+```
+
+> - 只替换已存在的文件，目标不存在返回 `原文件不存在，无法覆盖`，不会顺手创建
+> - 必须同名同格式（仅图片）：URL 不变，扩展名与内容一旦对不上，服务端给出的 Content-Type 就是错的。格式变了返回 `覆盖要求格式与原文件一致，请改用「保存为新图」`
+> - 返回的 `url` 带 `?v=<时间戳>`：文件本身挂 7 天强缓存（本地与 OSS 一致），不带版本号浏览器看不到新图
+
+### 5.5 删除媒体文件
 
 ```
 DELETE /api/admin/media/{name}
@@ -1361,6 +1385,7 @@ publishedAt, readingTime, mood
 | 36 | POST | `/api/admin/upload` | 文件上传 |
 | 37 | POST | `/api/admin/media/fetch` | 取回外链图 |
 | 38 | GET | `/api/admin/media` | 媒体文件列表 |
-| 39 | DELETE | `/api/admin/media/{name}` | 删除媒体文件 |
+| 39 | POST | `/api/admin/media/{name}/replace` | 覆盖媒体文件 |
+| 40 | DELETE | `/api/admin/media/{name}` | 删除媒体文件 |
 
 > `{res}` 可选值: `articles`, `home-carousels`, `collapse-cards`, `team-members`, `archive-categories`, `timeline-carousels`, `timeline-events`, `parallax-stories`, `tool-sites`, `barrages`, `called-texts`, `musics`, `comments`, `bangumi-records`, `friend-links`
