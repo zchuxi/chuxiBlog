@@ -295,30 +295,31 @@ test('通用编辑弹窗保护未保存内容并支持快捷保存', async () =>
   assert.match(source, /:disabled="saving \|\| \(field\.name === 'id' && editingId != null\)"/)
 })
 
-test('点击弹窗外的遮罩总先确认再关闭，未修改时也提示', async () => {
+test('点击弹窗外的遮罩仅在有未保存修改时确认，未改动直接关闭', async () => {
   const source = await read('./ResourcePanel.vue')
-  // 遮罩点击单独走 onMaskClick，不能复用 requestClose（仅脏才确认）
+  // 遮罩点击单独走 onMaskClick：策略同 requestClose（脏才确认），但提示用站内层
   const maskOpenMatch = source.match(/<div v-if="drawerOpen" class="admin-mask"[^>]*?@click\.self="onMaskClick"[^>]*?><\/div>/)
   assert.ok(maskOpenMatch, '弹窗遮罩点击应绑定 onMaskClick')
   assert.doesNotMatch(source, /admin-mask"\s+@click\.self="closeDrawer"/)
   assert.match(source, /function onMaskClick\(\)/)
-  // 文案区分两种状态：脏时提示放弃修改，未脏时仍提示一次避免误关
   const onMaskBlock = extractBlock(source, source.lastIndexOf('function onMaskClick()'))
-  assert.match(onMaskBlock, /当前修改尚未保存，确定放弃并关闭吗/)
-  assert.match(onMaskBlock, /确定关闭当前弹窗吗/)
-  // 提示必须先于关闭：onMaskClick 只亮出站内确认层，不许自己把弹窗关掉，
+  // 未改动直接关，不再弹「确定关闭当前弹窗吗」这类无谓提示
+  assert.match(onMaskBlock, /if \(!isDirty\.value\) \{\s*closeDrawerNow\(\)/)
+  assert.doesNotMatch(onMaskBlock, /确定关闭当前弹窗吗/)
+  // 脏时提示必须先于关闭：onMaskClick 只亮出站内确认层，不许自己把弹窗关掉，
   // 也不许用 window.confirm（原生对话框弹出时弹窗已从画面上消失）
+  assert.match(onMaskBlock, /当前修改尚未保存，确定放弃并关闭吗/)
   assert.doesNotMatch(onMaskBlock, /window\.confirm/)
   assert.doesNotMatch(onMaskBlock, /drawerOpen\.value = false/)
   assert.match(source, /v-if="drawerOpen && closeConfirmTip"/)
-  const confirmBlock = extractBlock(source, source.lastIndexOf('function confirmMaskClose()'))
+  const confirmBlock = extractBlock(source, source.lastIndexOf('function closeDrawerNow()'))
   assert.match(confirmBlock, /drawerOpen\.value = false/)
   // 确认层要盖在编辑弹窗（z-index 120）之上，否则又变成「弹窗先看不见才提示」
   const css = await read('../../assets/css/admin.css')
   const confirmCss = css.slice(css.indexOf('.admin-confirm-mask'))
   const zIndex = Number((confirmCss.match(/z-index:\s*(\d+)/) || [])[1])
   assert.ok(zIndex > 120, `确认层 z-index 应高于编辑弹窗，实际 ${zIndex}`)
-  // 关闭按钮、取消按钮、Esc 仍走 requestClose（脏才确认），与 mask 路径区分
+  // 关闭按钮、取消按钮、Esc 走 requestClose，同样是脏才确认
   const closeDrawerBlock = extractBlock(source, source.lastIndexOf('function closeDrawer()'))
   assert.match(closeDrawerBlock, /requestClose\(\)/)
 })
