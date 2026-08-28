@@ -211,13 +211,24 @@ const trackStyle = computed(() => ({
   transform: `translate3d(0, -${(viewportCount.value - 1) * windowInnerHeight.value * progress.value}px, 0)`
 }))
 
+// 缓出曲线：让光晕/遮罩/框架等次级图层「先快后慢」地落位，
+// 比线性跟随更有呼吸感；背景与内容位移仍 1:1 跟随滚动
+const easeOutCubic = x => 1 - Math.pow(1 - x, 3)
+
 // 每屏基础度量：positionDelta 为该屏相对当前焦点的偏移（单位=屏）
 function metrics(i) {
   const positionDelta = i - progress.value * (viewportCount.value - 1)
   const focusProgress = Math.max(0, 1 - Math.min(Math.abs(positionDelta), 1.2) / 1.2)
   const depthProgress = Math.min(Math.abs(positionDelta), 1.6) / 1.6
   const drift = Math.max(-36, Math.min(36, positionDelta * -18 + momentum.value * 28))
-  return { positionDelta, focusProgress, depthProgress, drift }
+  return {
+    positionDelta,
+    focusProgress,
+    depthProgress,
+    drift,
+    focusEased: easeOutCubic(focusProgress),
+    depthEased: easeOutCubic(depthProgress)
+  }
 }
 
 /** 减弱动效时的静态取值：位移/缩放全部归零，仅留一层可读的遮罩 */
@@ -242,22 +253,22 @@ const STATIC_VIEWPORT_STYLE = {
 
 function viewportStyle(i) {
   if (reduceMotion.value) return STATIC_VIEWPORT_STYLE
-  const { positionDelta: t, focusProgress: l, depthProgress: o, drift } = metrics(i)
+  const { positionDelta: t, drift, focusEased: le, depthEased: oe } = metrics(i)
   if (isMobile.value) {
     // 移动端：只用 transform/opacity（走合成器，不触发重排/重绘），
     // 位移幅度比桌面收窄但足以形成纵深；大面积叠加层（beam/grid/curtain/frame）仍关闭。
     return {
-      '--parallax-bg-transform': `translate3d(0, ${t * -9}%, 0) scale(${1.05 + l * 0.07})`,
-      '--parallax-content-transform': `translate3d(0, ${t * -26}px, 0) scale(${0.965 + l * 0.035})`,
-      '--parallax-overlay-opacity': `${Math.min(0.56, 0.16 + o * 0.34)}`,
+      '--parallax-bg-transform': `translate3d(0, ${t * -9}%, 0) scale(${1.05 + le * 0.07})`,
+      '--parallax-content-transform': `translate3d(0, ${t * -26}px, 0) scale(${0.965 + le * 0.035})`,
+      '--parallax-overlay-opacity': `${Math.min(0.56, 0.16 + oe * 0.34)}`,
       // 两个 orb 为 radial-gradient + transform/opacity，合成成本低，移动端保留（透明度降一档）
-      '--parallax-glow-opacity': `${0.08 + l * 0.3}`,
-      '--parallax-glow-scale': `${0.94 + l * 0.16}`,
+      '--parallax-glow-opacity': `${0.08 + le * 0.3}`,
+      '--parallax-glow-scale': `${0.94 + le * 0.16}`,
       '--parallax-orbit-transform': `translate3d(${t * 7}%, ${t * -5}%, 0)`,
       '--parallax-beam-offset': '0%',
       '--parallax-beam-opacity': '0',
       '--parallax-grid-opacity': '0',
-      '--parallax-content-opacity': `${0.5 + l * 0.5}`,
+      '--parallax-content-opacity': `${0.5 + le * 0.5}`,
       '--parallax-curtain-offset': '0%',
       '--parallax-curtain-opacity': '0',
       '--parallax-frame-opacity': '0',
@@ -270,21 +281,21 @@ function viewportStyle(i) {
   const f = depthScale.value
   const r = momentum.value
   return {
-    '--parallax-bg-transform': `translate3d(0, ${(t * -11 + r * 3.8) * w}%, 0) scale(${1.16 + (1.22 - l * 0.08 - 1.16) * f})`,
-    '--parallax-content-transform': `translate3d(0, ${(t * -34 + r * 20) * w}px, 0) scale(${0.98 + (0.92 + l * 0.08 - 0.98) * f})`,
-    '--parallax-overlay-opacity': `${Math.min(0.64, 0.18 + o * 0.42)}`,
-    '--parallax-glow-opacity': `${0.12 + l * 0.56}`,
-    '--parallax-glow-scale': `${0.96 + (0.9 + l * 0.28 - 0.96) * f}`,
+    '--parallax-bg-transform': `translate3d(0, ${(t * -11 + r * 3.8) * w}%, 0) scale(${1.16 + (1.22 - le * 0.08 - 1.16) * f})`,
+    '--parallax-content-transform': `translate3d(0, ${(t * -34 + r * 20) * w}px, 0) scale(${0.98 + (0.92 + le * 0.08 - 0.98) * f})`,
+    '--parallax-overlay-opacity': `${Math.min(0.64, 0.18 + oe * 0.42)}`,
+    '--parallax-glow-opacity': `${0.12 + le * 0.56}`,
+    '--parallax-glow-scale': `${0.96 + (0.9 + le * 0.28 - 0.96) * f}`,
     '--parallax-beam-offset': `${(t * -18 + r * 28) * w}%`,
-    '--parallax-beam-opacity': `${0.16 + l * 0.44}`,
+    '--parallax-beam-opacity': `${0.16 + le * 0.44}`,
     '--parallax-orbit-transform': `translate3d(${(t * 10 - r * 18) * w}%, ${(t * -7 + r * 16) * w}%, 0)`,
-    '--parallax-grid-opacity': `${0.05 + l * 0.13}`,
-    '--parallax-content-opacity': `${0.42 + l * 0.58}`,
-    '--parallax-curtain-offset': `${16 + o * 34 * w}%`,
-    '--parallax-curtain-opacity': `${0.12 + o * 0.5}`,
-    '--parallax-frame-opacity': `${0.16 + l * 0.62}`,
+    '--parallax-grid-opacity': `${0.05 + le * 0.13}`,
+    '--parallax-content-opacity': `${0.42 + le * 0.58}`,
+    '--parallax-curtain-offset': `${16 + oe * 34 * w}%`,
+    '--parallax-curtain-opacity': `${0.12 + oe * 0.5}`,
+    '--parallax-frame-opacity': `${0.16 + le * 0.62}`,
     '--parallax-frame-shift': `${(t * 24 - r * 18) * w}px`,
-    '--parallax-highlight-opacity': `${0.1 + l * 0.4}`,
+    '--parallax-highlight-opacity': `${0.1 + le * 0.4}`,
     '--parallax-drift': `${drift}px`
   }
 }
@@ -292,9 +303,9 @@ function viewportStyle(i) {
 // 内容区动效强度与漂移量（移动端固定接近 1 / 不漂移）
 function motionLevel(i) {
   if (reduceMotion.value) return 1
-  const { focusProgress } = metrics(i)
+  const { focusEased } = metrics(i)
   // 移动端区间由 0.82~1 放宽到 0.62~1：卡片升起量随之从约 9px 增到约 20px，进入焦点时纵深可感
-  return isMobile.value ? 0.62 + focusProgress * 0.38 : 1 - (1 - focusProgress) * motionResistance.value
+  return isMobile.value ? 0.62 + focusEased * 0.38 : 1 - (1 - focusEased) * motionResistance.value
 }
 function driftFor(i) {
   if (reduceMotion.value) return 0
@@ -383,7 +394,27 @@ function schedule() {
   rafId = window.requestAnimationFrame(() => {
     measure()
     rafId = 0
+    startMomentumDecay()
   })
+}
+
+// 动量衰减：scroll 事件停止后，momentum 原本会冻结在最后一次采样值，
+// 依赖它的光束/轨道/高光会定格在半空。这里用 rAF 让它指数回落到 0，
+// 形成「滚动停下 → 视差缓缓归位」的收尾
+let decayRaf = 0
+function startMomentumDecay() {
+  if (decayRaf) window.cancelAnimationFrame(decayRaf)
+  const step = () => {
+    decayRaf = 0
+    if (disposed) return
+    if (Math.abs(momentum.value) > 0.015) {
+      momentum.value *= 0.88
+      decayRaf = window.requestAnimationFrame(step)
+    } else if (momentum.value !== 0) {
+      momentum.value = 0
+    }
+  }
+  decayRaf = window.requestAnimationFrame(step)
 }
 
 let motionQuery = null
@@ -420,6 +451,7 @@ onBeforeUnmount(() => {
   disposed = true
   if (motionQuery) motionQuery.removeEventListener('change', onMotionPrefChange)
   if (rafId) window.cancelAnimationFrame(rafId)
+  if (decayRaf) window.cancelAnimationFrame(decayRaf)
   if (scroller instanceof HTMLElement) {
     scroller.removeEventListener('scroll', schedule)
   } else {

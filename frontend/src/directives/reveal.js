@@ -27,6 +27,25 @@ function reveal(el) {
   el.classList.remove('viewport-reveal-pending')
   el.classList.add('viewport-reveal-visible')
   if (observer) observer.unobserve(el)
+  scheduleCleanup(el)
+}
+
+// 入场动画跑完后挂上 done 类，由 CSS 撤掉 preserve-3d 与两层渐变伪元素。
+// 否则每张卡片常驻两个 3D 合成层，列表页 hover / 筛选切换时会大面积重绘卡顿。
+function scheduleCleanup(el) {
+  const done = () => el.classList.add('viewport-reveal-done')
+  if (typeof el.addEventListener === 'function') {
+    el.addEventListener('transitionend', function onEnd(e) {
+      // 扫光伪元素 ::after 的过渡最长（1.02s），以它结束为准；
+      // 元素自身 transform 提前结束会截断扫光尾段
+      if (e.target === el && e.pseudoElement === '::after' && e.propertyName === 'transform') {
+        el.removeEventListener('transitionend', onEnd)
+        done()
+      }
+    })
+  }
+  // transitionend 兜底：动画被打断（快速滚动、筛选切换）时也要收尾
+  if (typeof setTimeout === 'function') setTimeout(done, 1800)
 }
 
 export default {
@@ -36,7 +55,8 @@ export default {
     setDelay(el, instant ? 0 : delay)
     // 无观察器（SSR/老浏览器）时同样直接显形，避免内容永久隐藏
     if (instant || !observer) {
-      el.classList.add('viewport-reveal-visible')
+      // 无入场动画可等，直接收尾
+      el.classList.add('viewport-reveal-visible', 'viewport-reveal-done')
       return
     }
     el.classList.add('viewport-reveal-pending')

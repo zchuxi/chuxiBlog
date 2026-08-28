@@ -31,7 +31,13 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
     const main = document.querySelector('.app-shell-main')
-    if (main) main.scrollTop = 0
+    if (main) {
+      // 平滑回顶：直接赋值 scrollTop 会让旧页面瞬间跳到顶部，与路由
+      // 淡出叠在一起观感生硬；平滑滚动让离开页随滚动一起淡出
+      const reduce = typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      main.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+    }
     return { top: 0 }
   }
 })
