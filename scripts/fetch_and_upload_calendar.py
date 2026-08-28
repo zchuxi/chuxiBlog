@@ -9,26 +9,41 @@ fetch_and_upload_calendar.py
 
 使用方法：
   1. 打开你本机的代理（Clash / v2rayN / ...），确保 HTTPS_PROXY 已设
-  2. SSH_PWD=你的服务器密码 python fetch_and_upload_calendar.py
-  3. 想每天自动跑，加 Windows 任务计划
+  2. 设置 SSH_HOST、SSH_USER、SSH_KEY_PATH（最小权限账户 + 私钥，禁止密码），
+     可选 SSH_KNOWN_HOSTS（默认 ~/.ssh/known_hosts，须已登记经人工核验的主机密钥）
+  3. python fetch_and_upload_calendar.py
+  4. 想每天自动跑，加 Windows 任务计划
 
-依赖：requests, paramiko（已安装在 C:\\Users\\zchux\\.workbuddy\\binaries\\python\\versions\\3.13.12）
+依赖：见 scripts/requirements.txt（requests, paramiko）
 """
 
 import os
 import sys
 import json
 import datetime
-import getpass
 
 import requests
 import paramiko
 
 # ---------- 配置 ----------
-HOST = "106.14.202.90"
-PORT = 22
-USER = "root"
-PASSWORD = os.environ.get("SSH_PWD") or getpass.getpass("Server SSH password: ")
+HOST = os.environ.get("SSH_HOST", "")
+PORT = int(os.environ.get("SSH_PORT", "22"))
+USER = os.environ.get("SSH_USER", "")
+KEY_PATH = os.path.expanduser(os.environ.get("SSH_KEY_PATH", ""))
+KNOWN_HOSTS = os.path.expanduser(
+    os.environ.get("SSH_KNOWN_HOSTS", "~/.ssh/known_hosts")
+)
+
+_missing = [n for n, v in {"SSH_HOST": HOST, "SSH_USER": USER, "SSH_KEY_PATH": KEY_PATH}.items() if not v]
+if _missing:
+    print(f"Set required environment variables: {', '.join(_missing)}", file=sys.stderr)
+    sys.exit(1)
+if not os.path.isfile(KEY_PATH):
+    print(f"SSH private key does not exist: {KEY_PATH}", file=sys.stderr)
+    sys.exit(1)
+if not os.path.isfile(KNOWN_HOSTS):
+    print(f"SSH known_hosts does not exist: {KNOWN_HOSTS}", file=sys.stderr)
+    sys.exit(1)
 
 API_URL = "https://api.bgm.tv/calendar"
 # 与后端 BangumiCalendarService 的相对缓存路径 data/bangumi-calendar.json 对应
@@ -87,8 +102,12 @@ def save_local(data):
 def upload_remote(data):
     print(f"[3/3] Uploading to {USER}@{HOST}:{REMOTE_PATH}")
     client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(HOST, port=PORT, username=USER, password=PASSWORD, timeout=20)
+    client.load_host_keys(KNOWN_HOSTS)
+    client.set_missing_host_key_policy(paramiko.RejectPolicy())
+    client.connect(
+        HOST, port=PORT, username=USER, key_filename=KEY_PATH,
+        look_for_keys=False, allow_agent=False, timeout=20,
+    )
     try:
         # Make sure the directory exists
         stdin, stdout, stderr = client.exec_command(

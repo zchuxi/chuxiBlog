@@ -11,26 +11,41 @@ fetch_and_upload_bangumi_subjects.py
 使用方法：
   1. 打开你本机的代理（Clash / v2rayN / ...），确保 HTTPS_PROXY 已设
   2. 可选：BGM_TOKEN=你的bgm令牌（提高限流配额）
-  3. SSH_PWD=你的服务器密码 python fetch_and_upload_bangumi_subjects.py
-  4. 新增番剧后重跑一次即可刷新缓存；也可加 Windows 任务计划定期跑
+  3. 设置 SSH_HOST、SSH_USER、SSH_KEY_PATH（最小权限账户 + 私钥，禁止密码），
+     可选 SSH_KNOWN_HOSTS（默认 ~/.ssh/known_hosts，须已登记经人工核验的主机密钥）
+  4. python fetch_and_upload_bangumi_subjects.py
+  5. 新增番剧后重跑一次即可刷新缓存；也可加 Windows 任务计划定期跑
 
-依赖：requests, paramiko（已安装在 C:\Users\zchux\.workbuddy\binaries\python\versions\3.13.12）
+依赖：见 scripts/requirements.txt（requests, paramiko）
 """
 
 import os
 import sys
 import json
 import time
-import getpass
 
 import requests
 import paramiko
 
 # ---------- 配置 ----------
-HOST = "106.14.202.90"
-PORT = 22
-USER = "root"
-PASSWORD = os.environ.get("SSH_PWD") or getpass.getpass("Server SSH password: ")
+HOST = os.environ.get("SSH_HOST", "")
+PORT = int(os.environ.get("SSH_PORT", "22"))
+USER = os.environ.get("SSH_USER", "")
+KEY_PATH = os.path.expanduser(os.environ.get("SSH_KEY_PATH", ""))
+KNOWN_HOSTS = os.path.expanduser(
+    os.environ.get("SSH_KNOWN_HOSTS", "~/.ssh/known_hosts")
+)
+
+_missing = [n for n, v in {"SSH_HOST": HOST, "SSH_USER": USER, "SSH_KEY_PATH": KEY_PATH}.items() if not v]
+if _missing:
+    print(f"Set required environment variables: {', '.join(_missing)}", file=sys.stderr)
+    sys.exit(1)
+if not os.path.isfile(KEY_PATH):
+    print(f"SSH private key does not exist: {KEY_PATH}", file=sys.stderr)
+    sys.exit(1)
+if not os.path.isfile(KNOWN_HOSTS):
+    print(f"SSH known_hosts does not exist: {KNOWN_HOSTS}", file=sys.stderr)
+    sys.exit(1)
 
 # 本站番剧记录来源（取 subjectId 列表）：默认线上站点，也可用本地后端
 RECORDS_URL = os.environ.get("RECORDS_URL", "https://www.chuxi.online/api/front/bangumi")
@@ -110,8 +125,12 @@ def upload_remote():
     files = sorted(os.listdir(LOCAL_DIR))
     print(f"[4/4] Uploading {len(files)} files to {USER}@{HOST}:{REMOTE_DIR}")
     client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(HOST, port=PORT, username=USER, password=PASSWORD, timeout=20)
+    client.load_host_keys(KNOWN_HOSTS)
+    client.set_missing_host_key_policy(paramiko.RejectPolicy())
+    client.connect(
+        HOST, port=PORT, username=USER, key_filename=KEY_PATH,
+        look_for_keys=False, allow_agent=False, timeout=20,
+    )
     try:
         stdin, stdout, stderr = client.exec_command(f"mkdir -p {REMOTE_DIR}")
         stdout.read()
@@ -132,8 +151,7 @@ def main():
     try:
         ids = get_subject_ids()
         if not ids:
-            print("
-✓ 没有可缓存的番剧 subjectId（先在后台上传/同步番剧记录）")
+            print("\n✓ 没有可缓存的番剧 subjectId（先在后台上传/同步番剧记录）")
             return
         print(f"[2/4] Fetching bgm.tv details (proxy = {PROXY or '(direct)'})")
         for i, sid in enumerate(ids, 1):
@@ -154,20 +172,15 @@ def main():
                     save_local(sid, payloads)
             time.sleep(0.6)  # 限流礼貌间隔
         upload_remote()
-        print("
-✓ Done. 番剧详情页现在应从服务器缓存读取（无需代理）。")
+        print("\n  ✓ Done. 番剧详情页现在应从服务器缓存读取（无需代理）。")
     except requests.exceptions.ProxyError as e:
-        print(f"
-✗ 代理错误：{e}
-  请确认你的代理客户端已开启并监听 {PROXY or '(未配置)'}。", file=sys.stderr)
+        print(f"\n✗ 代理错误：{e}\n  请确认你的代理客户端已开启并监听 {PROXY or '(未配置)'}。", file=sys.stderr)
         sys.exit(2)
     except requests.exceptions.ConnectionError as e:
-        print(f"
-✗ 网络错误：{e}", file=sys.stderr)
+        print(f"\n✗ 网络错误：{e}", file=sys.stderr)
         sys.exit(2)
     except Exception as e:
-        print(f"
-✗ 执行失败：{type(e).__name__}: {e}", file=sys.stderr)
+        print(f"\n✗ 执行失败：{type(e).__name__}: {e}", file=sys.stderr)
         sys.exit(1)
 
 
