@@ -98,7 +98,11 @@
                       </div>
                     </button>
                   </div>
-                  <div class="hero-visual__frame">
+                  <div
+                    class="hero-visual__frame"
+                    @touchstart.passive="onHeroTouchStart"
+                    @touchend="onHeroTouchEnd"
+                  >
                     <div class="hero-carousel">
                       <div
                         class="hero-carousel__track"
@@ -121,6 +125,19 @@
                           </div>
                         </div>
                       </div>
+                    </div>
+                    <div v-if="carousels.length > 1" class="hero-visual__dots" role="tablist" aria-label="轮播切换">
+                      <button
+                        v-for="(c, i) in carousels"
+                        :key="c.id"
+                        type="button"
+                        class="hero-dot"
+                        :class="{ 'is-active': heroIndex === i }"
+                        role="tab"
+                        :aria-selected="heroIndex === i"
+                        :aria-label="`切换到第 ${i + 1} 张`"
+                        @click="goHero(i)"
+                      ></button>
                     </div>
                   </div>
                 </div>
@@ -319,6 +336,29 @@ let heroAutoplayTimer = null
 function goHero(i) {
   heroIndex.value = i
   resetHeroAutoplay()
+}
+
+/* 移动端触摸滑动切换：纵向轮播，上滑下一张、下滑上一张；横向滑动同样生效 */
+let heroTouchStartX = 0
+let heroTouchStartY = 0
+
+function onHeroTouchStart(e) {
+  const t = e.changedTouches && e.changedTouches[0]
+  if (!t) return
+  heroTouchStartX = t.clientX
+  heroTouchStartY = t.clientY
+}
+
+function onHeroTouchEnd(e) {
+  const t = e.changedTouches && e.changedTouches[0]
+  const len = carousels.value.length
+  if (!t || len < 2) return
+  const dx = t.clientX - heroTouchStartX
+  const dy = t.clientY - heroTouchStartY
+  const primary = Math.abs(dx) > Math.abs(dy) ? dx : dy
+  if (Math.abs(primary) < 40) return
+  const step = primary < 0 ? 1 : -1
+  goHero((heroIndex.value + step + len) % len)
 }
 
 function startHeroAutoplay() {
@@ -847,13 +887,35 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
     min-width: 0;
     max-width: 100%;
   }
-  [data-home-scope] .home-landing__copy { padding-left: 0; }
+  [data-home-scope] .home-landing__copy { padding-left: 0; gap: 12px; }
   [data-home-scope] .home-landing__title {
-    font-size: clamp(34px, 8vw, 46px);
+    font-size: clamp(34px, 9vw, 46px);
     letter-spacing: 1px;
+    line-height: 1.15;
     overflow-wrap: anywhere;
   }
   [data-home-scope] .home-landing__tagline { font-size: 16.5px; }
+  /* 欢迎语加玻璃底板：小屏上背景图繁忙，原纯文字投影可读性差 */
+  [data-home-scope] .home-landing__welcome {
+    margin-top: 4px;
+    padding: 12px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.14);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  [data-home-scope] .home-landing__welcome p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    text-shadow: 0 1px 4px rgba(6, 20, 44, 0.3);
+  }
+  html.dark [data-home-scope] .home-landing__welcome {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(10, 18, 32, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
   [data-home-scope] .home-landing__aside { gap: 16px; }
   [data-home-scope] .home-landing__aside .profile-card,
   [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
