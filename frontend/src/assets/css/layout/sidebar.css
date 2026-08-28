@@ -1,0 +1,15 @@
+/* sidebar.css —— 右侧栏 —— .layout-right-sidebar 手机抽屉
+   由 layout.css 拆分而来（P3-2），纯机械移动；规则顺序与原文件一致。 */
+
+.layout-right-sidebar{position:relative;z-index:2;width:0;flex:0 0 0;min-width:0;overflow:hidden;border-left:0 solid var(--topbar-border);background:var(--nested-outer-card-bg, color-mix(in srgb, var(--topbar-bg) 80%, transparent));box-shadow:var(--nested-outer-card-shadow, -2px 0 16px rgba(0, 0, 0, .08));border-color:var(--nested-outer-card-border, var(--topbar-border));transition:width .28s ease,flex-basis .28s ease,border-color .28s ease,border-width .28s ease}
+
+.layout-right-sidebar.is-expanded{width:30vw;flex-basis:30vw;border-left-width:1px}
+
+.layout-right-sidebar.is-expanded .layout-right-sidebar__inner{opacity:1;transform:translate(0)}
+
+.layout-right-sidebar .layout-right-sidebar__inner{height:100%;display:flex;flex-direction:column;opacity:0;transform:translate(20px);transition:opacity .22s ease,transform .28s ease;overflow:hidden}
+
+@media(max-width:768px){
+.layout-right-sidebar{position:absolute;top:0;right:0;bottom:0;width:0;border-left-width:0;border-top:1px solid transparent;border-bottom:1px solid transparent;box-shadow:none}
+.layout-right-sidebar.is-expanded{width:100%;flex-basis:100%;border-left-width:1px}
+}

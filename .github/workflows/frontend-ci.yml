@@ -30,6 +30,8 @@ jobs:
         run: npm ci
       - name: npm run lint
         run: npm run lint
+      - name: npm run lint:css
+        run: npm run lint:css
       - name: npm test
         run: npm test
       - name: npm run build

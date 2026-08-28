@@ -1,7 +1,9 @@
 #!/bin/sh
 # 提交前机械检查点（约定见 README「改动后验证」）：
 # - 暂存区包含 backend/ 改动时强制运行 mvn test，失败则阻断提交。
-# - 暂存区包含 frontend/ 改动时强制运行 npm run lint（秒级；npm run build 耗时较长，仍为手动约定）。
+# - 暂存区包含 frontend/ 改动时强制运行 npm run lint 与 npm run lint:css（均为秒级；
+#   lint:css 带 --max-warnings 存量上限，新增颜色直写/重复选择器会直接失败。
+#   npm run build 耗时较长，仍为手动约定）。
 # 安装：双击 scripts\install-git-hooks.bat（复制本文件到 .git/hooks/）
 # 紧急绕过：git commit --no-verify（仅限确知无风险时）
 if git diff --cached --name-only | grep -q '^backend/'; then
@@ -19,4 +21,10 @@ if git diff --cached --name-only | grep -q '^frontend/'; then
     exit 1
   }
   echo "[pre-commit] npm run lint 通过"
+  echo "[pre-commit] 运行 npm run lint:css ..."
+  ( cd "$(git rev-parse --show-toplevel)/frontend" && npm run lint:css ) || {
+    echo "[pre-commit] npm run lint:css 失败（error 或存量 warning 上限被突破），提交已阻断（绕过：git commit --no-verify）"
+    exit 1
+  }
+  echo "[pre-commit] npm run lint:css 通过"
 fi

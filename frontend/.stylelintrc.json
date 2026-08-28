@@ -1,0 +1,89 @@
+{
+  "extends": ["stylelint-config-standard", "stylelint-config-recommended-vue"],
+  "ignoreFiles": ["dist/**", "node_modules/**", "public/**"],
+  "rules": {
+    "selector-max-id": 0,
+    "no-descending-specificity": null,
+
+    "selector-disallowed-list": [
+      ["html", "body", "div", "span", "p", "button"],
+      { "message": "禁止裸元素选择器，必须使用类名", "severity": "error" }
+    ],
+
+    "declaration-property-value-disallowed-list": [
+      {
+        "/^color|^background|^border|^outline|^box-shadow/": ["/^#[0-9a-fA-F]{3,8}$/"]
+      },
+      {
+        "message": "颜色应使用令牌 var(--xxx)，确需直写请加 stylelint-disable-next-line 注释并写明理由",
+        "severity": "warning"
+      }
+    ],
+
+    "custom-property-pattern": [
+      "^[a-z][a-z0-9]*(-[a-z0-9]+)+$",
+      { "message": "自定义属性命名须为 kebab-case 且带语义前缀（前缀内允许数字，如 --live2d-*）", "severity": "warning" }
+    ],
+
+    "no-duplicate-selectors": [true, { "severity": "warning" }],
+
+    "color-function-notation": null,
+    "color-function-alias-notation": null,
+    "alpha-value-notation": null,
+    "color-hex-length": null,
+    "declaration-block-single-line-max-declarations": null,
+    "selector-class-pattern": null,
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "media-feature-range-notation": null,
+    "selector-pseudo-element-colon-notation": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "property-no-vendor-prefix": null,
+    "selector-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null,
+    "keyframe-selector-notation": null,
+    "keyframes-name-pattern": null,
+    "selector-attribute-quotes": null,
+    "font-family-name-quotes": null,
+    "font-family-no-missing-generic-family-keyword": null,
+    "value-keyword-case": null,
+    "declaration-property-value-keyword-no-deprecated": null,
+    "selector-not-notation": null,
+    "shorthand-property-no-redundant-values": null,
+    "property-no-deprecated": null,
+    "number-max-precision": null,
+    "length-zero-no-unit": null,
+    "function-url-quotes": null,
+    "import-notation": null,
+    "selector-type-no-unknown": null,
+    "declaration-block-no-duplicate-properties": null
+  },
+  "overrides": [
+    {
+      "files": ["src/assets/css/base.css"],
+      "rules": {
+        "selector-disallowed-list": null,
+        "block-no-empty": null,
+        "selector-max-id": null,
+        "declaration-property-value-disallowed-list": null,
+        "no-duplicate-selectors": null
+      }
+    },
+    {
+      "files": ["src/assets/css/preview.css", "src/assets/css/hljs-atom-one-dark.css"],
+      "rules": {
+        "declaration-property-value-disallowed-list": null,
+        "no-duplicate-selectors": null
+      }
+    },
+    {
+      "files": ["src/assets/css/article.css"],
+      "rules": {
+        "custom-property-pattern": null
+      }
+    }
+  ]
+}
