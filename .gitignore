@@ -27,6 +27,8 @@ avatar.png
 .claude/
 .qoder/
 .reasonix/
+.arts/
+.mossx/
 
 # AI 助手临时截图/裁图产物
 .qoder-*.png
@@ -34,6 +36,9 @@ avatar.png
 
 # 验收截图归档（本地留存，不入库）
 docs/screenshots/
+
+# 优化方案 / 技术债 / 样式规约文档（本地沉淀，不入库；CLAUDE.md 要求继续写入此目录）
+docs/optimizations/
 
 # 安全审计报告与发布评审产物（含未修复项清单，公开远端不宜暴露，本地留存）
 deliverables/
@@ -66,9 +71,15 @@ backend-run.log
 # 一次性 CDP 探针脚本（硬编码本机端口，仅排查管理端白屏时临时使用）
 scripts/_admin_probe.mjs
 
-# 环境变量与私钥（预防性：防止误提交敏感文件）
+# 本机临时启动脚本（含个人路径，密码走环境变量注入，不入库）
+scripts/_run-backend-detached.ps1
+
+# 环境变量与私钥（预防性：防止误提交敏感文件；示例文件可提交）
 .env
 *.env
+.env.*
+!.env.example
+!*.env.example
 *.pem
 *.key
 id_rsa

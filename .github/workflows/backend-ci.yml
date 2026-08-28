@@ -44,5 +44,5 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: mvn test
-        run: mvn -B test
+      - name: mvn test（Maven Wrapper，脱离 runner 环境 Maven 版本漂移）
+        run: ./mvnw -B test

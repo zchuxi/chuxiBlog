@@ -1,0 +1,13 @@
+# scripts/ 下 Python 运维脚本的依赖清单
+# 安装：python -m pip install -r scripts/requirements.txt
+# 版本用兼容发布约束（~=）：锁定主版本，允许修复级更新
+
+# deploy/deploy_upload.py、deploy/deploy_frontend_only.py
+# fetch_and_upload_calendar.py、fetch_and_upload_bangumi_subjects.py
+paramiko~=3.4
+
+# fetch_and_upload_calendar.py、fetch_and_upload_bangumi_subjects.py
+requests~=2.31
+
+# downscale_live2d_textures.py
+Pillow~=10.0
