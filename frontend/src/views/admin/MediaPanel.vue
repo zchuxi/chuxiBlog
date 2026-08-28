@@ -21,7 +21,7 @@
       <div v-else-if="items.length === 0" class="admin-state">图库还是空的，点击右上角「上传图片」添加吧</div>
       <div v-else class="media-grid">
         <div v-for="item in items" :key="item.name" class="media-card">
-          <img class="media-thumb" :src="item.url" :alt="item.name" loading="lazy" />
+          <img class="media-thumb" :src="thumbSrc(item)" :alt="item.name" loading="lazy" />
           <div class="media-info">
             <p class="media-name" :title="item.name">{{ item.name }}</p>
             <p class="media-meta">
@@ -128,9 +128,15 @@ async function onRemove(item) {
   }
 }
 
-function onCropSaved() {
-  toast('裁切已保存为新图')
+function onCropSaved(data, overwritten) {
+  toast(overwritten ? '已用裁切结果覆盖原图' : '裁切已保存为新图')
   load()
+}
+
+// 缩略图带上 lastModified 版本号：覆盖原图后地址不变，不加版本会一直显示缓存里的旧图。
+// 复制链接给出的仍是干净地址（item.url），不带版本参数
+function thumbSrc(item) {
+  return item.lastModified ? `${item.url}?v=${item.lastModified}` : item.url
 }
 
 function formatSize(size) {

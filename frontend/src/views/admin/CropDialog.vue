@@ -45,12 +45,35 @@
           </button>
           <span class="crop-format">输出：{{ outExt }} · {{ outPixelText }}</span>
           <CxButton plain @click="emit('close')">取消</CxButton>
-          <CxButton :disabled="!ready || saving" @click="save">
+          <CxButton
+            plain
+            :disabled="!ready || saving || !canOverwrite"
+            :title="canOverwrite ? '用裁切结果替换原文件，地址不变' : `${srcExt} 会被转成 ${outExt}，格式变了不能覆盖`"
+            @click="askOverwrite"
+          >覆盖原图</CxButton>
+          <CxButton :disabled="!ready || saving" @click="save('new')">
             {{ saving ? '保存中…' : '保存为新图' }}
           </CxButton>
         </footer>
       </div>
     </div>
+
+    <!-- 覆盖是不可撤销的，先确认再动手；提示层盖在裁切弹窗之上，裁切结果一直看得见 -->
+    <transition name="admin-fade">
+      <div v-if="confirming" class="admin-confirm-mask" @click.self="confirming = false">
+        <div class="admin-confirm-box" role="alertdialog" aria-modal="true" aria-label="覆盖原图确认">
+          <p class="admin-confirm-text">
+            将用裁切结果覆盖原图「{{ item.name }}」，原图不可恢复，确定吗？
+          </p>
+          <div class="admin-confirm-actions">
+            <CxButton plain @click="confirming = false">取消</CxButton>
+            <CxButton :disabled="saving" @click="save('overwrite')">
+              {{ saving ? '覆盖中…' : '确认覆盖' }}
+            </CxButton>
+          </div>
+        </div>
+      </div>
+    </transition>
   </teleport>
 </template>
 
@@ -58,6 +81,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { mediaApi } from '../../api/admin'
 import CxButton from '../../components/cx/CxButton.vue'
+import { buildCropFileName } from './adminUi'
 
 const props = defineProps({
   item: { type: Object, required: true }, // { name, url }
@@ -87,6 +111,7 @@ const imgEl = ref(null)
 const ready = ref(false)
 const loadError = ref(false)
 const saving = ref(false)
+const confirming = ref(false) // 覆盖原图的二次确认层
 const ratioVal = ref(props.ratio || 0)
 const disp = reactive({ w: 0, h: 0 }) // 图片显示尺寸
 const box = reactive({ x: 0, y: 0, w: 0, h: 0 }) // 裁切框（显示坐标系）
@@ -107,13 +132,17 @@ const ratioOptions = computed(() => {
 })
 
 // 输出格式跟随原图：png/webp 保留，其余统一 jpeg
+const srcExt = computed(() => (props.item.name.split('.').pop() || '').toLowerCase())
 const outType = computed(() => {
-  const ext = (props.item.name.split('.').pop() || '').toLowerCase()
-  if (ext === 'png') return 'image/png'
-  if (ext === 'webp') return 'image/webp'
+  if (srcExt.value === 'png') return 'image/png'
+  if (srcExt.value === 'webp') return 'image/webp'
   return 'image/jpeg'
 })
 const outExt = computed(() => outType.value.replace('image/', ''))
+
+// 覆盖要求扩展名和内容格式仍然一致，所以只有原样输出的三种能覆盖；
+// gif/bmp 会被转成 jpeg，扩展名与内容对不上，只能另存为新图
+const canOverwrite = computed(() => ['png', 'webp', 'jpg', 'jpeg'].includes(srcExt.value))
 
 // 显示坐标 → 原图坐标的比例（与 devicePixelRatio 无关）
 const scaleX = computed(() => (disp.w ? imgEl.value.naturalWidth / disp.w : 1))
@@ -265,14 +294,25 @@ function onDocumentKeydown(event) {
   if (event.key !== 'Escape' && !isSaveShortcut) return
   event.preventDefault()
   event.stopPropagation()
-  if (event.key === 'Escape' && !saving.value) emit('close')
+  if (event.key !== 'Escape' || saving.value) return
+  // 确认层开着时 Esc 只收起提示，不把整个裁切弹窗一起关掉
+  if (confirming.value) confirming.value = false
+  else emit('close')
 }
 
 onMounted(() => document.addEventListener('keydown', onDocumentKeydown))
 onBeforeUnmount(() => document.removeEventListener('keydown', onDocumentKeydown))
 
-// ---- 保存：按原图分辨率裁出并上传为新图 ----
-async function save() {
+// ---- 保存：按原图分辨率裁出，另存为新图或覆盖原图 ----
+
+const EXT_MAP = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg' }
+
+function askOverwrite() {
+  if (!ready.value || saving.value || !canOverwrite.value) return
+  confirming.value = true
+}
+
+async function save(mode) {
   const img = imgEl.value
   if (!img || saving.value) return
   const sx = Math.round(box.x * scaleX.value)
@@ -291,19 +331,17 @@ async function save() {
       canvas.toBlob(resolve, outType.value, outType.value === 'image/jpeg' ? 0.92 : undefined)
     )
     if (!blob) throw new Error('裁切失败，浏览器不支持该格式')
-    // 输出扩展名与实际格式对齐（如 gif 原图会转成 jpg）
-    const name = props.item.name
-    const dot = name.lastIndexOf('.')
-    const base = dot > 0 ? name.slice(0, dot) : name
-    const extMap = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg' }
-    const data = await mediaApi.upload(blob, 'crop-' + base + extMap[outType.value])
-    // 带出新图信息，调用方可直接回填表单字段
-    emit('saved', data)
+    const data = mode === 'overwrite'
+      ? await mediaApi.replace(props.item.name, blob)
+      : await mediaApi.upload(blob, buildCropFileName(props.item.name, sw, sh, EXT_MAP[outType.value]))
+    // 带出新图信息，调用方可直接回填表单字段（覆盖时 url 带 ?v= 版本号，绕开强缓存）
+    emit('saved', data, mode === 'overwrite')
     emit('close')
   } catch (err) {
     toast((err && err.message) || '保存失败', 'error')
   } finally {
     saving.value = false
+    confirming.value = false
   }
 }
 </script>

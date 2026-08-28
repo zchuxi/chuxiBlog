@@ -109,3 +109,18 @@ export function createFormSnapshot(form, fields) {
 export function isFormDirty(form, fields, initialSnapshot) {
   return createFormSnapshot(form, fields) !== initialSnapshot
 }
+
+/**
+ * 裁切结果的上传文件名：<原名去噪>-crop-<宽>x<高><扩展名>。
+ * 去噪 = 去掉后端上传时加的 8 位 uuid 前缀（外链取回的还多一段 fetch-）和上一轮的
+ * -crop-WxH，否则反复裁切会让前缀后缀一层层叠上去，既看不出原图是谁也越滚越长。
+ * 后端保存时还会再加一段新的 uuid 前缀保证唯一，最终形如 a1b2c3d4-封面-crop-1200x800.png。
+ */
+export function buildCropFileName(sourceName, width, height, ext) {
+  const name = String(sourceName || '')
+  const dot = name.lastIndexOf('.')
+  const base = (dot > 0 ? name.slice(0, dot) : name)
+    .replace(/^[0-9a-f]{8}-(fetch-)?/i, '')
+    .replace(/-crop-\d+x\d+$/i, '')
+  return `${base || 'image'}-crop-${width}x${height}${ext}`
+}

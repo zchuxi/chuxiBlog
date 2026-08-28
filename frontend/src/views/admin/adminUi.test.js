@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  buildCropFileName,
   createFormSnapshot,
   filterMenuGroups,
   filterResourceRows,
@@ -122,4 +123,25 @@ test('表单快照按字段类型规范化，等价输入不误报脏状态', ()
     fields,
     initial
   ), true)
+})
+
+test('buildCropFileName 用 -crop-尺寸 标出裁切图，且不叠加前缀后缀', () => {
+  // 原图名带后端上传时加的 8 位 uuid 前缀：前缀去掉，保留可辨认的原名主体
+  assert.equal(
+    buildCropFileName('88b42e91-4ce163c81cf4bb60dc.png', 2591, 1728, '.png'),
+    '4ce163c81cf4bb60dc-crop-2591x1728.png'
+  )
+  // 对裁切图再裁一次：旧的 -crop-WxH 被替换而不是叠加，名字不会越滚越长
+  assert.equal(
+    buildCropFileName('a1b2c3d4-4ce163c81cf4bb60dc-crop-2591x1728.png', 800, 600, '.png'),
+    '4ce163c81cf4bb60dc-crop-800x600.png'
+  )
+  // 外链取回的副本多一段 fetch-，一并去掉
+  assert.equal(buildCropFileName('a1b2c3d4-fetch-cover.jpg', 100, 50, '.jpg'), 'cover-crop-100x50.jpg')
+  // 手工命名的图没有 uuid 前缀，原样保留；扩展名按实际输出格式给（gif 会转成 jpg）
+  assert.equal(buildCropFileName('封面图.gif', 640, 480, '.jpg'), '封面图-crop-640x480.jpg')
+  // 非 16 进制的同长度前缀不算 uuid，不能误删
+  assert.equal(buildCropFileName('zzzzzzzz-logo.png', 10, 10, '.png'), 'zzzzzzzz-logo-crop-10x10.png')
+  // 空名兜底，至少给出一个合法文件名
+  assert.equal(buildCropFileName('', 10, 10, '.png'), 'image-crop-10x10.png')
 })

@@ -272,7 +272,7 @@
           <p class="admin-confirm-text">{{ closeConfirmTip }}</p>
           <div class="admin-confirm-actions">
             <CxButton plain @click="cancelCloseConfirm">取消</CxButton>
-            <CxButton @click="confirmMaskClose">确认关闭</CxButton>
+            <CxButton @click="closeDrawerNow">确认关闭</CxButton>
           </div>
         </div>
       </div>
@@ -580,25 +580,27 @@ function closeDrawer() {
   requestClose()
 }
 
-// 点击弹窗外（遮罩）一律先提示确认再关闭，与右上角关闭/取消按钮/Esc
-// 的「仅脏才确认」策略分开处理，避免用户在未留意情况下误关弹窗。
-// 这里用站内确认层而不是 window.confirm：原生对话框由浏览器接管绘制，
-// 实际观感是「弹窗先从画面消失、提示后到」；站内层渲染在弹窗之上，
-// 提示期间弹窗始终留在屏幕上，只有点「确认关闭」才真的关。
+// 点击弹窗外（遮罩）与右上角关闭/取消按钮/Esc 用同一套策略：只有存在未保存
+// 修改时才拦一道确认，没改过就直接关，不打扰。
+// 区别在提示的呈现方式——这里用站内确认层而不是 window.confirm：原生对话框由
+// 浏览器接管绘制，实际观感是「弹窗先从画面消失、提示后到」；站内层渲染在弹窗
+// 之上，提示期间弹窗始终留在屏幕上，只有点「确认关闭」才真的关。
 const closeConfirmTip = ref('')
 
 function onMaskClick() {
   if (!drawerOpen.value || saving.value || closeConfirmTip.value) return
-  closeConfirmTip.value = isDirty.value
-    ? '当前修改尚未保存，确定放弃并关闭吗？'
-    : '确定关闭当前弹窗吗？'
+  if (!isDirty.value) {
+    closeDrawerNow()
+    return
+  }
+  closeConfirmTip.value = '当前修改尚未保存，确定放弃并关闭吗？'
 }
 
 function cancelCloseConfirm() {
   closeConfirmTip.value = ''
 }
 
-function confirmMaskClose() {
+function closeDrawerNow() {
   closeConfirmTip.value = ''
   drawerOpen.value = false
   saveError.value = ''
@@ -631,7 +633,7 @@ function onEditorKeydown(event) {
     if (event.key === 'Escape' || event.key === 'Enter') {
       event.preventDefault()
       if (event.key === 'Escape') cancelCloseConfirm()
-      else confirmMaskClose()
+      else closeDrawerNow()
     }
     return
   }
