@@ -1,174 +1,219 @@
-# 初曦的窝（SpringBoot + Vue3）
+# 初曦の窝
 
-以 https://blog.lin-xin.top 为视觉基准完整复刻的前后端分离博客。前端样式取自原站编译产物（去除 scoped 哈希后逐页复用），DOM 结构按原站渲染结果 1:1 重建，数据结构与原站 API 返回体完全一致。
+> 一个前后端分离的个人博客系统。Spring Boot 3 + Vue 3，带完整的内容管理后台。
+
+[![backend-ci](https://github.com/zchuxi/chuxiBlog/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/zchuxi/chuxiBlog/actions/workflows/backend-ci.yml)
+[![frontend-ci](https://github.com/zchuxi/chuxiBlog/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/zchuxi/chuxiBlog/actions/workflows/frontend-ci.yml)
+![Java](https://img.shields.io/badge/Java-17-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F)
+![Vue](https://img.shields.io/badge/Vue-3.5-42b883)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF)
+
+线上站点：<https://www.chuxi.online>
+
+不只是「文章列表 + 详情页」。13 个前台页面各有独立的交互设计：17 屏滚动视差叙事、可发送可点赞的树洞弹幕流、接 bgm.tv 数据的追番记录、按年月归档的时间线。所有内容都能在后台改，不用碰代码。
+
+## 功能
+
+**前台**
+
+- 文章系统：markdown 渲染 + 代码高亮 + 目录导航 + 评论与点赞
+- 全站暗色模式，日月过渡动画，主题在前后台联动
+- live2d 看板娘（可拖拽）、背景图轮换、底部音乐播放器、樱花特效
+- 站内 AI 助手：以已发布文章作检索上下文，模型不可用时自动降级为站内搜索
+- 番剧记录：接 bgm.tv 在线数据，后端三层缓存（内存 → 磁盘 → 直连兜底），浏览器无需代理
+- RSS 订阅（`/api/rss`，Atom 格式）
+
+**后台**
+
+- 覆盖前台全部展示内容：文章、轮播、折叠卡片、团队成员、归档分类、时间线事件、视差故事、工具站点、树洞弹幕、疗愈文本、音乐曲库、评论、番剧记录、友情链接，均支持增删改查
+- 13 个管理面板，含站点设置、导航菜单、外观、页面文案、AI 配置
+- 图片库：上传 / 复制链接 / 删除 / 自研裁切（比例预设，可另存或覆盖原图），所有图片字段支持「从图库选择」
+- 番剧可直接从 Bangumi 搜索导入，走后端代理缓存
+- Cookie 鉴权：`HttpOnly` + `SameSite=Strict`，HTTPS 下自动 `Secure`，明文 token 不下发浏览器
 
 ## 技术栈
 
-- **后端**：Spring Boot 3.3 + Spring Data JPA + MySQL 8，端口 `8081`
-- **前端**：Vite 5 + Vue 3 + Vue Router + Pinia + Naive UI（HERO 轮播）+ marked / highlight.js（文章渲染），端口 `5173`
+| 层 | 选型 |
+| --- | --- |
+| 后端 | Spring Boot 3.3 · Java 17 · Spring Data JPA · MySQL 8 · Caffeine · Actuator |
+| 前端 | Vue 3.5 · Vite 5 · Vue Router 4 · Pinia 2 |
+| 渲染 | marked + highlight.js + DOMPurify（XSS 净化） |
+| 看板娘 | pixi.js 7 + pixi-live2d-display |
+| 存储 | 本地磁盘 / 阿里云 OSS（二选一，配置切换） |
+| 安全 | OWASP HTML Sanitizer（白名单净化）· PBKDF2 口令哈希 |
 
-## 启动方式
+后端 17 个实体对应的接口统一走 `{code, message, data}` 返回体。
 
-1. 确保 MySQL 在 `localhost:3306`，账号与口令通过环境变量 `DB_USERNAME` / `DB_PASSWORD` 注入（缺省回退值见 `backend/src/main/resources/application.yml`，请按本机实际口令设置；本地缺省库 `chuxi_db` 首次启动自动创建并注入种子数据，可用 `DB_URL` 覆盖）
-2. 双击 `start-backend.bat`（首次会自动 `mvn package`；**务必用 java -jar 方式运行**，中文路径下 `mvn spring-boot:run` 会因 GBK argfile 报 ClassNotFoundException）
-3. 双击 `start-frontend.bat`，浏览器打开 http://localhost:5173
+## 快速开始
 
-> 8080 端口被本机另一旧进程占用，所以后端固定使用 8081（`vite.config.js` 已配好代理）。
+**环境要求**：JDK 17+、Node ≥ 22、npm ≥ 10、MySQL 8
 
-## 提交纪律（约定）
+```bash
+git clone https://github.com/zchuxi/chuxiBlog.git
+cd chuxiBlog
+```
 
-- **重命名/移动类重构必须独立成提交**（包重命名、文件移动、目录调整等不与任何功能改动混在同一提交），保证 git 重命名检测与历史热点信号不断裂
-- **功能特性按边界拆分提交**：一个提交只做一件事，互不相关的特性/修复各自成提交，使 `git log --oneline` 可按特性归因、可选择性回退
-- 本约定仅对**后续提交**生效，不要求重写既有历史
+**1. 配置数据库**
 
-## 改动后验证（约定）
+复制 `.env.example` 为 `.env` 并填写，或直接用环境变量注入：
 
-- **后端改动后必须在 `backend/` 目录运行 `mvn test`**：冒烟测试 `ChuxiApplicationTests` 会完整加载 Spring 上下文（H2 内存库替代 MySQL，测试配置见 `src/test/resources/application.yml`，无需本地 MySQL/OSS），并检查 `/actuator/health` 可用；Bean 装配、实体映射、种子数据导入出错都会直接失败
-- **前端改动后在 `frontend/` 目录运行 `npm run lint` 和 `npm run build`**，以 lint 与构建双通过作为机械检查（lint 为最小 eslint 配置，见 `frontend/eslint.config.js`，已纳入 pre-commit 钩子；build 耗时较长仍为手动约定；type 检查暂未引入，按需另行评估）
-- **前端改动后在 `frontend/` 目录运行 `npm test`**：Node 内置测试器（`node --test`，Node ≥ 21，零额外依赖）跑 `src/**/*.test.js` 下的纯数据行为检查（当前覆盖 `resourceSchemas.js` 的 schema 结构约束：字段类型合法性、select 必填 options、batch/ratio/default 规则、columns 与字段的对应关系）；新增可被 Node 直接加载的纯逻辑模块时按同一约定补测试
-- `start-backend.bat` 打包时保留 `-DskipTests`（启动提速），因此**跳过测试仅限启动脚本，提交前仍须手动跑 `mvn test`**
-- **机械检查点（对应上面前两条）**：新克隆/新环境必须先运行一次 `scripts\install-git-hooks.bat` 安装仓库内版本化的 pre-commit 钩子（`scripts/git-hooks/pre-commit`，钩子不随 clone 自动生效），此后暂存区含 `backend/` 改动的提交自动执行 `mvn test`、含 `frontend/` 改动的提交自动执行 `npm run lint`，失败即阻断提交（紧急绕过 `git commit --no-verify`）；其余约定暂维持流程文档形式
-- **CI 兜底执行点（不依赖本机安装）**：推送到 GitHub 或发起 PR 时，`.github/workflows/backend-ci.yml` 在 `backend/` 改动时自动运行 `mvn test`，`.github/workflows/frontend-ci.yml` 在 `frontend/` 改动时自动依次运行 `npm run lint`、`npm test` 与 `npm run build`（lint 命令与 pre-commit 钩子保持一致，test/build 为 CI 额外兜底）；本机钩子未安装或被 `--no-verify` 绕过时，CI 仍会拦截失败的改动（Gitee 远端不触发此工作流）
+```bash
+DB_URL=jdbc:mysql://127.0.0.1:3306/chuxi_db?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+DB_USERNAME=your_user
+DB_PASSWORD=your_password
+```
 
-## 页面清单
+库不存在会自动创建，表为空时自动导入 `backend/src/main/resources/seed/*.json` 的种子数据，可随意清库重建。
+
+**2. 启动后端**（端口 `8081`）
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Windows 用户可直接双击根目录 `start-backend.bat`。
+
+**3. 启动前端**（端口 `5173`）
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+打开 <http://localhost:5173> 即可，Vite 已配好到 `8081` 的代理。
+
+**4. 初始化管理员口令**
+
+管理员账号固定为 `admin`，**密码无默认值**，必须先初始化：
+
+```bash
+python scripts/init-admin-password.py
+```
+
+交互式输入 ≥16 位口令，脚本按 PBKDF2 生成哈希写入数据库。仓库内不含任何明文口令。之后访问 <http://localhost:5173/admin> 登录。
+
+## 页面
 
 | 路由 | 内容 |
 | --- | --- |
-| `/index` | 首页：HERO 五幕轮播、人员卡片、站点信号板（count-up）、折叠手风琴卡片、文章画廊（2/3/4/3 行式布局 + 加载更多） |
-| `/article/:id` | 文章详情：封面 HERO、markdown 正文（代码高亮）、目录导航、评论区 |
-| `/timeline` | 页面概览 + 顶部卡片轮播 + 故事时间线（滚动激活） |
-| `/tree-hole` | 树洞弹幕流（可发送/点赞/暂停）+ 疗愈书架卡片 |
-| `/parallax` | 17 屏滚动视差叙事（开场/15 个故事/告别屏） |
+| `/index` | 首页：HERO 五幕轮播、人员卡片、站点信号板（count-up）、折叠手风琴、文章画廊 |
+| `/article/:id` | 文章详情：封面 HERO、markdown 正文、目录导航、评论区 |
+| `/timeline` | 顶部卡片轮播 + 故事时间线（滚动激活） |
+| `/tree-hole` | 树洞弹幕流（发送 / 点赞 / 暂停）+ 疗愈书架 |
+| `/parallax` | 17 屏滚动视差叙事 |
 | `/archive` | 归档开场、概览统计、按年月归档 + 目录侧栏 |
-| `/tool` | 工具地图：统计、搜索、分类筛选、精选站点、27 个站点卡片 |
-| `/tool/:id` | 工具详情页：站点档案、亮点、同类推荐 |
-| `/bangumi` | 番剧记录：封面卡、进度、评分、状态筛选、详情浮层（bgm.tv 数据） |
-| `/components` | CX 组件展示页（button/message/popover/radio/switch/tag） |
+| `/tool` · `/tool/:id` | 工具地图：统计、搜索、分类筛选、精选站点 / 站点详情 |
+| `/bangumi` · `/bangumi/:id` | 番剧记录：进度、评分、状态筛选 / 番剧详情 |
+| `/calendar` | 番剧更新日历 |
+| `/about` | 关于页 |
+| `/components` | CX 组件展示（button / message / popover / radio / switch / tag） |
+| `/admin` | 管理后台 |
 
-全局：左上导航（滑动指示器）、暗色模式（日月过渡动画）、背景图轮换（横/竖屏两套 29 张）、底部音乐播放器、站内 AI 助手（文章检索增强 + 模型不可用时本地降级）、live2d 看板娘（Mashiro）、樱花特效、文章搜索浮层、设置弹窗、登录/注册弹窗（原创玻璃拟态设计，视觉演示）。
+## 接口
 
-站内 AI 助手默认关闭外部模型调用；配置 `APP_AI_ENABLED=true`、`APP_AI_API_KEY` 后启用 OpenAI-compatible chat completions。可选配置包括 `APP_AI_BASE_URL`（默认 `https://api.deepseek.com/v1`）、`APP_AI_MODEL`（默认 `deepseek-chat`）、`APP_AI_TIMEOUT_SECONDS` 和 `APP_AI_MAX_CONTEXT_ARTICLES`。API key 仅由后端读取，不会下发到浏览器；未配置或上游失败时自动返回已发布文章的检索结果。
+统一返回体 `{code, message, data}`。完整清单见 [docs/API.md](docs/API.md)，常用的几个：
 
-## 后台管理端
-
-- 入口：`http://localhost:5173/admin`（或右上角头像菜单 →「后台管理」）；账号固定为 `admin`（见 `AuthController`）。管理员密码**无默认值**，初始化执行 `python scripts/init-admin-password.py`（交互式输入 ≥16 位新口令，脚本按 PBKDF2 生成哈希并写入库内 `site_content` 的 `admin-password` 记录；记录已存在时不覆盖）。README 与仓库不记录任何明文口令
-- `scripts/init-admin-password.sql` 仅是说明性模板，**不得直接执行**（见文件头部警告）
-- 覆盖前台展示的全部内容：文章（含 markdown 正文宽抽屉）、首页轮播、折叠卡片、团队成员、归档分类、时间线轮播、时间线事件、视差故事、工具站点、树洞弹幕、疗愈文本、音乐曲库、评论管理、番剧记录（支持从 Bangumi 搜索导入），均支持增删改查
-- 图片库：上传 / 复制链接 / 删除 / 自研裁切（比例预设，另存为新图），所有 image 字段可「从图库选择」；文件存 `backend/uploads/`，经 `/api/uploads/{name}` 公开访问
-- 管理端支持暗色模式（侧栏底部切换，与前台主题联动）
-- 换网站图标：把头像图存为项目根 `avatar.png`，运行 `pwsh scripts/make-favicon.ps1`（自动裁白边 + 圆形遮罩 → `frontend/public/favicon.png`）
-- 管理 API：`POST /api/auth/login` 登录成功后写入 7 天有效的 `HttpOnly` Cookie，Cookie 使用 `SameSite=Strict`、`Path=/api`，在 HTTPS 或 `X-Forwarded-Proto: https` 下自动启用 `Secure`；浏览器不会保存或读取明文 token，`POST /api/auth/logout` 会使当前会话失效并清除 Cookie
-- `/api/admin/{resource}` 系列 REST 接口使用管理 Cookie 鉴权（未登录 401，服务端暂保留 Bearer 读取兼容）；删除文章会级联删除其评论与评论点赞记录；tags 在 API 层为数组、库内为 CSV，由服务端互转
-- 番剧导入工具走后台代理缓存：`GET /api/admin/bangumi/search?keyword=`（搜索，后端三层缓存）、`POST /api/admin/bangumi/sync-collections`（同步收藏，后端代理、个人实时数据不缓存）、条目详情复用前台缓存接口 `/api/front/bangumi/bgm/subject/{sid}`；无代理时前端自动降级浏览器直连
-
-## 主要接口
-
-统一返回体 `{code, message, data}`：
-
-- `GET /api/front/home/landing` · `GET /api/front/home/articles` · `GET /api/front/home/team-members`
-- `GET /api/front/articles/{id}` · `GET/POST /api/front/articles/{id}/comments` · `GET /api/front/articles/search`
-- `GET /api/front/timeline/landing` · `GET /api/front/archive/landing`
-- `GET/POST /api/front/tree-hole/barrages`（`POST .../{id}/likes`）· `GET /api/front/tree-hole/called-texts`
-- `GET /api/front/parallax/stories` · `GET /api/front/tools/landing` · `GET /api/music`
-- `POST /api/front/ai/chat`（最近 8 轮对话；使用已发布文章作为上下文；模型未启用或不可用时降级为站内检索）
-- `GET /api/front/bangumi/bgm/{kind}/{sid}`（`kind` ∈ subject/episodes/characters；番剧详情在线数据，后端三层缓存：内存 → 磁盘 `data/bangumi-bgm/` → 直连兜底，浏览器无需代理）
-- `GET /actuator/health`（仅返回健康状态，不暴露组件详情）
-
-种子数据在 `backend/src/main/resources/seed/*.json`（取自原站接口样例），表空时自动导入，可随意清库重建。
-
-## 线上 schema 变更流程（审阅点）
-
-`spring.jpa.hibernate.ddl-auto` 已改为环境变量注入（`${JPA_DDL_AUTO:update}`）：
-
-- **本地**：缺省 `update`，实体改动自动同步到本地 `chuxi_db`，无需额外操作
-- **线上**：由服务器 systemd unit 注入 `JPA_DDL_AUTO=validate`，启动时只校验实体与库结构是否一致，**绝不自动改表**；不一致时启动直接失败（SchemaManagementException），以此兜底拦截未经审阅的结构变更
-
-因此**实体字段一旦变更（新增/删除/改名/改类型），上线前必须人工出具对应 DDL，先在线上库执行完毕，再启动新版本服务**，顺序不可颠倒。评审涉及 `backend/src/main/java/com/chuxi/entity/` 改动的提交时，须确认对应 DDL 已随变更给出。
-
-> 后续项（未实施）：评估以线上既有 `flyway_schema_history` 表为基线重新启用 Flyway 纳管后续变更；涉及线上执行，需单独授权后再做。
-
-## 线上部署
-
-生产环境部署在阿里云（`106.14.202.90`），由 nginx 反向代理到本机 Spring Boot：
-
-- **域名**：`https://www.chuxi.online`（主）；`https://chuxi.online` 同步可用
-- **静态资源**：`/opt/chuxi/dist`（vite 构建产物），由 nginx 直接服务
-- **后端**：`127.0.0.1:8080`，systemd unit `chuxi.service`，环境变量在 unit 内声明（DB/CORS/JWT/OSS/上传目录等）
-- **数据库**：MySQL 8，库名 `chuxi`；账号与口令由 systemd unit 以环境变量 `DB_USERNAME` / `DB_PASSWORD` 注入（见上条「后端」，README 不记录线上凭证，轮换在服务器密管/unit 内完成）
-- **对象存储**：阿里云 OSS 桶 `chuxisleep`（`oss-cn-beijing`），`/api/admin/media/fetch` 提供白名单 SSRF 安全代理供外链图传回站内
-- **架构**：`nginx(:80/:443) → /api/* → 127.0.0.1:8080`
-- **部署脚本**：`scripts/deploy/deploy_upload.py`（全量 jar+dist，重启服务）、`scripts/deploy/deploy_frontend_only.py`（仅前端，跳过重启）；依赖 `paramiko`，运行前设置环境变量 `SSH_PWD`
-- **部署前备份**：`deploy_upload.py` 在替换任何产物之前，将服务器现行 jar 与 dist 备份到 `/opt/chuxi/backup/`（`chuxi-backend.jar.bak.<时间戳>`、`dist.bak.<时间戳>`，时间戳格式 `YYYYMMDDHHMMSS`）；备份失败会中止部署，线上产物不被替换
-- **前端产物**：`vite.config.js` 已固定 `build.outDir=dist`，在 `frontend/` 运行 `npm run build` 后产物只落在 `frontend/dist/`；打包命令 `cd frontend && tar czf <DIST_TGZ> dist`（tar 顶层必须是 `dist/`）
-- **DDL 流程**：线上 `JPA_DDL_AUTO=validate`，部署本次评论点赞隔离改动时必须先在库内执行 `scripts/ddl-comment-like.sql`，确认 `comment_like` 表创建成功后再重启后端；其他新表同样须先执行随变更提供的 DDL，顺序不可颠倒
-- **可信代理**：应用默认只监听 `127.0.0.1:8080` 且不信任客户端转发头（`app.trust-proxy=false`，fail-closed）。生产经 nginx 接入时，必须在 systemd unit 注入 `APP_TRUST_PROXY=true`，且 nginx 以 `proxy_set_header` **覆盖** `X-Forwarded-For`（用 `$remote_addr`，勿用 `$proxy_add_x_forwarded_for` 追加客户端值）与 `X-Forwarded-Proto`；`SERVER_ADDRESS` 默认已为回环，无需改动
-- **构建路径坑**：Maven 必须在**纯英文路径**（如 `D:/build/chuxi2-backend`）下构建，中文 `backend/` 目录会触发 GBK 乱码；产出 jar 路径通过 `JAR_LOCAL` 环境变量传给部署脚本
-
-### live2d 资产传输优化（审阅点）
-
-看板娘模型资产（moc3 9.5MB + 贴图）由 nginx 直接服务，默认配置下有两个坑：`.moc3` 不在 nginx 的 `gzip_types` 里会裸传；`/live2d/` 目录没有强缓存，回访要逐文件发 304 协商。`vite.config.js` 的 compression 插件已在构建期产出 `.gz`/`.br` 预压缩文件（moc3 brotli 后约 2MB），nginx 侧只需静态启用，零 CPU 开销：
-
-```nginx
-# server 块内：静态预压缩优先（dist 内已有 .gz/.br 产物）
-gzip_static on;
-# 若 nginx 带 ngx_brotli 模块则一并启用（brotli 比 gzip 再小约 35%）：
-# brotli_static on;
-
-# /live2d/ 大文件强缓存 30 天；将来换模型版本时改目录名（如 miku2/）即可让缓存失效。
-# model3.json 等小配置文件不放强缓存，走 etag 协商，改动即生效。
-location /live2d/ {
-    expires 30d;
-    add_header Cache-Control "public";
-}
+```
+GET  /api/front/home/landing          首页聚合数据
+GET  /api/front/home/articles         文章列表（分页）
+GET  /api/front/articles/{id}         文章详情
+GET  /api/front/articles/search       文章搜索
+GET  /api/front/articles/{id}/comments
+POST /api/front/tree-hole/barrages    发送弹幕
+POST /api/front/ai/chat               AI 助手（最近 8 轮上下文）
+GET  /api/rss                         Atom 订阅
+GET  /actuator/health                 健康检查
 ```
 
-注意事项：
+管理接口在 `/api/admin/{resource}` 下，Cookie 鉴权，未登录返回 401。
 
-- 没有 `ngx_brotli` 时只开 `gzip_static on` 即可命中 `.gz`（3.2MB）；都不开时 moc3 裸传 9.5MB，等于预压缩白做
-- `gzip_static`/`brotli_static` 只影响压缩产物选择，不影响上面的缓存头
-- 若 `listen 443 ssl` 尚未启用 `http2`，顺手加上：贴图有 6 张，HTTP/2 多路复用可避免连接数竞争
+## 配置
 
-### 回滚 runbook
+全部可选配置见 [.env.example](.env.example)。几组常用的：
 
-新版本上线后异常（服务起不来 / 页面白屏 / 接口大面积报错）时，按以下步骤回滚到上一版本。全程在服务器上执行（`ssh root@106.14.202.90`），不需要本地构建。
+**AI 助手**（默认关闭，不配置则降级为站内检索）
 
-1. **找到要回滚的备份时间戳**（取最近一次部署产生的那组）：
+```bash
+APP_AI_ENABLED=true
+APP_AI_API_KEY=sk-xxx
+APP_AI_BASE_URL=https://api.deepseek.com/v1   # OpenAI 兼容即可
+APP_AI_MODEL=deepseek-chat
+```
 
-   ```bash
-   ls -lt /opt/chuxi/backup/ | head
-   TS=<上一版本的时间戳，如 20260730120000>
-   ```
+API key 仅后端读取，不下发浏览器。
 
-2. **恢复后端 jar**：
+**对象存储**（不启用则图片存本地 `backend/uploads/`，经 `/api/uploads/{name}` 访问）
 
-   ```bash
-   cp -f /opt/chuxi/backup/chuxi-backend.jar.bak.$TS /opt/chuxi/chuxi-backend.jar
-   ```
+```bash
+APP_OSS_ENABLED=true
+APP_OSS_ENDPOINT=https://oss-cn-beijing.aliyuncs.com
+APP_OSS_BUCKET=your_bucket
+```
 
-3. **恢复前端 dist**：
+**schema 管理**
 
-   ```bash
-   rm -rf /opt/chuxi/dist
-   cp -a /opt/chuxi/backup/dist.bak.$TS /opt/chuxi/dist
-   ```
+`JPA_DDL_AUTO` 本地缺省 `update`（实体改动自动同步），生产应设为 `validate`：只校验不改表，不一致时启动直接失败，以此拦截未经审阅的结构变更。因此**生产环境的实体字段变更必须先人工执行 DDL，再启动新版本**。
 
-   只回滚前端时可跳过步骤 2 和 4（nginx 直接服务静态文件，无需重启）。
+## 开发约定
 
-4. **重启服务**：
+**改动后验证**
 
-   ```bash
-   systemctl restart chuxi
-   ```
+```bash
+cd backend  && ./mvnw test      # 17 个测试类，含上下文加载冒烟 + 安全边界回归
+cd frontend && npm run lint     # ESLint
+cd frontend && npm run lint:css # Stylelint
+cd frontend && npm test         # 24 个测试文件，node --test 零额外依赖
+cd frontend && npm run build
+```
 
-5. **确认站点恢复**，逐项检查：
+后端测试用 H2 内存库，不需要本地 MySQL 或 OSS。
 
-   ```bash
-   systemctl is-active chuxi                          # 期望输出 active
-   journalctl -u chuxi -n 40 --no-pager               # 无 ERROR / 启动异常堆栈
-   curl -s -o /dev/null -w '%{http_code}\n' https://www.chuxi.online/          # 期望 200
-   curl -s -o /dev/null -w '%{http_code}\n' https://www.chuxi.online/api/front/home/landing  # 期望 200
-   ```
+**本地钩子**（新克隆需手动装一次，git 不随 clone 分发钩子）
 
-   最后用浏览器打开 `https://www.chuxi.online` 确认首页正常渲染、文章页可打开。
+```bash
+scripts\install-git-hooks.bat
+```
 
-> 注意：若本次部署伴随了 DDL 变更（新表/新列），回滚 jar 后旧代码通常兼容多出的表结构（线上为 `validate` 模式，只校验实体声明的字段）；若回滚后启动即报 schema 校验错误，说明该 DDL 与旧版本不兼容，需人工评估，不要盲目删表。
+装好后，暂存区含 `backend/` 改动自动跑 `mvn test`，含 `frontend/` 改动自动跑 `npm run lint`，失败阻断提交。
+
+**CI 兜底**：即使本机没装钩子或用了 `--no-verify`，推送和 PR 仍会在 GitHub Actions 上跑同样的检查。后端流水线还包含一道「实体变更须随附 DDL」检查。
+
+**提交纪律**
+
+- 重命名 / 移动类重构独立成提交，不与功能改动混在一起，保证 git 重命名检测不断裂
+- 功能按边界拆分，一个提交只做一件事，便于按特性归因和选择性回退
+
+## 目录结构
+
+```
+backend/
+  src/main/java/com/chuxi/
+    entity/    17 个 JPA 实体
+    repo/      Spring Data 仓库
+    service/   业务逻辑
+    web/       REST 控制器
+    auth/      Cookie 鉴权
+    init/      种子数据导入
+  src/main/resources/seed/    种子 JSON
+frontend/
+  src/
+    views/     页面组件（含 admin/ 下 13 个管理面板）
+    components/
+    assets/css/  按主题拆分的样式
+    live2d/    看板娘
+    stores/    Pinia
+    api/
+docs/          API 文档与设计方案
+scripts/       初始化、部署、图标生成等脚本
+```
+
+## 安全
+
+漏洞报告方式见 [SECURITY.md](SECURITY.md)。已落地的措施：PBKDF2 口令哈希、HttpOnly Cookie 鉴权、DOMPurify + OWASP Sanitizer 双层 XSS 净化、媒体抓取白名单（防 SSRF）、Actuator 仅暴露健康状态、生产默认只监听回环且不信任客户端转发头。
+
+## 致谢
+
+视觉设计以 [blog.lin-xin.top](https://blog.lin-xin.top) 为参考基准复刻，感谢原作者的设计。后台管理、AI 助手、番剧模块、树洞、组件库等功能为本项目自行实现。
