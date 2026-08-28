@@ -255,6 +255,28 @@
         </footer>
       </aside>
     </transition>
+
+    <!-- 关闭确认层：盖在编辑弹窗之上，保证「先提示、确认后才关闭」的顺序 -->
+    <transition name="admin-fade">
+      <div
+        v-if="drawerOpen && closeConfirmTip"
+        class="admin-confirm-mask"
+        @click.self="cancelCloseConfirm"
+      >
+        <div
+          class="admin-confirm-box"
+          role="alertdialog"
+          aria-modal="true"
+          :aria-label="closeConfirmTip"
+        >
+          <p class="admin-confirm-text">{{ closeConfirmTip }}</p>
+          <div class="admin-confirm-actions">
+            <CxButton plain @click="cancelCloseConfirm">取消</CxButton>
+            <CxButton @click="confirmMaskClose">确认关闭</CxButton>
+          </div>
+        </div>
+      </div>
+    </transition>
   </section>
 </template>
 
@@ -559,16 +581,33 @@ function closeDrawer() {
 }
 
 // 点击弹窗外（遮罩）一律先提示确认再关闭，与右上角关闭/取消按钮/Esc
-// 的「仅脏才确认」策略分开处理，避免用户在未留意情况下误关弹窗
+// 的「仅脏才确认」策略分开处理，避免用户在未留意情况下误关弹窗。
+// 这里用站内确认层而不是 window.confirm：原生对话框由浏览器接管绘制，
+// 实际观感是「弹窗先从画面消失、提示后到」；站内层渲染在弹窗之上，
+// 提示期间弹窗始终留在屏幕上，只有点「确认关闭」才真的关。
+const closeConfirmTip = ref('')
+
 function onMaskClick() {
-  if (!drawerOpen.value || saving.value) return
-  const tip = isDirty.value
+  if (!drawerOpen.value || saving.value || closeConfirmTip.value) return
+  closeConfirmTip.value = isDirty.value
     ? '当前修改尚未保存，确定放弃并关闭吗？'
     : '确定关闭当前弹窗吗？'
-  if (!window.confirm(tip)) return
+}
+
+function cancelCloseConfirm() {
+  closeConfirmTip.value = ''
+}
+
+function confirmMaskClose() {
+  closeConfirmTip.value = ''
   drawerOpen.value = false
   saveError.value = ''
 }
+
+// 弹窗被别的路径关掉（保存成功、删除、Esc / 取消按钮）时收起残留的确认层
+watch(drawerOpen, open => {
+  if (!open) closeConfirmTip.value = ''
+})
 
 function requestClose() {
   if (!drawerOpen.value) return true
@@ -587,6 +626,15 @@ function hasOpenEditorOverlay() {
 
 function onEditorKeydown(event) {
   if (!drawerOpen.value || saving.value) return
+  // 确认层打开时独占键盘：Esc 只收起提示（弹窗留着），Enter 才真关闭
+  if (closeConfirmTip.value) {
+    if (event.key === 'Escape' || event.key === 'Enter') {
+      event.preventDefault()
+      if (event.key === 'Escape') cancelCloseConfirm()
+      else confirmMaskClose()
+    }
+    return
+  }
   const isSaveShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's'
   if (hasOpenEditorOverlay() && (isSaveShortcut || event.key === 'Escape')) {
     event.preventDefault()

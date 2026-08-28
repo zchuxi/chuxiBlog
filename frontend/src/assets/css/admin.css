@@ -1503,6 +1503,35 @@ html.dark .admin-table tbody tr.is-checked td.admin-col-ops {
 }
 
 /* ===== 编辑弹窗：居中卡片 + 双列紧凑表单 ===== */
+/* 关闭确认层：z-index 高于编辑弹窗（120）与子弹层（130），提示期间弹窗仍在画面上 */
+.admin-confirm-mask {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: var(--adm-mask);
+  z-index: 200;
+}
+.admin-confirm-box {
+  width: min(360px, 100%);
+  padding: 22px 24px 18px;
+  border-radius: 18px;
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border-soft);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+}
+.admin-confirm-text {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.admin-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
 .admin-modal {
   position: fixed;
   top: 50%;
