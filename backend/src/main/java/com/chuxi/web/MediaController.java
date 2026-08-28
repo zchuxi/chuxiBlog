@@ -79,22 +79,8 @@ public class MediaController {
         if (file == null || file.isEmpty()) return R.fail("文件为空");
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null) return R.fail("文件名无效");
-        String lowerName = originalFilename.toLowerCase();
-        boolean extOk = ALLOWED_EXTENSIONS.stream().anyMatch(lowerName::endsWith);
-        String contentType = file.getContentType();
-        boolean mimeOk = contentType != null && ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase());
-        if (!extOk || !mimeOk) return R.fail("不支持的文件类型，仅允许图片和音频文件");
-
-        // 文件头 Magic Number 校验：只读头部 16 字节，验证文件真实内容与声明类型一致
-        byte[] header = new byte[16];
-        try (InputStream is = file.getInputStream()) {
-            int read = is.read(header);
-            if (read < 4) return R.fail("文件内容过短");
-            header = Arrays.copyOf(header, read);
-        }
-        if (!validateMagicNumber(header, contentType)) {
-            return R.fail("文件内容与声明类型不符");
-        }
+        String reject = typeRejectReason(file, originalFilename);
+        if (reject != null) return R.fail(reject);
 
         String origin = originalFilename;
         String cleaned = origin.replaceAll("[^A-Za-z0-9._-]", "_");
@@ -120,6 +106,98 @@ public class MediaController {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("name", name);
         data.put("url", "/api/uploads/" + name);
+        data.put("size", Files.size(target));
+        return R.ok(data);
+    }
+
+    /**
+     * 上传/覆盖共用的类型校验：扩展名白名单 + MIME 白名单 + 文件头 Magic Number。
+     * 通过返回 null，否则返回中文失败原因。
+     */
+    private String typeRejectReason(MultipartFile file, String nameForExt) throws IOException {
+        String lowerName = nameForExt.toLowerCase();
+        boolean extOk = ALLOWED_EXTENSIONS.stream().anyMatch(lowerName::endsWith);
+        String contentType = file.getContentType();
+        boolean mimeOk = contentType != null && ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase());
+        if (!extOk || !mimeOk) return "不支持的文件类型，仅允许图片和音频文件";
+
+        // 文件头 Magic Number 校验：只读头部 16 字节，验证文件真实内容与声明类型一致
+        byte[] header = new byte[16];
+        try (InputStream is = file.getInputStream()) {
+            int read = is.read(header);
+            if (read < 4) return "文件内容过短";
+            header = Arrays.copyOf(header, read);
+        }
+        if (!validateMagicNumber(header, contentType)) return "文件内容与声明类型不符";
+        return null;
+    }
+
+    /**
+     * 覆盖场景专用：扩展名必须和新内容的 MIME 对得上。
+     * 覆盖不改文件名，URL 里的扩展名一旦和内容不符，本地 serve 按扩展名探测出的
+     * Content-Type 就是错的（OSS 同理），浏览器会拿到一张打不开的图。
+     * 只放行图片——这个接口是给裁切用的，音频没有原地替换的场景。
+     */
+    private static boolean extMatchesType(String name, String contentType) {
+        String lower = name.toLowerCase();
+        String ct = contentType == null ? "" : contentType.toLowerCase();
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return ct.contains("jpeg");
+        if (lower.endsWith(".png")) return ct.contains("png");
+        if (lower.endsWith(".webp")) return ct.contains("webp");
+        if (lower.endsWith(".gif")) return ct.contains("gif");
+        if (lower.endsWith(".bmp")) return ct.contains("bmp");
+        return false;
+    }
+
+    /**
+     * 覆盖后 URL 不变但内容变了，而本地与 OSS 都挂了 7 天强缓存，浏览器不会回源。
+     * 附一个版本参数让调用方拿到的地址能立刻看到新图。
+     */
+    private static String withVersion(String url) {
+        if (url == null) return null;
+        return url + (url.contains("?") ? "&" : "?") + "v=" + System.currentTimeMillis();
+    }
+
+    /**
+     * 覆盖已有媒体文件：同名、同格式原地替换，用于裁切后直接覆盖原图。
+     * 目标必须已存在——这个接口只做替换，不承担「顺手创建」的职责。
+     */
+    @PostMapping("/api/admin/media/{name}/replace")
+    public R<Map<String, Object>> replace(@PathVariable String name,
+                                          @RequestParam("file") MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) return R.fail("文件为空");
+        if (badName(name)) return R.fail("非法文件名");
+        String reject = typeRejectReason(file, name);
+        if (reject != null) return R.fail(reject);
+        if (!extMatchesType(name, file.getContentType())) {
+            return R.fail("覆盖要求格式与原文件一致，请改用「保存为新图」");
+        }
+
+        if (oss.available()) {
+            try {
+                // 对象不存在时不在 OSS 里造一个，落到下面的本地分支去找存量文件
+                if (oss.exists(name)) {
+                    Map<String, Object> data = new LinkedHashMap<>(
+                            oss.upload(name, file.getInputStream(), file.getSize(), file.getContentType()));
+                    data.put("url", withVersion((String) data.get("url")));
+                    return R.ok(data);
+                }
+            } catch (Exception e) {
+                log.error("OSS 覆盖失败：name={}, size={}", name, file.getSize(), e);
+                return R.fail("OSS 覆盖失败：" + e.getMessage());
+            }
+        }
+
+        Path target = resolveSafe(name);
+        if (target == null) return R.fail("非法文件名");
+        if (!Files.isRegularFile(target)) return R.fail("原文件不存在，无法覆盖");
+        try (InputStream is = file.getInputStream()) {
+            Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("name", name);
+        data.put("url", withVersion("/api/uploads/" + name));
         data.put("size", Files.size(target));
         return R.ok(data);
     }

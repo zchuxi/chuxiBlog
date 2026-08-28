@@ -72,6 +72,16 @@ export const mediaApi = {
     })
   },
   remove: name => http.delete(`/admin/media/${encodeURIComponent(name)}`),
+  // 覆盖已有文件：同名同格式原地替换（裁切后覆盖原图用）。
+  // 返回的 url 带 ?v= 版本号——地址没变但内容变了，不带版本会被 7 天强缓存挡住
+  replace: (name, file) => {
+    const form = new FormData()
+    form.append('file', file, name)
+    return http.post(`/admin/media/${encodeURIComponent(name)}/replace`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 300000
+    })
+  },
   // 取回外链图：仅支持本站 OSS 公网域；返回 { name, url, size }，url 是新的站内副本
   fetch: url => http.post('/admin/media/fetch', { url })
 }
