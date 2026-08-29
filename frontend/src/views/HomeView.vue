@@ -891,33 +891,38 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
 
 /* ========== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ========== */
 @media (max-width: 768px) {
-  /* 首屏英雄化：参考桌面「文案撑满一屏」的重心，移动端让文案区独占首屏，
-     人员卡/统计卡自然落到第二屏，滚动提示恢复显示引导下滑 */
+  /* 对齐网页端「文案 + 人员卡 + 统计卡同屏」的构成：移动端改为纵向堆叠进同一屏，
+     文案区不再独占首屏（原先文案上下大片空白、卡片完全看不到，观感空而散） */
   [data-home-scope] .home-landing {
-    padding: 16px 4px 0;
-    gap: 24px;
+    padding: 24px 4px 0;
+    gap: 18px;
     min-height: 100vh;
     min-height: 100svh;
-    align-content: start;
+    align-content: center;
   }
-  [data-home-scope] .home-landing__copy {
-    min-height: calc(100vh - 150px);
-    min-height: calc(100svh - 150px);
-    justify-content: center;
-  }
-  /* 滚动提示恢复显示：landing 顶部距视口顶约 82px，锚在首屏可视区底部上方 */
-  [data-home-scope] .home-landing__scroll-hint {
-    display: block;
-    bottom: auto;
-    top: calc(100vh - 140px);
-    top: calc(100svh - 140px);
-  }
+  /* 卡片已上移同屏，滚动提示会压在卡片上，保持 ≤960 的隐藏即可 */
   [data-home-scope] .home-landing__copy,
   [data-home-scope] .home-landing__aside {
     min-width: 0;
     max-width: 100%;
   }
   [data-home-scope] .home-landing__copy { padding-left: 0; gap: 12px; }
+  /* 移动端按钮对齐网页端：主/次按钮同一行并排，主实色次玻璃，
+     不等比拉满整行时保持自然宽度 */
+  [data-home-scope] .home-landing__actions {
+    flex-wrap: nowrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  [data-home-scope] .home-landing__btn {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    min-height: 46px;
+    padding: 10px 16px;
+    font-size: 15px;
+    white-space: nowrap;
+  }
   [data-home-scope] .home-landing__title {
     font-size: clamp(34px, 9vw, 46px);
     letter-spacing: 1px;
@@ -946,9 +951,14 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
     background: rgba(10, 18, 32, 0.32);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
-  [data-home-scope] .home-landing__aside { gap: 16px; }
+  [data-home-scope] .home-landing__aside { gap: 14px; }
   [data-home-scope] .home-landing__aside .profile-card,
-  [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
+  [data-home-scope] .home-landing__aside .signal-board-card { padding: 16px; gap: 12px; }
+  /* 同屏装不下桌面版松散的卡内排布，收紧行高与间距 */
+  [data-home-scope] .profile-card__content h3 { font-size: 1.6rem; }
+  [data-home-scope] .profile-card__content p { line-height: 1.6; }
+  [data-home-scope] .signal-board-card__stats { gap: 10px; }
+  [data-home-scope] .stat-item { padding: 10px 12px; }
   /* 人员卡：标题居中（≤1180 生效）后头像组也居中，避免左挤右空 */
   [data-home-scope] .profile-card__roster { justify-content: safe center; }
   /* 第二屏：窄屏交还原站 CSS 的 aspect-ratio 高度，避免固定 480px 底部留白 */
@@ -994,15 +1004,11 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
     height: clamp(400px, 54svh, 470px);
   }
   [data-home-scope] .home-landing__tagline { font-size: 15.5px; }
-  [data-home-scope] .home-landing__actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
+  /* ≤480 仍保持网页端的并排双按钮，仅收紧字号与内边距 */
   [data-home-scope] .home-landing__btn {
-    width: 100%;
-    justify-content: center;
     min-height: 44px;
+    padding: 10px 10px;
+    font-size: 14px;
   }
   [data-home-scope] .home-landing__aside .profile-card,
   [data-home-scope] .home-landing__aside .signal-board-card { padding: 16px 14px; }
