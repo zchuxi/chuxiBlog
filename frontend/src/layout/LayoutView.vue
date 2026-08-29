@@ -874,9 +874,29 @@ html.dark .login-dialog__submit:hover { box-shadow: 0 16px 32px rgba(0, 0, 0, 0.
 
 /* ========== 移动端适配 ========== */
 @media (max-width: 768px) {
-  .app-shell > header.app-shell-top { top: 8px; left: 10px; right: 10px; padding: 8px 12px; gap: 10px; }
+  .app-shell > header.app-shell-top {
+    top: 8px; left: 10px; right: 10px; padding: 8px 12px; gap: 10px;
+    border-color: rgba(255, 255, 255, 0.26);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px) saturate(1.1);
+    -webkit-backdrop-filter: blur(6px) saturate(1.1);
+    box-shadow: 0 4px 14px rgba(20, 30, 60, 0.10);
+  }
+  .app-shell > .app-shell-top.is-solid {
+    background: rgba(255, 255, 255, 0.30);
+    box-shadow: 0 6px 18px rgba(88, 111, 214, 0.12);
+  }
+  html.dark .app-shell > .app-shell-top {
+    border-color: rgba(255, 255, 255, 0.10) /* token-guard-ignore：暗色主题覆写块，嵌套于 @media 内需显式标注 */;
+    background: rgba(22, 22, 26, 0.38);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
+  }
+  html.dark .app-shell > .app-shell-top.is-solid {
+    background: rgba(24, 24, 24, 0.52);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.30);
+  }
   .app-shell-top .shell-brand { flex: 1 1 auto; min-width: 0; gap: 8px; }
-  .app-shell-top .shell-brand > span { font-size: 16.5px; }
+  .app-shell-top .shell-brand > span { font-size: 16.5px; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); }
   .app-shell-top .shell-brand > .cx-popover-wrapper { margin-left: auto; flex: none; }
   .app-shell-top .shell-action-btn { width: 40px; height: 40px; }
   .app-shell-top .shell-actions { gap: 5px; }
