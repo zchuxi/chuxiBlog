@@ -661,17 +661,18 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* 全断点深色玻璃底板：轮换背景图明暗不可控，深色玻璃 + 白字在任何图上都清晰 */
+  /* 全断点深色玻璃底板：轮换背景图明暗不可控，深色玻璃 + 白字在任何图上都清晰；
+     底色/描边/阴影与下方按钮（home-landing__btn）保持同一配方，观感统一 */
   width: fit-content;
   max-width: 100%;
   margin-top: 4px;
   padding: 12px 18px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: linear-gradient(180deg, rgba(9, 18, 38, 0.4), rgba(9, 18, 38, 0.28));
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: linear-gradient(180deg, rgba(9, 18, 38, 0.42), rgba(9, 18, 38, 0.3));
   -webkit-backdrop-filter: blur(14px) saturate(1.25);
   backdrop-filter: blur(14px) saturate(1.25);
-  box-shadow: 0 10px 26px rgba(6, 16, 36, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 20px rgba(6, 16, 36, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 [data-home-scope] .home-landing__welcome p {
   margin: 0;
