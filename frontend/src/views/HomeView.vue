@@ -696,6 +696,7 @@ onMounted(async () => {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background: linear-gradient(180deg, rgba(9, 18, 38, 0.42), rgba(9, 18, 38, 0.3));
+  /* token-guard-ignore 着陆区按钮为全断点固定深色玻璃底板，白字与令牌同值纯属巧合，不随主题变化 */
   color: #f5f9ff;
   font: inherit;
   font-size: 15.5px;

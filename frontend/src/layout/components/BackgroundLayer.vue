@@ -85,11 +85,24 @@ function stopIdlePreload() {
 watch(() => settings.backgroundCarouselEnabled, startBgCarousel)
 watch(() => settings.backgroundImageEnabled, startBgCarousel)
 
+// 屏幕方向/尺寸变化（手机旋转、窗口缩放跨横竖屏）时切到对应方向的图池。
+// resize 在旋转时也会触发，只挂这一个事件即可覆盖两种场景。
+// 当前图仍属于新方向的池子时直接返回，普通窗口缩放不做任何事。
+function onViewportChange() {
+  const pool = currentPool()
+  const cur = bgLayers.value[activeBgLayer.value]
+  if (pool.includes(cur)) return
+  const img = isPortrait() ? settings.selectedVerticalImage : settings.selectedLandscapeImage
+  if (img && img !== cur) swapBackground(img)
+  scheduleIdlePreload()
+}
+
 onMounted(() => {
   // 首张当前图直接进入缓存标记，避免与轮换池重复预加载
   if (settings.selectedLandscapeImage) imageCache.add(settings.selectedLandscapeImage)
   startBgCarousel()
   scheduleIdlePreload()
+  window.addEventListener('resize', onViewportChange)
   settings.loadRemoteGallery().then(() => {
     const img = isPortrait() ? settings.selectedVerticalImage : settings.selectedLandscapeImage
     if (img && bgLayers.value[activeBgLayer.value] !== img) swapBackground(img)
@@ -98,6 +111,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', onViewportChange)
   stopBgCarousel()
   stopIdlePreload()
 })
