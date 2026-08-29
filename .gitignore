@@ -68,6 +68,9 @@ graphify-out/
 
 # CDP 调试用的 Edge 独立用户配置（579MB，调试管理端时生成）
 .edge-test-profile/
+
+# 首页视觉调试临时产物（探针脚本/中间 CSS/截图，不入库）
+frontend/.tmp-work/
 graphify-update.log
 backend-run.log
 
