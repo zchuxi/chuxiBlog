@@ -935,11 +935,7 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
     line-height: 1.6;
     text-shadow: 0 1px 4px rgba(6, 20, 44, 0.3);
   }
-  html.dark [data-home-scope] .home-landing__welcome {
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(10, 18, 32, 0.32);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
+  /* 暗色主题不再单独覆写欢迎卡底色：与桌面端保持一致的全断点深色玻璃渐变 */
   [data-home-scope] .home-landing__aside { gap: 16px; }
   [data-home-scope] .home-landing__aside .profile-card,
   [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
