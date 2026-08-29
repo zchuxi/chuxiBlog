@@ -925,16 +925,10 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
     overflow-wrap: anywhere;
   }
   [data-home-scope] .home-landing__tagline { font-size: 16.5px; }
-  /* 欢迎语加玻璃底板：小屏上背景图繁忙，原纯文字投影可读性差 */
+  /* 欢迎语沿用全断点深色玻璃底板：浅色玻璃 + 白字在亮背景图上对比度不足 */
   [data-home-scope] .home-landing__welcome {
     margin-top: 4px;
     padding: 12px 16px;
-    border-radius: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.14);
-    -webkit-backdrop-filter: blur(12px) saturate(1.2);
-    backdrop-filter: blur(12px) saturate(1.2);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   }
   [data-home-scope] .home-landing__welcome p {
     font-size: 14.5px;
