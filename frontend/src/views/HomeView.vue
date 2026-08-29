@@ -98,7 +98,11 @@
                       </div>
                     </button>
                   </div>
-                  <div class="hero-visual__frame">
+                  <div
+                    class="hero-visual__frame"
+                    @touchstart.passive="onHeroTouchStart"
+                    @touchend="onHeroTouchEnd"
+                  >
                     <div class="hero-carousel">
                       <div
                         class="hero-carousel__track"
@@ -121,6 +125,19 @@
                           </div>
                         </div>
                       </div>
+                    </div>
+                    <div v-if="carousels.length > 1" class="hero-visual__dots" role="tablist" aria-label="轮播切换">
+                      <button
+                        v-for="(c, i) in carousels"
+                        :key="c.id"
+                        type="button"
+                        class="hero-dot"
+                        :class="{ 'is-active': heroIndex === i }"
+                        role="tab"
+                        :aria-selected="heroIndex === i"
+                        :aria-label="`切换到第 ${i + 1} 张`"
+                        @click="goHero(i)"
+                      ></button>
                     </div>
                   </div>
                 </div>
@@ -319,6 +336,29 @@ let heroAutoplayTimer = null
 function goHero(i) {
   heroIndex.value = i
   resetHeroAutoplay()
+}
+
+/* 移动端触摸滑动切换：纵向轮播，上滑下一张、下滑上一张；横向滑动同样生效 */
+let heroTouchStartX = 0
+let heroTouchStartY = 0
+
+function onHeroTouchStart(e) {
+  const t = e.changedTouches && e.changedTouches[0]
+  if (!t) return
+  heroTouchStartX = t.clientX
+  heroTouchStartY = t.clientY
+}
+
+function onHeroTouchEnd(e) {
+  const t = e.changedTouches && e.changedTouches[0]
+  const len = carousels.value.length
+  if (!t || len < 2) return
+  const dx = t.clientX - heroTouchStartX
+  const dy = t.clientY - heroTouchStartY
+  const primary = Math.abs(dx) > Math.abs(dy) ? dx : dy
+  if (Math.abs(primary) < 40) return
+  const step = primary < 0 ? 1 : -1
+  goHero((heroIndex.value + step + len) % len)
 }
 
 function startHeroAutoplay() {
@@ -605,7 +645,8 @@ onMounted(async () => {
   color: #fff;
   text-shadow:
     0 2px 10px rgba(6, 20, 44, 0.55),
-    0 4px 28px rgba(6, 20, 44, 0.32);
+    0 4px 28px rgba(6, 20, 44, 0.32),
+    0 0 48px rgba(63, 119, 181, 0.35);
 }
 [data-home-scope] .home-landing__tagline {
   margin: 6px 0 0;
@@ -620,6 +661,17 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  /* 全断点深色玻璃底板：轮换背景图明暗不可控，深色玻璃 + 白字在任何图上都清晰 */
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, rgba(9, 18, 38, 0.4), rgba(9, 18, 38, 0.28));
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
+  box-shadow: 0 10px 26px rgba(6, 16, 36, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 [data-home-scope] .home-landing__welcome p {
   margin: 0;
@@ -642,19 +694,20 @@ onMounted(async () => {
   gap: 6px;
   padding: 10px 22px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
-  background: rgba(255, 255, 255, 0.18);
-  color: color-mix(in srgb, var(--text-color) 92%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: linear-gradient(180deg, rgba(9, 18, 38, 0.42), rgba(9, 18, 38, 0.3));
+  color: #f5f9ff;
   font: inherit;
   font-size: 15.5px;
   font-weight: 600;
   letter-spacing: 0.2px;
   cursor: pointer;
+  text-shadow: 0 1px 2px rgba(4, 10, 24, 0.35);
   -webkit-backdrop-filter: blur(14px) saturate(1.25);
   backdrop-filter: blur(14px) saturate(1.25);
   box-shadow:
-    0 4px 14px color-mix(in srgb, var(--text-color) 6%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    0 8px 20px rgba(6, 16, 36, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition:
     transform 0.22s ease,
     box-shadow 0.26s ease,
@@ -668,11 +721,11 @@ onMounted(async () => {
 }
 [data-home-scope] .home-landing__btn:hover {
   transform: translateY(-1px);
-  background-color: rgba(255, 255, 255, 0.32);
-  border-color: color-mix(in srgb, var(--text-color) 22%, transparent);
+  background: linear-gradient(180deg, rgba(9, 18, 38, 0.54), rgba(9, 18, 38, 0.4));
+  border-color: rgba(255, 255, 255, 0.38);
   box-shadow:
-    0 8px 22px color-mix(in srgb, var(--text-color) 10%, transparent),
-    inset 0 1px 0 var(--topbar-border-top);
+    0 12px 26px rgba(6, 16, 36, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 [data-home-scope] .home-landing__btn:hover .svg-icon {
   opacity: 1;
@@ -705,19 +758,19 @@ onMounted(async () => {
   opacity: 1;
 }
 html.dark [data-home-scope] .home-landing__btn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.14);
-  color: color-mix(in srgb, var(--text-color) 96%, transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f5f9ff;
   box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 html.dark [data-home-scope] .home-landing__btn:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.24);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+  border-color: rgba(255, 255, 255, 0.28);
   box-shadow:
-    0 8px 22px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 12px 26px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 html.dark [data-home-scope] .home-landing__btn--primary {
   color: #ffffff;
@@ -838,31 +891,108 @@ html.dark [data-home-scope] .home-landing__scroll-hint {
 
 /* ========== 移动端适配（≤768 / ≤480，只追加、不回归桌面） ========== */
 @media (max-width: 768px) {
+  /* 首屏英雄化：参考桌面「文案撑满一屏」的重心，移动端让文案区独占首屏，
+     人员卡/统计卡自然落到第二屏，滚动提示恢复显示引导下滑 */
   [data-home-scope] .home-landing {
     padding: 16px 4px 0;
     gap: 24px;
+    min-height: 100vh;
+    min-height: 100svh;
+    align-content: start;
+  }
+  [data-home-scope] .home-landing__copy {
+    min-height: calc(100vh - 150px);
+    min-height: calc(100svh - 150px);
+    justify-content: center;
+  }
+  /* 滚动提示恢复显示：landing 顶部距视口顶约 82px，锚在首屏可视区底部上方 */
+  [data-home-scope] .home-landing__scroll-hint {
+    display: block;
+    bottom: auto;
+    top: calc(100vh - 140px);
+    top: calc(100svh - 140px);
   }
   [data-home-scope] .home-landing__copy,
   [data-home-scope] .home-landing__aside {
     min-width: 0;
     max-width: 100%;
   }
-  [data-home-scope] .home-landing__copy { padding-left: 0; }
+  [data-home-scope] .home-landing__copy { padding-left: 0; gap: 12px; }
   [data-home-scope] .home-landing__title {
-    font-size: clamp(34px, 8vw, 46px);
+    font-size: clamp(34px, 9vw, 46px);
     letter-spacing: 1px;
+    line-height: 1.15;
     overflow-wrap: anywhere;
   }
   [data-home-scope] .home-landing__tagline { font-size: 16.5px; }
+  /* 欢迎语加玻璃底板：小屏上背景图繁忙，原纯文字投影可读性差 */
+  [data-home-scope] .home-landing__welcome {
+    margin-top: 4px;
+    padding: 12px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.14);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  [data-home-scope] .home-landing__welcome p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    text-shadow: 0 1px 4px rgba(6, 20, 44, 0.3);
+  }
+  html.dark [data-home-scope] .home-landing__welcome {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(10, 18, 32, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
   [data-home-scope] .home-landing__aside { gap: 16px; }
   [data-home-scope] .home-landing__aside .profile-card,
   [data-home-scope] .home-landing__aside .signal-board-card { padding: 18px 16px; }
+  /* 人员卡：标题居中（≤1180 生效）后头像组也居中，避免左挤右空 */
+  [data-home-scope] .profile-card__roster { justify-content: safe center; }
   /* 第二屏：窄屏交还原站 CSS 的 aspect-ratio 高度，避免固定 480px 底部留白 */
   [data-home-scope] .dashboard-highlight__hero .hero-bento-frame,
   [data-home-scope] .dashboard-highlight__hero .hero-visual { height: auto; }
+
+  /* ---- HERO 轮播移动端重构：大图为主体（对齐桌面「图为主、导航为辅」） ---- */
+  /* 图片在上、导航条在下：首图先入眼，而不是先看到一排按钮 */
+  [data-home-scope] .hero-visual__frame {
+    order: -1;
+    /* home.css 给 frame 设了 flex:1（basis:0%），纵向 flex 容器里它会压过 height，
+       容器高度又被内容（全部 slide 堆叠）反向撑破——必须 flex:none 让 height 生效 */
+    flex: none;
+    /* 16/10（≈244px 高）放不下 kicker+标题+描述+日期，文字溢出且被圆点遮挡；
+       加高到接近桌面的大图体量 */
+    height: clamp(430px, 58vh, 540px);
+    height: clamp(430px, 58svh, 540px);
+    aspect-ratio: auto;
+    max-height: none;
+  }
+  [data-home-scope] .hero-slide__overlay {
+    /* 底部预留圆点指示器空间，避免遮挡日期 */
+    padding: 22px 18px 48px;
+  }
+  [data-home-scope] .hero-slide strong {
+    font-size: clamp(1.6rem, 6.6vw, 2.1rem);
+  }
+  /* 移动端只保留主描述，次描述隐藏：小屏读不完两段，堆叠还会溢出 */
+  [data-home-scope] .hero-slide__content { display: none; }
+  [data-home-scope] .hero-slide__description { -webkit-line-clamp: 3; }
+
+  /* ---- 折叠卡片：激活态压深暗角，白字在任何配图上都可读 ---- */
+  [data-home-scope] .fold-box .fold-graphic-card__veil {
+    background: linear-gradient(180deg, transparent 30%, rgba(7, 16, 30, 0.72));
+  }
+  [data-home-scope] .fold-box.is-active .fold-graphic-card__veil { opacity: 0.85; }
 }
 @media (max-width: 480px) {
   [data-home-scope] .home-landing__title { font-size: clamp(30px, 8.5vw, 38px); }
+  /* 小屏 hero 略降高，保证图片+导航条一屏内能露出导航 */
+  [data-home-scope] .hero-visual__frame {
+    height: clamp(400px, 54vh, 470px);
+    height: clamp(400px, 54svh, 470px);
+  }
   [data-home-scope] .home-landing__tagline { font-size: 15.5px; }
   [data-home-scope] .home-landing__actions {
     flex-direction: column;
